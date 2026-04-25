@@ -44,6 +44,37 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Local infrastructure (PostgreSQL + Redis)
+
+Start infra:
+
+```bash
+docker compose up -d
+```
+
+Stop infra:
+
+```bash
+docker compose down
+```
+
+Reset infra data:
+
+```bash
+docker compose down -v
+```
+
+Service connection defaults are already included in `.env.example`:
+
+- `DATABASE_URL=postgresql://jobradar:jobradar@localhost:5432/jobradar`
+- `REDIS_URL=redis://localhost:6379`
+
+Nest now boots with:
+
+- TypeORM PostgreSQL connection from `DATABASE_URL`
+- BullMQ Redis connection from `REDIS_URL`
+- startup env validation via Joi schema
+
 ## Auth setup (Gumroad license verification)
 
 1. Copy `.env.example` to `.env`.
