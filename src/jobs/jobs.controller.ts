@@ -5,6 +5,11 @@ import { JobsService } from './jobs.service';
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
+  @Get('latest')
+  async getLatestJobsPreview() {
+    return this.jobsService.getLatestJobs(5);
+  }
+
   @Get()
   async getJobs(@Query('limit') limit?: string) {
     const parsedLimit = Number(limit ?? 50);
