@@ -51,7 +51,6 @@ const sourceSeeds: SourceSeedItem[] = [
     externalId: 'fireblocks',
     name: 'Fireblocks',
   },
-  { provider: SourceProvider.GREENHOUSE, externalId: 'rivian', name: 'Rivian' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'gitlab', name: 'GitLab' },
   {
     provider: SourceProvider.GREENHOUSE,
