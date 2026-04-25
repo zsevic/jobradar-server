@@ -99,6 +99,18 @@ Seed initial sources:
 npm run seed:sources
 ```
 
+Run a manual Greenhouse poll cycle (queues fetch + persistence jobs):
+
+```bash
+POST /api/jobs/poll/greenhouse
+```
+
+Run a manual Ashby poll cycle (queues fetch + persistence jobs):
+
+```bash
+POST /api/jobs/poll/ashby
+```
+
 ## Auth setup (Gumroad license verification)
 
 1. Copy `.env.example` to `.env`.

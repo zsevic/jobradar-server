@@ -2,15 +2,19 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { SignOptions } from 'jsonwebtoken';
+import { User } from '../database/entities/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GumroadService } from './gumroad.service';
 
 @Module({
   imports: [
     HttpModule,
     ConfigModule,
+    TypeOrmModule.forFeature([User]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -24,7 +28,7 @@ import { GumroadService } from './gumroad.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GumroadService],
-  exports: [AuthService],
+  providers: [AuthService, GumroadService, JwtAuthGuard],
+  exports: [AuthService, JwtAuthGuard, JwtModule, TypeOrmModule],
 })
 export class AuthModule {}

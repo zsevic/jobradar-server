@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
+import { FilterPreset } from './entities/filter-preset.entity';
 import { Job } from './entities/job.entity';
+import { NotificationSent } from './entities/notification-sent.entity';
 import { Source } from './entities/source.entity';
 import { User } from './entities/user.entity';
 
@@ -13,7 +15,7 @@ if (!databaseUrl) {
 export default new DataSource({
   type: 'postgres',
   url: databaseUrl,
-  entities: [User, Source, Job],
+  entities: [User, Source, Job, FilterPreset, NotificationSent],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
 });
