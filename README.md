@@ -75,6 +75,24 @@ Nest now boots with:
 - BullMQ Redis connection from `REDIS_URL`
 - startup env validation via Joi schema
 
+Run DB migrations:
+
+```bash
+npm run migration:run
+```
+
+Revert last migration:
+
+```bash
+npm run migration:revert
+```
+
+Generate migration from entity changes:
+
+```bash
+npm run migration:generate
+```
+
 ## Auth setup (Gumroad license verification)
 
 1. Copy `.env.example` to `.env`.

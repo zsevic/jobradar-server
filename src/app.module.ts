@@ -8,6 +8,9 @@ import { AuthModule } from './auth/auth.module';
 import databaseConfig from './config/database.config';
 import redisConfig from './config/redis.config';
 import { envValidationSchema } from './config/env.validation';
+import { Job } from './database/entities/job.entity';
+import { Source } from './database/entities/source.entity';
+import { User } from './database/entities/user.entity';
 
 @Module({
   imports: [
@@ -20,7 +23,7 @@ import { envValidationSchema } from './config/env.validation';
       useFactory: (config: ConfigType<typeof databaseConfig>) => ({
         type: 'postgres',
         url: config.url,
-        autoLoadEntities: true,
+        entities: [User, Source, Job],
         synchronize: false,
       }),
       inject: [databaseConfig.KEY],
