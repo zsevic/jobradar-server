@@ -33,7 +33,7 @@ const sourceSeeds: SourceSeedItem[] = [
   },
   {
     provider: SourceProvider.GREENHOUSE,
-    externalId: 'brainrocket',
+    externalId: 'brainrocketltd',
     name: 'Brainrocket',
   },
   {

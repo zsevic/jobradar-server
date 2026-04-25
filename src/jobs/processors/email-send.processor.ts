@@ -36,6 +36,9 @@ export class EmailSendProcessor extends WorkerHost {
     });
 
     if (alreadySent) {
+      this.logger.debug(
+        `Skip duplicate notification user=${payload.userId} job=${payload.jobId}`,
+      );
       return;
     }
 
@@ -48,5 +51,8 @@ export class EmailSendProcessor extends WorkerHost {
       userId: payload.userId,
       jobId: payload.jobId,
     });
+    this.logger.log(
+      `Notification persisted user=${payload.userId} job=${payload.jobId}`,
+    );
   }
 }

@@ -1,5 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Job as BullJob } from 'bullmq';
 import { Repository } from 'typeorm';
@@ -20,6 +20,7 @@ interface MatchJobPayload {
 })
 export class JobMatchProcessor extends WorkerHost {
   private readonly THRESHOLD = 70;
+  private readonly logger = new Logger(JobMatchProcessor.name);
 
   constructor(
     @InjectRepository(Job)
@@ -37,17 +38,27 @@ export class JobMatchProcessor extends WorkerHost {
 
   async process(job: BullJob<MatchJobPayload>): Promise<void> {
     const dbJob = await this.jobRepository.findOneBy({ id: job.data.jobId });
-    if (!dbJob) return;
+    if (!dbJob) {
+      this.logger.warn(`Job ${job.data.jobId} not found for matching`);
+      return;
+    }
 
     const presets = await this.filterPresetRepository.find({
       where: {
         alertsEnabled: true,
       },
     });
+    this.logger.log(
+      `Matching job ${dbJob.id} against ${presets.length} active presets`,
+    );
 
+    let enqueuedEmails = 0;
     for (const preset of presets) {
       const score = this.calculateScore(dbJob, preset);
       if (score <= this.THRESHOLD) {
+        this.logger.debug(
+          `Preset ${preset.id} below threshold for job ${dbJob.id} (score=${score})`,
+        );
         continue;
       }
 
@@ -56,11 +67,19 @@ export class JobMatchProcessor extends WorkerHost {
         jobId: dbJob.id,
       });
       if (alreadySent) {
+        this.logger.debug(
+          `Skip already-notified pair user=${preset.userId} job=${dbJob.id}`,
+        );
         continue;
       }
 
       const user = await this.userRepository.findOneBy({ id: preset.userId });
-      if (!user) continue;
+      if (!user) {
+        this.logger.warn(
+          `User ${preset.userId} not found for preset ${preset.id}`,
+        );
+        continue;
+      }
 
       await this.jobsService.enqueueEmailSend({
         userId: user.id,
@@ -68,6 +87,14 @@ export class JobMatchProcessor extends WorkerHost {
         email: user.email,
         score,
       });
+      enqueuedEmails += 1;
+      this.logger.log(
+        `Enqueued email candidate user=${user.id} job=${dbJob.id} score=${score}`,
+      );
+    }
+
+    if (enqueuedEmails === 0) {
+      this.logger.log(`No qualifying alerts for job ${dbJob.id}`);
     }
   }
 

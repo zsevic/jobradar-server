@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Job as BullJob } from 'bullmq';
 import { Repository } from 'typeorm';
@@ -20,6 +20,7 @@ interface PersistJobPayload {
 })
 export class JobProcessProcessor extends WorkerHost {
   private readonly TWO_DAYS_IN_MS = 48 * 60 * 60 * 1000;
+  private readonly logger = new Logger(JobProcessProcessor.name);
 
   constructor(
     @InjectRepository(Job)
@@ -46,6 +47,7 @@ export class JobProcessProcessor extends WorkerHost {
     });
 
     if (existing) {
+      this.logger.debug(`Skip duplicate job ${jobId}`);
       return;
     }
 
@@ -67,7 +69,11 @@ export class JobProcessProcessor extends WorkerHost {
     const now = Date.now();
     if (now - saved.postedAt.getTime() <= this.TWO_DAYS_IN_MS) {
       await this.jobsService.enqueueJobForMatching(saved.id);
+      this.logger.log(`Saved job ${saved.id} and enqueued for matching`);
+      return;
     }
+
+    this.logger.log(`Saved job ${saved.id} (older than 48h, skip matching)`);
   }
 
   private buildJobHash(job: NormalizedJob): string {
