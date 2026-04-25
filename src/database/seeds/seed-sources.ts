@@ -21,7 +21,7 @@ const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'rho', name: 'Rho' },
   {
     provider: SourceProvider.ASHBY,
-    externalId: 'ruby labs',
+    externalId: 'ruby-labs',
     name: 'Ruby Labs',
   },
   { provider: SourceProvider.ASHBY, externalId: 'deel', name: 'Deel' },
