@@ -93,6 +93,12 @@ Generate migration from entity changes:
 npm run migration:generate
 ```
 
+Seed initial sources:
+
+```bash
+npm run seed:sources
+```
+
 ## Auth setup (Gumroad license verification)
 
 1. Copy `.env.example` to `.env`.
