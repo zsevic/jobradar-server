@@ -172,4 +172,38 @@ export class JobsService {
         seniority: job.seniority,
       }));
   }
+
+  async getLatestJobsPreview(limit = 5): Promise<
+    Array<{
+      id: string;
+      title: string;
+      company: string;
+      location: string;
+      isRemote: boolean;
+      postedAt: string;
+      isNew: boolean;
+    }>
+  > {
+    const jobs = await this.jobsRepository.find({
+      order: {
+        postedAt: 'DESC',
+      },
+      take: limit,
+    });
+
+    const now = Date.now();
+    return jobs
+      .filter((job) => now - job.postedAt.getTime() <= this.TWO_DAYS_IN_MS)
+      .map((job) => ({
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        isRemote: job.isRemote,
+        postedAt: job.postedAt.toISOString(),
+        isNew:
+          now - job.postedAt.getTime() <=
+          this.NEW_JOB_WINDOW_HOURS * 60 * 60 * 1000,
+      }));
+  }
 }

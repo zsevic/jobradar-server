@@ -7,7 +7,7 @@ export class JobsController {
 
   @Get('latest')
   async getLatestJobsPreview() {
-    return this.jobsService.getLatestJobs(5);
+    return this.jobsService.getLatestJobsPreview(5);
   }
 
   @Get()
