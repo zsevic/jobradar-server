@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
+import { stripLocationFromTitle } from '../utils/strip-title-location';
 
 interface AshbyApiJob {
   id?: string;
@@ -55,13 +56,15 @@ export class AshbyAdapter implements JobProviderAdapter {
           Boolean(job.isRemote) ||
           job.workplaceType?.toLowerCase() === 'remote' ||
           location.toLowerCase().includes('remote');
+        const rawTitle = (job.title as string).trim();
+        const title = stripLocationFromTitle(rawTitle, location);
 
         return {
           provider: SourceProvider.ASHBY,
           externalId:
             job.id?.toString() ||
-            `${sourceExternalId}:${job.title}:${job.publishedAt}`,
-          title: (job.title as string).trim(),
+            `${sourceExternalId}:${rawTitle}:${job.publishedAt}`,
+          title,
           company: sourceName,
           location,
           isRemote,

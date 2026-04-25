@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
+import { stripLocationFromTitle } from '../utils/strip-title-location';
 
 interface GreenhouseJob {
   id: number;
@@ -53,11 +54,12 @@ export class GreenhouseAdapter implements JobProviderAdapter {
         const isRemote =
           locationLower.includes('remote') ||
           locationLower.includes('anywhere');
+        const title = stripLocationFromTitle(job.title.trim(), location);
 
         return {
           provider: SourceProvider.GREENHOUSE,
           externalId: String(job.id),
-          title: job.title.trim(),
+          title,
           company: sourceName,
           location,
           isRemote,
