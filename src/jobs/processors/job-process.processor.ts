@@ -11,7 +11,9 @@ import { JobsService } from '../jobs.service';
 
 interface PersistJobPayload {
   sourceId: string;
-  normalizedJob: NormalizedJob;
+  normalizedJob: Omit<NormalizedJob, 'postedAt'> & {
+    postedAt: string | Date;
+  };
 }
 
 @Injectable()
@@ -32,8 +34,23 @@ export class JobProcessProcessor extends WorkerHost {
 
   async process(job: BullJob<PersistJobPayload>): Promise<void> {
     const input = job.data.normalizedJob;
-    const jobId = `${input.provider}:${input.externalId}`;
-    const hash = this.buildJobHash(input);
+    const postedAt =
+      input.postedAt instanceof Date
+        ? input.postedAt
+        : new Date(input.postedAt);
+    if (Number.isNaN(postedAt.getTime())) {
+      this.logger.warn(
+        `Skip job with invalid postedAt value for provider=${input.provider} externalId=${input.externalId}`,
+      );
+      return;
+    }
+
+    const normalizedJob: NormalizedJob = {
+      ...input,
+      postedAt,
+    };
+    const jobId = `${normalizedJob.provider}:${normalizedJob.externalId}`;
+    const hash = this.buildJobHash(normalizedJob);
 
     const existing = await this.jobRepository.findOne({
       where: [
@@ -59,7 +76,7 @@ export class JobProcessProcessor extends WorkerHost {
       company: input.company,
       location: input.location,
       isRemote: input.isRemote,
-      postedAt: input.postedAt,
+      postedAt: normalizedJob.postedAt,
       url: input.url,
       stack: input.stack,
       seniority: input.seniority,
