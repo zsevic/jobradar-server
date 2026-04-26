@@ -3,7 +3,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
-import { MoreThanOrEqual, Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
+import { FilterPreset } from '../database/entities/filter-preset.entity';
 import { Job } from '../database/entities/job.entity';
 import { Source, SourceProvider } from '../database/entities/source.entity';
 import {
@@ -27,6 +28,8 @@ export class JobsService {
     private readonly sourceRepository: Repository<Source>,
     @InjectRepository(Job)
     private readonly jobsRepository: Repository<Job>,
+    @InjectRepository(FilterPreset)
+    private readonly filterPresetRepository: Repository<FilterPreset>,
     @InjectQueue(ASHBY_FETCH_QUEUE)
     private readonly ashbyFetchQueue: Queue,
     @InjectQueue(GREENHOUSE_FETCH_QUEUE)
@@ -165,7 +168,37 @@ export class JobsService {
     });
   }
 
-  async getLatestJobs(
+  private getRoleTitleKeywords(role: string): string[] {
+    const keywordMap: Record<string, string[]> = {
+      backend: [
+        'backend',
+        'back-end',
+        'api',
+        'server',
+        'node',
+        'python',
+        'java',
+        'php',
+        'golang',
+      ],
+      frontend: ['frontend', 'front-end', 'react', 'angular', 'vue', 'next.js'],
+      fullstack: ['fullstack', 'full-stack'],
+      mobile: ['mobile', 'android', 'ios', 'react native', 'swift', 'kotlin'],
+      devops: [
+        'devops',
+        'sre',
+        'platform',
+        'infrastructure',
+        'site reliability',
+      ],
+      qa: ['qa', 'quality assurance', 'test engineer', 'automation engineer'],
+    };
+
+    return keywordMap[role] ?? [];
+  }
+
+  async getLatestJobsForUser(
+    userId: string,
     limit = 100,
     page = 1,
   ): Promise<{
@@ -189,17 +222,77 @@ export class JobsService {
     const now = Date.now();
     const cutoffDate = new Date(now - this.TWO_DAYS_IN_MS);
     const skip = (page - 1) * limit;
+    const preset = await this.filterPresetRepository.findOneBy({ userId });
+    const roleKeywords = this.getRoleTitleKeywords(preset?.role ?? '');
 
-    const [jobs, total] = await this.jobsRepository.findAndCount({
-      where: {
-        postedAt: MoreThanOrEqual(cutoffDate),
-      },
-      order: {
-        postedAt: 'DESC',
-      },
-      take: limit,
-      skip,
-    });
+    const query = this.jobsRepository
+      .createQueryBuilder('job')
+      .where('job.postedAt >= :cutoffDate', { cutoffDate })
+      .orderBy('job.postedAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    if (preset) {
+      if (preset.seniority) {
+        query.andWhere('job.seniority = :seniority', {
+          seniority: preset.seniority,
+        });
+      }
+
+      if (preset.stack.length > 0) {
+        query.andWhere('job.stack && ARRAY[:...stack]::text[]', {
+          stack: preset.stack,
+        });
+      }
+
+      if (roleKeywords.length > 0) {
+        query.andWhere(
+          new Brackets((qb) => {
+            for (const [index, keyword] of roleKeywords.entries()) {
+              qb.orWhere(`LOWER(job.title) LIKE :roleKeyword${index}`, {
+                [`roleKeyword${index}`]: `%${keyword.toLowerCase()}%`,
+              });
+            }
+          }),
+        );
+      }
+
+      if (preset.locations.length > 0) {
+        query.andWhere(
+          new Brackets((qb) => {
+            if (preset.locations.includes('remote')) {
+              qb.orWhere('job.isRemote = true');
+              qb.orWhere('LOWER(job.location) LIKE :remoteLocation', {
+                remoteLocation: '%remote%',
+              });
+            }
+
+            if (preset.locations.includes('US')) {
+              qb.orWhere('LOWER(job.location) LIKE :usLocation1', {
+                usLocation1: '%united states%',
+              });
+              qb.orWhere('LOWER(job.location) LIKE :usLocation2', {
+                usLocation2: '%usa%',
+              });
+              qb.orWhere('LOWER(job.location) LIKE :usLocation3', {
+                usLocation3: '% us%',
+              });
+            }
+
+            if (preset.locations.includes('EU')) {
+              qb.orWhere('LOWER(job.location) LIKE :euLocation1', {
+                euLocation1: '%europe%',
+              });
+              qb.orWhere('LOWER(job.location) LIKE :euLocation2', {
+                euLocation2: '%eu%',
+              });
+            }
+          }),
+        );
+      }
+    }
+
+    const [jobs, total] = await query.getManyAndCount();
 
     const items = jobs.map((job) => ({
       id: job.id,

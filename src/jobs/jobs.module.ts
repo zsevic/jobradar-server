@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from '../auth/auth.module';
 import { FilterPreset } from '../database/entities/filter-preset.entity';
 import { Job } from '../database/entities/job.entity';
 import { NotificationSent } from '../database/entities/notification-sent.entity';
@@ -30,6 +31,7 @@ import { WorkableFetchProcessor } from './processors/workable-fetch.processor';
 @Module({
   imports: [
     HttpModule,
+    AuthModule,
     TypeOrmModule.forFeature([
       Source,
       Job,
