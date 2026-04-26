@@ -16,6 +16,7 @@ import {
   WORKABLE_FETCH_QUEUE,
 } from './jobs.constants';
 import { NormalizedJob } from './interfaces/normalized-job.interface';
+import { extractLocationFacets } from './utils/normalize-location';
 
 @Injectable()
 export class JobsService {
@@ -212,6 +213,56 @@ export class JobsService {
     return normalized;
   }
 
+  private matchesLocationFilter(
+    job: Job,
+    selectedLocations: string[],
+  ): boolean {
+    const normalizedLocations = selectedLocations
+      .map((value) => this.normalizeCountryToken(value))
+      .filter((value) => value.length > 0);
+    if (normalizedLocations.length === 0) {
+      return true;
+    }
+
+    const wantsRemote = normalizedLocations.includes(this.REMOTE_LOCATION);
+    const selectedCountries = normalizedLocations.filter(
+      (value) => value !== this.REMOTE_LOCATION,
+    );
+
+    if (wantsRemote && job.isRemote) {
+      return true;
+    }
+
+    const facets = extractLocationFacets(job.locationRaw ?? job.location);
+    const countrySet = new Set(facets.countries);
+    const tokenSet = new Set(facets.tokens);
+    const locationLower = job.location.toLowerCase();
+    const rawLower = (job.locationRaw ?? job.location).toLowerCase();
+
+    return selectedCountries.some(
+      (country) =>
+        countrySet.has(country) ||
+        tokenSet.has(country) ||
+        locationLower.includes(country) ||
+        rawLower.includes(country) ||
+        (country === 'united states' && /\b(usa|us)\b/.test(rawLower)) ||
+        (country === 'united kingdom' && /\buk\b/.test(rawLower)) ||
+        (country === 'united arab emirates' && /\buae\b/.test(rawLower)),
+    );
+  }
+
+  private matchesPresetMetadata(job: Job, preset: FilterPreset): boolean {
+    const seniorityMatches =
+      !preset.seniority || !job.seniority || job.seniority === preset.seniority;
+
+    const stackMatches =
+      preset.stack.length === 0 ||
+      job.stack.length === 0 ||
+      preset.stack.some((stack) => job.stack.includes(stack));
+
+    return seniorityMatches && stackMatches;
+  }
+
   async getLatestJobsForUser(
     userId: string,
     limit = 100,
@@ -243,23 +294,9 @@ export class JobsService {
     const query = this.jobsRepository
       .createQueryBuilder('job')
       .where('job.postedAt >= :cutoffDate', { cutoffDate })
-      .orderBy('job.postedAt', 'DESC')
-      .skip(skip)
-      .take(limit);
+      .orderBy('job.postedAt', 'DESC');
 
     if (preset) {
-      if (preset.seniority) {
-        query.andWhere('job.seniority = :seniority', {
-          seniority: preset.seniority,
-        });
-      }
-
-      if (preset.stack.length > 0) {
-        query.andWhere('job.stack && ARRAY[:...stack]::text[]', {
-          stack: preset.stack,
-        });
-      }
-
       if (roleKeywords.length > 0) {
         query.andWhere(
           new Brackets((qb) => {
@@ -290,49 +327,44 @@ export class JobsService {
           presetRole: preset.role,
         });
       }
+    }
+    if (!preset || preset.locations.length === 0) {
+      query.skip(skip).take(limit);
+      const [jobs, total] = await query.getManyAndCount();
+      const items = jobs.map((job) => ({
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        isRemote: job.isRemote,
+        postedAt: job.postedAt.toISOString(),
+        isNew:
+          now - job.postedAt.getTime() <=
+          this.NEW_JOB_WINDOW_HOURS * 60 * 60 * 1000,
+        url: job.url,
+        stack: job.stack,
+        seniority: job.seniority,
+      }));
 
-      if (preset.locations.length > 0) {
-        query.andWhere(
-          new Brackets((qb) => {
-            const normalizedLocations = preset.locations
-              .map((value) => this.normalizeCountryToken(value))
-              .filter((value) => value.length > 0);
-            const wantsRemote = normalizedLocations.includes(
-              this.REMOTE_LOCATION,
-            );
-            const countries = normalizedLocations.filter(
-              (value) => value !== this.REMOTE_LOCATION,
-            );
-
-            if (wantsRemote) {
-              qb.orWhere('job.isRemote = true');
-              qb.orWhere('LOWER(job.location) LIKE :remoteLocation', {
-                remoteLocation: '%remote%',
-              });
-            }
-
-            for (const [index, country] of countries.entries()) {
-              qb.orWhere(
-                `job."locationCountries" && ARRAY[:country${index}]::text[]`,
-                {
-                  [`country${index}`]: country,
-                },
-              );
-              qb.orWhere(
-                `job."locationTokens" && ARRAY[:token${index}]::text[]`,
-                {
-                  [`token${index}`]: country,
-                },
-              );
-            }
-          }),
-        );
-      }
+      return {
+        items,
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      };
     }
 
-    const [jobs, total] = await query.getManyAndCount();
+    const jobs = await query.getMany();
+    const filteredByMetadata = jobs.filter((job) =>
+      this.matchesPresetMetadata(job, preset),
+    );
+    const finalFiltered =
+      filteredByMetadata.length > 0 ? filteredByMetadata : jobs;
+    const total = finalFiltered.length;
+    const pagedJobs = finalFiltered.slice(skip, skip + limit);
 
-    const items = jobs.map((job) => ({
+    const items = pagedJobs.map((job) => ({
       id: job.id,
       title: job.title,
       company: job.company,
