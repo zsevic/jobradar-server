@@ -9,6 +9,7 @@ const REGION_ALIASES: Record<string, string> = {
   emea: 'emea',
   latam: 'latam',
   americas: 'americas',
+  'north america': 'north america',
   'european union': 'eu',
   eu: 'eu',
 };
@@ -50,6 +51,23 @@ const KNOWN_COUNTRIES = new Set<string>([
   'finland',
   'denmark',
   'sweden',
+  'spain',
+  'costa rica',
+  'portugal',
+  'armenia',
+  'cyprus',
+  'malta',
+  'italy',
+  'new zealand',
+  'hong kong',
+  'ireland',
+  'belgium',
+  'indonesia',
+  'norway',
+  'china',
+  'vietnam',
+  'ukraine',
+  'peru',
 ]);
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -72,6 +90,27 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   seattle: 'united states',
   washington: 'united states',
   california: 'united states',
+  bangalore: 'india',
+  madrid: 'spain',
+  dallas: 'united states',
+  texas: 'united states',
+  chicago: 'united states',
+  illinois: 'united states',
+  lisbon: 'portugal',
+  yerevan: 'armenia',
+  limassol: 'cyprus',
+  birkirkara: 'malta',
+  london: 'united kingdom',
+  auckland: 'new zealand',
+  'hong kong': 'hong kong',
+  galway: 'ireland',
+  ghent: 'belgium',
+  jakarta: 'indonesia',
+  oslo: 'norway',
+  shanghai: 'china',
+  hanoi: 'vietnam',
+  kyiv: 'ukraine',
+  lima: 'peru',
 };
 
 function normalizeToken(value: string): string {
@@ -83,6 +122,8 @@ function normalizeToken(value: string): string {
     .replace(/\bsoutheast\b\s*[-,:]?\s*/g, '')
     .replace(/\bnorthwest\b\s*[-,:]?\s*/g, '')
     .replace(/\bsouthwest\b\s*[-,:]?\s*/g, '')
+    .replace(/\bcentral\b\s*[-,:]?\s*/g, '')
+    .replace(/\bwest coast\b\s*[-,:]?\s*/g, '')
     .replace(/[.;]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
