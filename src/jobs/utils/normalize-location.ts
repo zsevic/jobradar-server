@@ -10,6 +10,7 @@ const REGION_ALIASES: Record<string, string> = {
   latam: 'latam',
   americas: 'americas',
   'north america': 'north america',
+  europe: 'europe',
   'european union': 'eu',
   eu: 'eu',
 };
@@ -68,6 +69,18 @@ const KNOWN_COUNTRIES = new Set<string>([
   'vietnam',
   'ukraine',
   'peru',
+  'greece',
+  'slovakia',
+  'romania',
+  'lithuania',
+  'austria',
+  'bulgaria',
+  'sri lanka',
+  'taiwan',
+  'nigeria',
+  'croatia',
+  'kazakhstan',
+  'philippines',
 ]);
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -111,6 +124,16 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   hanoi: 'vietnam',
   kyiv: 'ukraine',
   lima: 'peru',
+  dublin: 'ireland',
+  sofia: 'bulgaria',
+  bulgaria: 'bulgaria',
+  colombo: 'sri lanka',
+  taipei: 'taiwan',
+  lagos: 'nigeria',
+  abuja: 'nigeria',
+  split: 'croatia',
+  almaty: 'kazakhstan',
+  cebu: 'philippines',
 };
 
 function normalizeToken(value: string): string {
