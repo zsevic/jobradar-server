@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
+import { cleanLocationAfterRemoteDetection } from '../utils/clean-location';
 import { extractSeniorityFromTitle } from '../utils/extract-seniority';
 import {
   classifyRoleFromTitle,
@@ -55,11 +56,12 @@ export class GreenhouseAdapter implements JobProviderAdapter {
     return jobs
       .filter((job) => !!job.id && !!job.title && !!job.absolute_url)
       .map((job) => {
-        const location = job.location?.name?.trim() || 'Unknown';
-        const locationLower = location.toLowerCase();
+        const rawLocation = job.location?.name?.trim() || 'Unknown';
+        const locationLower = rawLocation.toLowerCase();
         const isRemote =
           locationLower.includes('remote') ||
           locationLower.includes('anywhere');
+        const location = cleanLocationAfterRemoteDetection(rawLocation);
         const title = stripLocationFromTitle(job.title.trim(), location);
         const role = classifyRoleFromTitle(title);
         const stack = extractStackFromJobText(title, job.content, role);

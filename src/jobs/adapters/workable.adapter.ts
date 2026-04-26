@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
+import { cleanLocationAfterRemoteDetection } from '../utils/clean-location';
 import { extractSeniorityFromTitle } from '../utils/extract-seniority';
 import {
   classifyRoleFromTitle,
@@ -73,8 +74,9 @@ export class WorkableAdapter implements JobProviderAdapter {
         return hasBasics && isPublished;
       })
       .map((job) => {
-        const location = this.resolveLocation(job);
-        const isRemote = this.resolveIsRemote(job, location);
+        const rawLocation = this.resolveLocation(job);
+        const isRemote = this.resolveIsRemote(job, rawLocation);
+        const location = cleanLocationAfterRemoteDetection(rawLocation);
         const rawTitle = (job.title as string).trim();
         const title = stripLocationFromTitle(rawTitle, location);
         const seniority =
