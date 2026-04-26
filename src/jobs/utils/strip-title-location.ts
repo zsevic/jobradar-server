@@ -26,5 +26,11 @@ export function stripLocationFromTitle(
     result = result.replace(trailingLocationLike, '').trim();
   }
 
+  // Also remove trailing parenthesized location hints: "(Portugal)", "(Belarus)".
+  // Keep it conservative and only strip at the very end of the title.
+  result = result
+    .replace(/\s*\(([A-Za-z][A-Za-z\s.'-]{1,60})\)\s*$/i, '')
+    .trim();
+
   return result;
 }

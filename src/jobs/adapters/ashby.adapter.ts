@@ -4,6 +4,11 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
+import { extractSeniorityFromTitle } from '../utils/extract-seniority';
+import {
+  classifyRoleFromTitle,
+  extractStackFromJobText,
+} from '../utils/extract-stack';
 import { stripLocationFromTitle } from '../utils/strip-title-location';
 
 interface AshbyApiJob {
@@ -15,6 +20,7 @@ interface AshbyApiJob {
   publishedAt?: string;
   jobUrl?: string;
   applyUrl?: string;
+  descriptionPlain?: string;
   isListed?: boolean;
 }
 
@@ -58,6 +64,7 @@ export class AshbyAdapter implements JobProviderAdapter {
           location.toLowerCase().includes('remote');
         const rawTitle = (job.title as string).trim();
         const title = stripLocationFromTitle(rawTitle, location);
+        const role = classifyRoleFromTitle(title);
 
         return {
           provider: SourceProvider.ASHBY,
@@ -70,8 +77,8 @@ export class AshbyAdapter implements JobProviderAdapter {
           isRemote,
           postedAt: new Date(job.publishedAt as string),
           url,
-          stack: [],
-          seniority: null,
+          stack: extractStackFromJobText(title, job.descriptionPlain, role),
+          seniority: extractSeniorityFromTitle(title),
         };
       })
       .filter((job) => job.url.length > 0);

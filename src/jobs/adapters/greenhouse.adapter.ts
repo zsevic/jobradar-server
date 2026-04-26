@@ -4,6 +4,11 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
+import { extractSeniorityFromTitle } from '../utils/extract-seniority';
+import {
+  classifyRoleFromTitle,
+  extractStackFromJobText,
+} from '../utils/extract-stack';
 import { stripLocationFromTitle } from '../utils/strip-title-location';
 
 interface GreenhouseJob {
@@ -14,6 +19,7 @@ interface GreenhouseJob {
   };
   updated_at?: string;
   absolute_url?: string;
+  content?: string;
 }
 
 interface GreenhouseJobsResponse {
@@ -55,6 +61,8 @@ export class GreenhouseAdapter implements JobProviderAdapter {
           locationLower.includes('remote') ||
           locationLower.includes('anywhere');
         const title = stripLocationFromTitle(job.title.trim(), location);
+        const role = classifyRoleFromTitle(title);
+        const stack = extractStackFromJobText(title, job.content, role);
 
         return {
           provider: SourceProvider.GREENHOUSE,
@@ -65,8 +73,8 @@ export class GreenhouseAdapter implements JobProviderAdapter {
           isRemote,
           postedAt: job.updated_at ? new Date(job.updated_at) : new Date(),
           url: job.absolute_url as string,
-          stack: [],
-          seniority: null,
+          stack,
+          seniority: extractSeniorityFromTitle(title),
         };
       });
   }
