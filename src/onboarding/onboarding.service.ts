@@ -28,4 +28,8 @@ export class OnboardingService {
 
     return this.filterPresetRepository.findOneByOrFail({ userId });
   }
+
+  async getFilterPreset(userId: string) {
+    return this.filterPresetRepository.findOneBy({ userId });
+  }
 }

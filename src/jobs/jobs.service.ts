@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
-import { Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { Job } from '../database/entities/job.entity';
 import { Source, SourceProvider } from '../database/entities/source.entity';
 import {
@@ -165,8 +165,11 @@ export class JobsService {
     });
   }
 
-  async getLatestJobs(limit = 100): Promise<
-    Array<{
+  async getLatestJobs(
+    limit = 100,
+    page = 1,
+  ): Promise<{
+    items: Array<{
       id: string;
       title: string;
       company: string;
@@ -177,32 +180,49 @@ export class JobsService {
       url: string;
       stack: string[];
       seniority: string | null;
-    }>
-  > {
-    const jobs = await this.jobsRepository.find({
+    }>;
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  }> {
+    const now = Date.now();
+    const cutoffDate = new Date(now - this.TWO_DAYS_IN_MS);
+    const skip = (page - 1) * limit;
+
+    const [jobs, total] = await this.jobsRepository.findAndCount({
+      where: {
+        postedAt: MoreThanOrEqual(cutoffDate),
+      },
       order: {
         postedAt: 'DESC',
       },
       take: limit,
+      skip,
     });
 
-    const now = Date.now();
-    return jobs
-      .filter((job) => now - job.postedAt.getTime() <= this.TWO_DAYS_IN_MS)
-      .map((job) => ({
-        id: job.id,
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        isRemote: job.isRemote,
-        postedAt: job.postedAt.toISOString(),
-        isNew:
-          now - job.postedAt.getTime() <=
-          this.NEW_JOB_WINDOW_HOURS * 60 * 60 * 1000,
-        url: job.url,
-        stack: job.stack,
-        seniority: job.seniority,
-      }));
+    const items = jobs.map((job) => ({
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      isRemote: job.isRemote,
+      postedAt: job.postedAt.toISOString(),
+      isNew:
+        now - job.postedAt.getTime() <=
+        this.NEW_JOB_WINDOW_HOURS * 60 * 60 * 1000,
+      url: job.url,
+      stack: job.stack,
+      seniority: job.seniority,
+    }));
+
+    return {
+      items,
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    };
   }
 
   async getLatestJobsPreview(limit = 5): Promise<

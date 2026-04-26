@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Req,
   UnauthorizedException,
@@ -21,6 +22,15 @@ interface AuthenticatedRequest extends Request {
 @UseGuards(JwtAuthGuard)
 export class OnboardingController {
   constructor(private readonly onboardingService: OnboardingService) {}
+
+  @Get('preset')
+  async getPreset(@Req() request: AuthenticatedRequest) {
+    const userId = request.user?.userId;
+    if (!userId) {
+      throw new UnauthorizedException('Missing user context');
+    }
+    return this.onboardingService.getFilterPreset(userId);
+  }
 
   @Post('preset')
   async savePreset(

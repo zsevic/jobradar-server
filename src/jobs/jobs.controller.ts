@@ -11,12 +11,16 @@ export class JobsController {
   }
 
   @Get()
-  async getJobs(@Query('limit') limit?: string) {
+  async getJobs(@Query('limit') limit?: string, @Query('page') page?: string) {
     const parsedLimit = Number(limit ?? 50);
+    const parsedPage = Number(page ?? 1);
     const safeLimit = Number.isFinite(parsedLimit)
       ? Math.min(Math.max(parsedLimit, 1), 200)
       : 50;
-    return this.jobsService.getLatestJobs(safeLimit);
+    const safePage = Number.isFinite(parsedPage)
+      ? Math.max(Math.floor(parsedPage), 1)
+      : 1;
+    return this.jobsService.getLatestJobs(safeLimit, safePage);
   }
 
   @Post('poll/ashby')
