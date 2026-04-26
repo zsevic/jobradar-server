@@ -68,6 +68,10 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   prague: 'czechia',
   warszawa: 'poland',
   atlanta: 'united states',
+  'mexico city': 'mexico',
+  seattle: 'united states',
+  washington: 'united states',
+  california: 'united states',
 };
 
 function normalizeToken(value: string): string {
@@ -75,6 +79,10 @@ function normalizeToken(value: string): string {
     .toLowerCase()
     .replace(/\boffice\b/g, '')
     .replace(/\bremote\b\s*[-,:]?\s*/g, '')
+    .replace(/\bnortheast\b\s*[-,:]?\s*/g, '')
+    .replace(/\bsoutheast\b\s*[-,:]?\s*/g, '')
+    .replace(/\bnorthwest\b\s*[-,:]?\s*/g, '')
+    .replace(/\bsouthwest\b\s*[-,:]?\s*/g, '')
     .replace(/[.;]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
