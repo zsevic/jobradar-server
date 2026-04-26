@@ -76,6 +76,7 @@ export class JobProcessProcessor extends WorkerHost {
       company: input.company,
       location: input.location,
       isRemote: input.isRemote,
+      role: input.role,
       postedAt: normalizedJob.postedAt,
       url: input.url,
       stack: input.stack,

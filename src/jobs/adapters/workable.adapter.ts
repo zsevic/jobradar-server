@@ -93,6 +93,7 @@ export class WorkableAdapter implements JobProviderAdapter {
           isRemote,
           postedAt: job.created_at ? new Date(job.created_at) : new Date(),
           url: (job.url || job.shortlink) as string,
+          role: role === 'other' ? null : role,
           stack,
           seniority,
         };

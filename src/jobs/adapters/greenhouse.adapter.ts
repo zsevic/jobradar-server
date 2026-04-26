@@ -73,6 +73,7 @@ export class GreenhouseAdapter implements JobProviderAdapter {
           isRemote,
           postedAt: job.updated_at ? new Date(job.updated_at) : new Date(),
           url: job.absolute_url as string,
+          role: role === 'other' ? null : role,
           stack,
           seniority: extractSeniorityFromTitle(title),
         };

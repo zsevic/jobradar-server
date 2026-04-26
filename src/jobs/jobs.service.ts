@@ -248,13 +248,32 @@ export class JobsService {
       if (roleKeywords.length > 0) {
         query.andWhere(
           new Brackets((qb) => {
-            for (const [index, keyword] of roleKeywords.entries()) {
-              qb.orWhere(`LOWER(job.title) LIKE :roleKeyword${index}`, {
-                [`roleKeyword${index}`]: `%${keyword.toLowerCase()}%`,
-              });
-            }
+            qb.where('job.role = :presetRole', {
+              presetRole: preset.role,
+            });
+            qb.orWhere(
+              new Brackets((legacyQb) => {
+                legacyQb.where('job.role IS NULL');
+                legacyQb.andWhere(
+                  new Brackets((keywordQb) => {
+                    for (const [index, keyword] of roleKeywords.entries()) {
+                      keywordQb.orWhere(
+                        `LOWER(job.title) LIKE :roleKeyword${index}`,
+                        {
+                          [`roleKeyword${index}`]: `%${keyword.toLowerCase()}%`,
+                        },
+                      );
+                    }
+                  }),
+                );
+              }),
+            );
           }),
         );
+      } else if (preset.role) {
+        query.andWhere('job.role = :presetRole', {
+          presetRole: preset.role,
+        });
       }
 
       if (preset.locations.length > 0) {

@@ -9,6 +9,7 @@ export interface NormalizedJob {
   isRemote: boolean;
   postedAt: Date;
   url: string;
+  role: string | null;
   stack: string[];
   seniority: string | null;
 }

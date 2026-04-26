@@ -152,7 +152,11 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
   if (/\b(devops|sre|platform engineer|site reliability)\b/i.test(normalized)) {
     return 'devops';
   }
-  if (/\b(qa|quality assurance|test automation|tester)\b/i.test(normalized)) {
+  if (
+    /\b(qa|quality assurance|test automation|tester|test engineer|sdet|software development engineer in test)\b/i.test(
+      normalized,
+    )
+  ) {
     return 'qa';
   }
 

@@ -34,6 +34,9 @@ export class Job {
   @Column({ type: 'boolean', default: false })
   isRemote!: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  role!: string | null;
+
   @Column({ type: 'text', array: true, default: '{}' })
   stack!: string[];
 

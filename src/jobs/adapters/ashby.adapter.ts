@@ -77,6 +77,7 @@ export class AshbyAdapter implements JobProviderAdapter {
           isRemote,
           postedAt: new Date(job.publishedAt as string),
           url,
+          role: role === 'other' ? null : role,
           stack: extractStackFromJobText(title, job.descriptionPlain, role),
           seniority: extractSeniorityFromTitle(title),
         };
