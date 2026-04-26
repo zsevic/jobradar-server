@@ -22,6 +22,7 @@ export class JobsService {
   private readonly logger = new Logger(JobsService.name);
   private readonly NEW_JOB_WINDOW_HOURS = 24;
   private readonly TWO_DAYS_IN_MS = 48 * 60 * 60 * 1000;
+  private readonly REMOTE_LOCATION = 'remote';
 
   constructor(
     @InjectRepository(Source)
@@ -197,6 +198,10 @@ export class JobsService {
     return keywordMap[role] ?? [];
   }
 
+  private normalizeCountryToken(value: string): string {
+    return value.trim().toLowerCase();
+  }
+
   async getLatestJobsForUser(
     userId: string,
     limit = 100,
@@ -279,31 +284,26 @@ export class JobsService {
       if (preset.locations.length > 0) {
         query.andWhere(
           new Brackets((qb) => {
-            if (preset.locations.includes('remote')) {
+            const normalizedLocations = preset.locations
+              .map((value) => this.normalizeCountryToken(value))
+              .filter((value) => value.length > 0);
+            const wantsRemote = normalizedLocations.includes(
+              this.REMOTE_LOCATION,
+            );
+            const countries = normalizedLocations.filter(
+              (value) => value !== this.REMOTE_LOCATION,
+            );
+
+            if (wantsRemote) {
               qb.orWhere('job.isRemote = true');
               qb.orWhere('LOWER(job.location) LIKE :remoteLocation', {
                 remoteLocation: '%remote%',
               });
             }
 
-            if (preset.locations.includes('US')) {
-              qb.orWhere('LOWER(job.location) LIKE :usLocation1', {
-                usLocation1: '%united states%',
-              });
-              qb.orWhere('LOWER(job.location) LIKE :usLocation2', {
-                usLocation2: '%usa%',
-              });
-              qb.orWhere('LOWER(job.location) LIKE :usLocation3', {
-                usLocation3: '% us%',
-              });
-            }
-
-            if (preset.locations.includes('EU')) {
-              qb.orWhere('LOWER(job.location) LIKE :euLocation1', {
-                euLocation1: '%europe%',
-              });
-              qb.orWhere('LOWER(job.location) LIKE :euLocation2', {
-                euLocation2: '%eu%',
+            for (const [index, country] of countries.entries()) {
+              qb.orWhere(`LOWER(job.location) LIKE :country${index}`, {
+                [`country${index}`]: `%${country}%`,
               });
             }
           }),

@@ -3,6 +3,7 @@ import {
   IsArray,
   IsBoolean,
   IsIn,
+  IsString,
   ValidateIf,
 } from 'class-validator';
 
@@ -34,8 +35,6 @@ const stackOptions = [
   'dart',
 ] as const;
 const seniorityOptions = ['junior', 'mid', 'senior', 'staff'] as const;
-const locationOptions = ['remote', 'EU', 'US'] as const;
-
 export class SaveFilterPresetDto {
   @IsIn(roles)
   role!: (typeof roles)[number];
@@ -51,8 +50,8 @@ export class SaveFilterPresetDto {
 
   @IsArray()
   @ArrayMinSize(1)
-  @IsIn(locationOptions, { each: true })
-  locations!: Array<(typeof locationOptions)[number]>;
+  @IsString({ each: true })
+  locations!: string[];
 
   @IsBoolean()
   alertsEnabled!: boolean;
