@@ -11,7 +11,7 @@ const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'n8n', name: 'n8n' },
   { provider: SourceProvider.ASHBY, externalId: 'gorgias', name: 'Gorgias' },
   { provider: SourceProvider.ASHBY, externalId: 'passport', name: 'Passport' },
-  { provider: SourceProvider.ASHBY, externalId: 'oakslab', name: 'Oakslab' },
+  { provider: SourceProvider.ASHBY, externalId: 'oakslab', name: "OAK'S LAB" },
   { provider: SourceProvider.ASHBY, externalId: 'space44', name: 'Space44' },
   {
     provider: SourceProvider.ASHBY,
@@ -34,12 +34,12 @@ const sourceSeeds: SourceSeedItem[] = [
   {
     provider: SourceProvider.GREENHOUSE,
     externalId: 'brainrocketltd',
-    name: 'Brainrocket',
+    name: 'BrainRocket',
   },
   {
     provider: SourceProvider.GREENHOUSE,
     externalId: 'sofiastars',
-    name: 'Sofiastars',
+    name: 'Sofia Stars',
   },
   {
     provider: SourceProvider.GREENHOUSE,
@@ -77,6 +77,31 @@ const sourceSeeds: SourceSeedItem[] = [
     provider: SourceProvider.GREENHOUSE,
     externalId: 'constructorknowledge',
     name: 'Constructor Knowledge',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'headquarters',
+    name: 'HeadQuarters',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'flosum',
+    name: 'Flosum',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'gomining',
+    name: 'GoMining',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'devpro',
+    name: 'Dev.Pro',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'fioneer',
+    name: 'SAP Fioneer',
   },
 ];
 

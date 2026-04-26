@@ -10,6 +10,7 @@ import {
 export enum SourceProvider {
   ASHBY = 'ashby',
   GREENHOUSE = 'greenhouse',
+  WORKABLE = 'workable',
 }
 
 @Entity('sources')

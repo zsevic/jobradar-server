@@ -9,12 +9,14 @@ import { Source } from '../database/entities/source.entity';
 import { User } from '../database/entities/user.entity';
 import { AshbyAdapter } from './adapters/ashby.adapter';
 import { GreenhouseAdapter } from './adapters/greenhouse.adapter';
+import { WorkableAdapter } from './adapters/workable.adapter';
 import {
   ASHBY_FETCH_QUEUE,
   EMAIL_SEND_QUEUE,
   GREENHOUSE_FETCH_QUEUE,
   JOB_MATCH_QUEUE,
   JOB_PROCESS_QUEUE,
+  WORKABLE_FETCH_QUEUE,
 } from './jobs.constants';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
@@ -23,6 +25,7 @@ import { EmailSendProcessor } from './processors/email-send.processor';
 import { GreenhouseFetchProcessor } from './processors/greenhouse-fetch.processor';
 import { JobMatchProcessor } from './processors/job-match.processor';
 import { JobProcessProcessor } from './processors/job-process.processor';
+import { WorkableFetchProcessor } from './processors/workable-fetch.processor';
 
 @Module({
   imports: [
@@ -37,6 +40,7 @@ import { JobProcessProcessor } from './processors/job-process.processor';
     BullModule.registerQueue(
       { name: ASHBY_FETCH_QUEUE },
       { name: GREENHOUSE_FETCH_QUEUE },
+      { name: WORKABLE_FETCH_QUEUE },
       { name: JOB_PROCESS_QUEUE },
       { name: JOB_MATCH_QUEUE },
       { name: EMAIL_SEND_QUEUE },
@@ -47,8 +51,10 @@ import { JobProcessProcessor } from './processors/job-process.processor';
     JobsService,
     AshbyAdapter,
     GreenhouseAdapter,
+    WorkableAdapter,
     AshbyFetchProcessor,
     GreenhouseFetchProcessor,
+    WorkableFetchProcessor,
     JobProcessProcessor,
     JobMatchProcessor,
     EmailSendProcessor,

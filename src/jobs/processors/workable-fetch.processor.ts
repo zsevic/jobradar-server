@@ -1,0 +1,74 @@
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Job } from 'bullmq';
+import { Repository } from 'typeorm';
+import { Source, SourceProvider } from '../../database/entities/source.entity';
+import { WorkableAdapter } from '../adapters/workable.adapter';
+import { WORKABLE_FETCH_QUEUE } from '../jobs.constants';
+import { JobsService } from '../jobs.service';
+
+interface FetchSourceJobPayload {
+  sourceId: string;
+}
+
+@Injectable()
+@Processor(WORKABLE_FETCH_QUEUE, {
+  concurrency: 2,
+})
+export class WorkableFetchProcessor extends WorkerHost {
+  private readonly logger = new Logger(WorkableFetchProcessor.name);
+
+  constructor(
+    @InjectRepository(Source)
+    private readonly sourceRepository: Repository<Source>,
+    private readonly workableAdapter: WorkableAdapter,
+    private readonly jobsService: JobsService,
+  ) {
+    super();
+  }
+
+  async process(job: Job<FetchSourceJobPayload>): Promise<void> {
+    const source = await this.sourceRepository.findOne({
+      where: {
+        id: job.data.sourceId,
+        provider: SourceProvider.WORKABLE,
+        isActive: true,
+      },
+    });
+
+    if (!source) {
+      return;
+    }
+
+    try {
+      const normalizedJobs = await this.workableAdapter.fetchJobs(
+        source.externalId,
+        source.name,
+      );
+
+      for (const normalizedJob of normalizedJobs) {
+        await this.jobsService.enqueueJobForProcessing({
+          sourceId: source.id,
+          normalizedJob,
+        });
+      }
+
+      source.lastSyncedAt = new Date();
+      source.syncStatus = 'success';
+      await this.sourceRepository.save(source);
+      this.logger.log(
+        `Queued ${normalizedJobs.length} jobs from source ${source.externalId}`,
+      );
+    } catch (error) {
+      source.syncStatus = 'error';
+      await this.sourceRepository.save(source);
+      this.logger.error(
+        `Failed to fetch source ${source.externalId}: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
+      throw error;
+    }
+  }
+}

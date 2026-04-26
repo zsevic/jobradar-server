@@ -111,6 +111,12 @@ Run a manual Ashby poll cycle (queues fetch + persistence jobs):
 POST /api/jobs/poll/ashby
 ```
 
+Run a manual Workable poll cycle (queues fetch + persistence jobs):
+
+```bash
+POST /api/jobs/poll/workable
+```
+
 ## Auth setup (Gumroad license verification)
 
 1. Copy `.env.example` to `.env`.

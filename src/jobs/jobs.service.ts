@@ -12,6 +12,7 @@ import {
   GREENHOUSE_FETCH_QUEUE,
   JOB_MATCH_QUEUE,
   JOB_PROCESS_QUEUE,
+  WORKABLE_FETCH_QUEUE,
 } from './jobs.constants';
 import { NormalizedJob } from './interfaces/normalized-job.interface';
 
@@ -30,6 +31,8 @@ export class JobsService {
     private readonly ashbyFetchQueue: Queue,
     @InjectQueue(GREENHOUSE_FETCH_QUEUE)
     private readonly greenhouseFetchQueue: Queue,
+    @InjectQueue(WORKABLE_FETCH_QUEUE)
+    private readonly workableFetchQueue: Queue,
     @InjectQueue(JOB_PROCESS_QUEUE)
     private readonly jobProcessQueue: Queue,
     @InjectQueue(JOB_MATCH_QUEUE)
@@ -42,6 +45,7 @@ export class JobsService {
   async scheduleSourcePolling(): Promise<void> {
     await this.enqueueAshbySources();
     await this.enqueueGreenhouseSources();
+    await this.enqueueWorkableSources();
   }
 
   async enqueueAshbySources(): Promise<void> {
@@ -98,6 +102,34 @@ export class JobsService {
     }
 
     this.logger.log(`Enqueued ${greenhouseSources.length} greenhouse sources`);
+  }
+
+  async enqueueWorkableSources(): Promise<void> {
+    const workableSources = await this.sourceRepository.find({
+      where: {
+        provider: SourceProvider.WORKABLE,
+        isActive: true,
+      },
+      order: {
+        name: 'ASC',
+      },
+    });
+
+    for (const [index, source] of workableSources.entries()) {
+      await this.workableFetchQueue.add(
+        'fetch-source',
+        {
+          sourceId: source.id,
+        },
+        {
+          delay: index * 400,
+          removeOnComplete: true,
+          removeOnFail: 200,
+        },
+      );
+    }
+
+    this.logger.log(`Enqueued ${workableSources.length} workable sources`);
   }
 
   async enqueueJobForProcessing(payload: {

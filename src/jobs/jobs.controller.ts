@@ -30,4 +30,10 @@ export class JobsController {
     await this.jobsService.enqueueGreenhouseSources();
     return { status: 'queued' };
   }
+
+  @Post('poll/workable')
+  async pollWorkable() {
+    await this.jobsService.enqueueWorkableSources();
+    return { status: 'queued' };
+  }
 }
