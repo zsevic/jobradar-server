@@ -76,6 +76,7 @@ export class AshbyAdapter implements JobProviderAdapter {
           title,
           company: sourceName,
           location,
+          locationRaw: rawLocation,
           isRemote,
           postedAt: new Date(job.publishedAt as string),
           url,

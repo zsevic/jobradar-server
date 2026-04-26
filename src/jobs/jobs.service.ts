@@ -199,7 +199,17 @@ export class JobsService {
   }
 
   private normalizeCountryToken(value: string): string {
-    return value.trim().toLowerCase();
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'us' || normalized === 'usa') {
+      return 'united states';
+    }
+    if (normalized === 'uk') {
+      return 'united kingdom';
+    }
+    if (normalized === 'uae') {
+      return 'united arab emirates';
+    }
+    return normalized;
   }
 
   async getLatestJobsForUser(
@@ -302,9 +312,18 @@ export class JobsService {
             }
 
             for (const [index, country] of countries.entries()) {
-              qb.orWhere(`LOWER(job.location) LIKE :country${index}`, {
-                [`country${index}`]: `%${country}%`,
-              });
+              qb.orWhere(
+                `job."locationCountries" && ARRAY[:country${index}]::text[]`,
+                {
+                  [`country${index}`]: country,
+                },
+              );
+              qb.orWhere(
+                `job."locationTokens" && ARRAY[:token${index}]::text[]`,
+                {
+                  [`token${index}`]: country,
+                },
+              );
             }
           }),
         );

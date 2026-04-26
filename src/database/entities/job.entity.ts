@@ -31,6 +31,18 @@ export class Job {
   @Column({ type: 'varchar' })
   location!: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  locationRaw!: string | null;
+
+  @Column({ type: 'text', array: true, default: '{}' })
+  locationTokens!: string[];
+
+  @Column({ type: 'text', array: true, default: '{}' })
+  locationCountries!: string[];
+
+  @Column({ type: 'text', array: true, default: '{}' })
+  locationRegions!: string[];
+
   @Column({ type: 'boolean', default: false })
   isRemote!: boolean;
 

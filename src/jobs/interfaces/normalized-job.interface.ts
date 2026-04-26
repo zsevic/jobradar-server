@@ -6,6 +6,7 @@ export interface NormalizedJob {
   title: string;
   company: string;
   location: string;
+  locationRaw: string;
   isRemote: boolean;
   postedAt: Date;
   url: string;

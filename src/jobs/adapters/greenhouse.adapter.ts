@@ -72,6 +72,7 @@ export class GreenhouseAdapter implements JobProviderAdapter {
           title,
           company: sourceName,
           location,
+          locationRaw: rawLocation,
           isRemote,
           postedAt: job.updated_at ? new Date(job.updated_at) : new Date(),
           url: job.absolute_url as string,
