@@ -20,7 +20,37 @@ const COUNTRY_ALIASES: Record<string, string> = {
   uk: 'united kingdom',
   uae: 'united arab emirates',
   'czech republic': 'czechia',
+  'south korea': 'south korea',
+  'republic of korea': 'south korea',
 };
+
+const KNOWN_COUNTRIES = new Set<string>([
+  'united states',
+  'united kingdom',
+  'united arab emirates',
+  'serbia',
+  'germany',
+  'france',
+  'netherlands',
+  'poland',
+  'india',
+  'switzerland',
+  'south africa',
+  'south korea',
+  'czechia',
+  'israel',
+  'singapore',
+  'japan',
+  'australia',
+  'canada',
+  'colombia',
+  'argentina',
+  'mexico',
+  'brazil',
+  'finland',
+  'denmark',
+  'sweden',
+]);
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
   belgrade: 'serbia',
@@ -44,6 +74,7 @@ function normalizeToken(value: string): string {
   return value
     .toLowerCase()
     .replace(/\boffice\b/g, '')
+    .replace(/\bremote\b\s*[-,:]?\s*/g, '')
     .replace(/[.;]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -82,24 +113,7 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       }
 
       const mappedCountry = COUNTRY_ALIASES[bit] ?? bit;
-      if (
-        mappedCountry.includes('united') ||
-        mappedCountry.includes('kingdom') ||
-        mappedCountry.includes('serbia') ||
-        mappedCountry.includes('germany') ||
-        mappedCountry.includes('france') ||
-        mappedCountry.includes('netherlands') ||
-        mappedCountry.includes('poland') ||
-        mappedCountry.includes('india') ||
-        mappedCountry.includes('switzerland') ||
-        mappedCountry.includes('south africa') ||
-        mappedCountry.includes('czechia') ||
-        mappedCountry.includes('israel') ||
-        mappedCountry.includes('singapore') ||
-        mappedCountry.includes('japan') ||
-        mappedCountry.includes('australia') ||
-        mappedCountry.includes('canada')
-      ) {
+      if (KNOWN_COUNTRIES.has(mappedCountry)) {
         countries.add(mappedCountry);
         tokens.add(mappedCountry);
       }
