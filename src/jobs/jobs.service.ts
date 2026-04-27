@@ -16,13 +16,12 @@ import {
   WORKABLE_FETCH_QUEUE,
 } from './jobs.constants';
 import { NormalizedJob } from './interfaces/normalized-job.interface';
-import { extractLocationFacets } from './utils/normalize-location';
+import { matchesJobLocationPreset } from './utils/match-location-preset';
 
 @Injectable()
 export class JobsService {
   private readonly logger = new Logger(JobsService.name);
   private readonly NEW_JOB_WINDOW_HOURS = 24;
-  private readonly REMOTE_LOCATION = 'remote';
 
   constructor(
     @InjectRepository(Source)
@@ -194,58 +193,6 @@ export class JobsService {
     return keywordMap[role] ?? [];
   }
 
-  private normalizeCountryToken(value: string): string {
-    const normalized = value.trim().toLowerCase();
-    if (normalized === 'us' || normalized === 'usa') {
-      return 'united states';
-    }
-    if (normalized === 'uk') {
-      return 'united kingdom';
-    }
-    if (normalized === 'uae') {
-      return 'united arab emirates';
-    }
-    return normalized;
-  }
-
-  private matchesLocationFilter(
-    job: Job,
-    selectedLocations: string[],
-  ): boolean {
-    const normalizedLocations = selectedLocations
-      .map((value) => this.normalizeCountryToken(value))
-      .filter((value) => value.length > 0);
-    if (normalizedLocations.length === 0) {
-      return true;
-    }
-
-    const wantsRemote = normalizedLocations.includes(this.REMOTE_LOCATION);
-    const selectedCountries = normalizedLocations.filter(
-      (value) => value !== this.REMOTE_LOCATION,
-    );
-
-    if (wantsRemote && job.isRemote) {
-      return true;
-    }
-
-    const facets = extractLocationFacets(job.locationRaw ?? job.location);
-    const countrySet = new Set(facets.countries);
-    const tokenSet = new Set(facets.tokens);
-    const locationLower = job.location.toLowerCase();
-    const rawLower = (job.locationRaw ?? job.location).toLowerCase();
-
-    return selectedCountries.some(
-      (country) =>
-        countrySet.has(country) ||
-        tokenSet.has(country) ||
-        locationLower.includes(country) ||
-        rawLower.includes(country) ||
-        (country === 'united states' && /\b(usa|us)\b/.test(rawLower)) ||
-        (country === 'united kingdom' && /\buk\b/.test(rawLower)) ||
-        (country === 'united arab emirates' && /\buae\b/.test(rawLower)),
-    );
-  }
-
   private matchesPresetMetadata(job: Job, preset: FilterPreset): boolean {
     const seniorityMatches =
       !preset.seniority || !job.seniority || job.seniority === preset.seniority;
@@ -354,12 +301,9 @@ export class JobsService {
     }
 
     const jobs = await query.getMany();
-    let filtered = jobs;
-    if (preset.locations.length > 0) {
-      filtered = filtered.filter((job) =>
-        this.matchesLocationFilter(job, preset.locations),
-      );
-    }
+    let filtered = jobs.filter((job) =>
+      matchesJobLocationPreset(job, preset.locations),
+    );
     filtered = filtered.filter((job) =>
       this.matchesPresetMetadata(job, preset),
     );

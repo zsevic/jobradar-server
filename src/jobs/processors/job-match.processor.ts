@@ -9,6 +9,7 @@ import { NotificationSent } from '../../database/entities/notification-sent.enti
 import { User } from '../../database/entities/user.entity';
 import { JOB_MATCH_QUEUE } from '../jobs.constants';
 import { JobsService } from '../jobs.service';
+import { matchesJobLocationPreset } from '../utils/match-location-preset';
 
 interface MatchJobPayload {
   jobId: string;
@@ -101,7 +102,6 @@ export class JobMatchProcessor extends WorkerHost {
   private calculateScore(job: Job, preset: FilterPreset): number {
     let score = 0;
     const title = job.title.toLowerCase();
-    const location = job.location.toLowerCase();
     const stack = job.stack.map((entry) => entry.toLowerCase());
 
     if (title.includes(preset.role.toLowerCase())) {
@@ -124,15 +124,7 @@ export class JobMatchProcessor extends WorkerHost {
       score += 20;
     }
 
-    const hasLocationMatch = preset.locations.some((preferredLocation) => {
-      const normalized = preferredLocation.toLowerCase();
-      if (normalized === 'remote') {
-        return job.isRemote || location.includes('remote');
-      }
-      return location.includes(normalized.toLowerCase());
-    });
-
-    if (hasLocationMatch) {
+    if (matchesJobLocationPreset(job, preset.locations)) {
       score += 20;
     }
 

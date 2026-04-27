@@ -29,7 +29,8 @@ export class OnboardingController {
     if (!userId) {
       throw new UnauthorizedException('Missing user context');
     }
-    return this.onboardingService.getFilterPreset(userId);
+    const preset = await this.onboardingService.getFilterPreset(userId);
+    return preset ?? null;
   }
 
   @Post('preset')
