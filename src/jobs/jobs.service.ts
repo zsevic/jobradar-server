@@ -22,7 +22,6 @@ import { extractLocationFacets } from './utils/normalize-location';
 export class JobsService {
   private readonly logger = new Logger(JobsService.name);
   private readonly NEW_JOB_WINDOW_HOURS = 24;
-  private readonly TWO_DAYS_IN_MS = 48 * 60 * 60 * 1000;
   private readonly REMOTE_LOCATION = 'remote';
 
   constructor(
@@ -177,11 +176,7 @@ export class JobsService {
         'back-end',
         'api',
         'server',
-        'node',
-        'python',
-        'java',
-        'php',
-        'golang',
+        'server-side',
       ],
       frontend: ['frontend', 'front-end', 'react', 'angular', 'vue', 'next.js'],
       fullstack: ['fullstack', 'full-stack'],
@@ -255,10 +250,14 @@ export class JobsService {
     const seniorityMatches =
       !preset.seniority || !job.seniority || job.seniority === preset.seniority;
 
-    const stackMatches =
-      preset.stack.length === 0 ||
-      job.stack.length === 0 ||
-      preset.stack.some((stack) => job.stack.includes(stack));
+    const rolesWithoutStack = ['devops', 'qa'];
+    const stackRequired =
+      !rolesWithoutStack.includes(preset.role) && preset.stack.length > 0;
+
+    const stackMatches = stackRequired
+      ? preset.stack.some((stack) => job.stack.includes(stack))
+      : preset.stack.length === 0 ||
+        preset.stack.some((stack) => job.stack.includes(stack));
 
     return seniorityMatches && stackMatches;
   }
@@ -286,14 +285,12 @@ export class JobsService {
     totalPages: number;
   }> {
     const now = Date.now();
-    const cutoffDate = new Date(now - this.TWO_DAYS_IN_MS);
     const skip = (page - 1) * limit;
     const preset = await this.filterPresetRepository.findOneBy({ userId });
     const roleKeywords = this.getRoleTitleKeywords(preset?.role ?? '');
 
     const query = this.jobsRepository
       .createQueryBuilder('job')
-      .where('job.postedAt >= :cutoffDate', { cutoffDate })
       .orderBy('job.postedAt', 'DESC');
 
     if (preset) {
@@ -328,7 +325,8 @@ export class JobsService {
         });
       }
     }
-    if (!preset || preset.locations.length === 0) {
+
+    if (!preset) {
       query.skip(skip).take(limit);
       const [jobs, total] = await query.getManyAndCount();
       const items = jobs.map((job) => ({
@@ -356,13 +354,17 @@ export class JobsService {
     }
 
     const jobs = await query.getMany();
-    const filteredByMetadata = jobs.filter((job) =>
+    let filtered = jobs;
+    if (preset.locations.length > 0) {
+      filtered = filtered.filter((job) =>
+        this.matchesLocationFilter(job, preset.locations),
+      );
+    }
+    filtered = filtered.filter((job) =>
       this.matchesPresetMetadata(job, preset),
     );
-    const finalFiltered =
-      filteredByMetadata.length > 0 ? filteredByMetadata : jobs;
-    const total = finalFiltered.length;
-    const pagedJobs = finalFiltered.slice(skip, skip + limit);
+    const total = filtered.length;
+    const pagedJobs = filtered.slice(skip, skip + limit);
 
     const items = pagedJobs.map((job) => ({
       id: job.id,
@@ -407,18 +409,16 @@ export class JobsService {
     });
 
     const now = Date.now();
-    return jobs
-      .filter((job) => now - job.postedAt.getTime() <= this.TWO_DAYS_IN_MS)
-      .map((job) => ({
-        id: job.id,
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        isRemote: job.isRemote,
-        postedAt: job.postedAt.toISOString(),
-        isNew:
-          now - job.postedAt.getTime() <=
-          this.NEW_JOB_WINDOW_HOURS * 60 * 60 * 1000,
-      }));
+    return jobs.map((job) => ({
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      isRemote: job.isRemote,
+      postedAt: job.postedAt.toISOString(),
+      isNew:
+        now - job.postedAt.getTime() <=
+        this.NEW_JOB_WINDOW_HOURS * 60 * 60 * 1000,
+    }));
   }
 }
