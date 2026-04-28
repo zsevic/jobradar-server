@@ -1,0 +1,17 @@
+[
+  {
+    "provider": "greenhouse",
+    "externalId": "gitlab",
+    "name": "GitLab"
+  },
+  {
+    "provider": "ashby",
+    "externalId": "notion",
+    "name": "Notion"
+  },
+  {
+    "provider": "workable",
+    "externalId": "huggingface",
+    "name": "Hugging Face"
+  }
+]
