@@ -84,7 +84,6 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'junior', name: 'Junior' },
   { provider: SourceProvider.ASHBY, externalId: 'echomark', name: 'Echomark' },
   { provider: SourceProvider.ASHBY, externalId: 'grepr', name: 'Grepr' },
-  { provider: SourceProvider.ASHBY, externalId: 'airapps', name: 'Air Apps' },
   { provider: SourceProvider.ASHBY, externalId: 'bevel', name: 'Bevel' },
   { provider: SourceProvider.ASHBY, externalId: 'sentient', name: 'Sentient' },
   { provider: SourceProvider.ASHBY, externalId: 'tennr', name: 'Tennr' },
