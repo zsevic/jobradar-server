@@ -88,11 +88,6 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'bevel', name: 'Bevel' },
   { provider: SourceProvider.ASHBY, externalId: 'sentient', name: 'Sentient' },
   { provider: SourceProvider.ASHBY, externalId: 'tennr', name: 'Tennr' },
-  {
-    provider: SourceProvider.ASHBY,
-    externalId: 'go-augment',
-    name: 'Go Augment',
-  },
   { provider: SourceProvider.ASHBY, externalId: 'happl', name: 'Happl' },
   { provider: SourceProvider.ASHBY, externalId: 'nash', name: 'Nash' },
   {
@@ -419,7 +414,6 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'constructor-1',
     name: 'Constructor',
   },
-  { provider: SourceProvider.WORKABLE, externalId: 'grf-ai', name: 'GRF AI' },
   {
     provider: SourceProvider.WORKABLE,
     externalId: 'degica-hiring',
