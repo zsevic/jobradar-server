@@ -103,6 +103,24 @@ export const sourceSeeds: SourceSeedItem[] = [
   },
   { provider: SourceProvider.ASHBY, externalId: 'tango', name: 'Tango' },
   { provider: SourceProvider.ASHBY, externalId: 'krea', name: 'Krea' },
+  { provider: SourceProvider.ASHBY, externalId: 'coderabbit', name: 'CodeRabbit' },
+  { provider: SourceProvider.ASHBY, externalId: 'ivo-inc', name: 'Ivo' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'fundamental',
+    name: 'Fundamental',
+  },
+  { provider: SourceProvider.ASHBY, externalId: 'sardine', name: 'Sardine' },
+  { provider: SourceProvider.ASHBY, externalId: 'kraken', name: 'Kraken' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'uncountable',
+    name: 'Uncountable',
+  },
+  { provider: SourceProvider.ASHBY, externalId: 'hudu', name: 'Hudu' },
+  { provider: SourceProvider.ASHBY, externalId: 'zowie', name: 'Zowie' },
+  { provider: SourceProvider.ASHBY, externalId: 'xpreso', name: 'Xpreso' },
+  { provider: SourceProvider.ASHBY, externalId: 'phonely', name: 'Phonely' },
 
   {
     provider: SourceProvider.GREENHOUSE,
@@ -241,6 +259,36 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'oura',
     name: 'Oura',
   },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'rhinofederatedcomputing',
+    name: 'Rhino Federated Computing',
+  },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'nice', name: 'Nice' },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'ecoatmgazelle',
+    name: 'ecoATM Gazelle',
+  },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'navvis', name: 'NavVis' },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'brandwatch',
+    name: 'Brandwatch',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'veeamsoftware',
+    name: 'Veeam',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'delphiconsulting',
+    name: 'Delphi Consulting',
+  },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'corelight', name: 'Corelight' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'kerv', name: 'Kerv' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'nearform', name: 'Nearform' },
   {
     provider: SourceProvider.WORKABLE,
     externalId: 'headquarters',
@@ -449,6 +497,42 @@ export const sourceSeeds: SourceSeedItem[] = [
     provider: SourceProvider.WORKABLE,
     externalId: 'withplum',
     name: 'WithPlum',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'pavago', name: 'Pavago' },
+  { provider: SourceProvider.WORKABLE, externalId: 'finartix', name: 'Finartix' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'hrfactory-lithuania',
+    name: 'HR Factory Lithuania',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'methods', name: 'Methods' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'xolo-careers',
+    name: 'Xolo',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'vecten', name: 'Vecten' },
+  { provider: SourceProvider.WORKABLE, externalId: '28stone', name: '28Stone' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'dsquares-loyalty-dmcc',
+    name: 'Dsquares Loyalty DMCC',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'justone-gr',
+    name: 'JustOne',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'triglocon', name: 'Triglocon' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'telestream',
+    name: 'Telestream',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'therapynotes',
+    name: 'TherapyNotes',
   },
 ];
 
