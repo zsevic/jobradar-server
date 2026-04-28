@@ -81,6 +81,36 @@ const sourceSeeds: SourceSeedItem[] = [
   },
   { provider: SourceProvider.ASHBY, externalId: 'eliseai', name: 'Elise AI' },
 
+  { provider: SourceProvider.ASHBY, externalId: 'rain', name: 'Rain' },
+  { provider: SourceProvider.ASHBY, externalId: 'junior', name: 'Junior' },
+  { provider: SourceProvider.ASHBY, externalId: 'echomark', name: 'Echomark' },
+  { provider: SourceProvider.ASHBY, externalId: 'grepr', name: 'Grepr' },
+  { provider: SourceProvider.ASHBY, externalId: 'airapps', name: 'Air Apps' },
+  { provider: SourceProvider.ASHBY, externalId: 'bevel', name: 'Bevel' },
+  { provider: SourceProvider.ASHBY, externalId: 'sentient', name: 'Sentient' },
+  { provider: SourceProvider.ASHBY, externalId: 'tennr', name: 'Tennr' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'go-augment',
+    name: 'Go Augment',
+  },
+  { provider: SourceProvider.ASHBY, externalId: 'happl', name: 'Happl' },
+  { provider: SourceProvider.ASHBY, externalId: 'nash', name: 'Nash' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'talentsafari',
+    name: 'Talent Safari',
+  },
+  { provider: SourceProvider.ASHBY, externalId: 'exa', name: 'Exa' },
+  { provider: SourceProvider.ASHBY, externalId: 'litellm', name: 'LiteLLM' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'anything',
+    name: 'Anything',
+  },
+  { provider: SourceProvider.ASHBY, externalId: 'tango', name: 'Tango' },
+  { provider: SourceProvider.ASHBY, externalId: 'krea', name: 'Krea' },
+
   {
     provider: SourceProvider.GREENHOUSE,
     externalId: 'telesign',
@@ -177,6 +207,46 @@ const sourceSeeds: SourceSeedItem[] = [
     provider: SourceProvider.GREENHOUSE,
     externalId: 'equilibriumenergy',
     name: 'Equilibrium Energy',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'wheely',
+    name: 'Wheely',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'faire',
+    name: 'Faire',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'caronsale',
+    name: 'CarOnSale',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'tvscientificpoweredbypinterest',
+    name: 'TV Scientific',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'dv01',
+    name: 'dv01',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'tailscale',
+    name: 'Tailscale',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'crunchyroll',
+    name: 'Crunchyroll',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'oura',
+    name: 'Oura',
   },
   {
     provider: SourceProvider.WORKABLE,
@@ -313,6 +383,80 @@ const sourceSeeds: SourceSeedItem[] = [
     provider: SourceProvider.WORKABLE,
     externalId: 'curology',
     name: 'Curology',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'servant',
+    name: 'Servant',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'kupa-global',
+    name: 'Kupa Global',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'maxana', name: 'Maxana' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'pulse-labs',
+    name: 'Pulse Labs',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'gotymex',
+    name: 'GoTymex',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'hilobyaktiia',
+    name: 'Hilo by Axtiia',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'architus',
+    name: 'Architus',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'constructor-1',
+    name: 'Constructor',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'grf-ai', name: 'GRF AI' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'degica-hiring',
+    name: 'Degica',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'cogna', name: 'Cogna' },
+  { provider: SourceProvider.WORKABLE, externalId: 'akeno', name: 'Akeno' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'fuseenergy',
+    name: 'Fuse Energy',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'helloaoa',
+    name: 'Hello AOA',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'alfadocs',
+    name: 'AlfaDocs',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'walletconnect',
+    name: 'WalletConnect',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'flowdesk',
+    name: 'Flowdesk',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'withplum',
+    name: 'WithPlum',
   },
 ];
 
