@@ -64,12 +64,26 @@ function normalizeText(value: string): string {
 }
 
 function hasGoLanguageMention(input: string): boolean {
-  return /\bgolang\b|\bgo\s+developer\b|\bgo\s+engineer\b|\bgo\s+backend\b/i.test(
+  return /\bgolang\b|\bgo\s+lang\b|\bgo\s+developer\b|\bgo\s+engineer\b|\bgo\s+backend\b|\bgo\s+programmer\b/i.test(
     input,
   );
 }
 
-function detectStackInText(input: string): Set<string> {
+/** Standalone "Go" as a language token (title-focused; excludes common non-tech phrases). */
+function standaloneGoLanguageInText(normalized: string): boolean {
+  if (/\bgo[-\s]to[-\s]market\b/i.test(normalized)) {
+    return false;
+  }
+  if (/\bgo\s+live\b/i.test(normalized)) {
+    return false;
+  }
+  return /\bgo\b/.test(normalized);
+}
+
+function detectStackInText(
+  input: string,
+  options?: { standaloneGoInTitle?: boolean },
+): Set<string> {
   const normalized = normalizeText(input);
   const detected = new Set<string>();
 
@@ -87,6 +101,10 @@ function detectStackInText(input: string): Set<string> {
     detected.add('golang');
   }
 
+  if (options?.standaloneGoInTitle && standaloneGoLanguageInText(normalized)) {
+    detected.add('golang');
+  }
+
   return detected;
 }
 
@@ -95,7 +113,7 @@ export function extractStackFromJobText(
   description?: string | null,
   role: JobRoleKind = 'other',
 ): string[] {
-  const fromTitle = detectStackInText(title);
+  const fromTitle = detectStackInText(title, { standaloneGoInTitle: true });
   const fromDescription = description
     ? detectStackInText(description)
     : new Set<string>();
