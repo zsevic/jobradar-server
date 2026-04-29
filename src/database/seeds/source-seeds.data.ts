@@ -121,6 +121,41 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'zowie', name: 'Zowie' },
   { provider: SourceProvider.ASHBY, externalId: 'xpreso', name: 'Xpreso' },
   { provider: SourceProvider.ASHBY, externalId: 'phonely', name: 'Phonely' },
+  { provider: SourceProvider.ASHBY, externalId: 'colonist', name: 'Colonist' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'Superhuman%20Platform%20Inc',
+    name: 'Superhuman Platform Inc',
+  },
+  { provider: SourceProvider.ASHBY, externalId: 'speak', name: 'Speak' },
+  { provider: SourceProvider.ASHBY, externalId: 'acorns', name: 'Acorns' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'nord-security',
+    name: 'Nord Security',
+  },
+  { provider: SourceProvider.ASHBY, externalId: 'NationGraph', name: 'NationGraph' },
+  { provider: SourceProvider.ASHBY, externalId: 'assured', name: 'Assured' },
+  { provider: SourceProvider.ASHBY, externalId: 'scribe', name: 'Scribe' },
+  { provider: SourceProvider.ASHBY, externalId: 'bio', name: 'Bio' },
+  { provider: SourceProvider.ASHBY, externalId: 'mexdigital', name: 'MexDigital' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'junipersquare',
+    name: 'Juniper Square',
+  },
+  { provider: SourceProvider.ASHBY, externalId: 'sweedpos.com', name: 'Sweed' },
+  { provider: SourceProvider.ASHBY, externalId: 'flipper', name: 'Flipper' },
+  { provider: SourceProvider.ASHBY, externalId: 'known', name: 'Known' },
+  { provider: SourceProvider.ASHBY, externalId: 'sana-roles', name: 'Sana' },
+  { provider: SourceProvider.ASHBY, externalId: 'togal-ai', name: 'Togal AI' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'polymarket',
+    name: 'Polymarket',
+  },
+  { provider: SourceProvider.ASHBY, externalId: 'hiive', name: 'Hiive' },
+  { provider: SourceProvider.ASHBY, externalId: 'kestra', name: 'Kestra' },
 
   {
     provider: SourceProvider.GREENHOUSE,
@@ -289,6 +324,33 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.GREENHOUSE, externalId: 'corelight', name: 'Corelight' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'kerv', name: 'Kerv' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'nearform', name: 'Nearform' },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'shifttechnology',
+    name: 'Shift Technology',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'justmarkets',
+    name: 'JustMarkets',
+  },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'betsson', name: 'Betsson' },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'abacusinsights',
+    name: 'Abacus Insights',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'terrapowerllc',
+    name: 'TerraPower',
+  },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'boku', name: 'Boku' },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'neuraflash',
+    name: 'NeuraFlash',
+  },
   {
     provider: SourceProvider.WORKABLE,
     externalId: 'headquarters',
@@ -534,5 +596,37 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'therapynotes',
     name: 'TherapyNotes',
   },
+  { provider: SourceProvider.WORKABLE, externalId: 'serva', name: 'Serva' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'tecknoworks',
+    name: 'Tecknoworks',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'faircom', name: 'FairCom' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'colibrix-one',
+    name: 'Colibrix One',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'airhelp', name: 'AirHelp' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'clearjunction',
+    name: 'Clear Junction',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'zipdev', name: 'Zipdev' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'thepixelocracy',
+    name: 'The Pixelocracy',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'hulcan', name: 'Hulcan' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'skylight-frame',
+    name: 'Skylight Frame',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'a2mac1', name: 'A2MAC1' },
+  { provider: SourceProvider.WORKABLE, externalId: 'connexity', name: 'Connexity' },
 ];
 
