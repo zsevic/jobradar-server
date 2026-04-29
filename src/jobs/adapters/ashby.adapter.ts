@@ -4,10 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
-import {
-  cleanLocationAfterRemoteDetection,
-  formatRawLocation,
-} from '../utils/clean-location';
+import { formatRawLocation, resolveNormalizedLocation } from '../utils/clean-location';
 import { extractSeniorityFromTitle } from '../utils/extract-seniority';
 import {
   classifyRoleFromTitle,
@@ -62,11 +59,15 @@ export class AshbyAdapter implements JobProviderAdapter {
       .map((job) => {
         const rawLocation = formatRawLocation(job.location?.trim() || 'Unknown');
         const url = job.jobUrl || job.applyUrl || '';
-        const isRemote =
+        const remoteIndicatedByProvider =
           Boolean(job.isRemote) ||
-          job.workplaceType?.toLowerCase() === 'remote' ||
+          job.workplaceType?.toLowerCase() === 'remote';
+        const location = resolveNormalizedLocation(rawLocation, {
+          remoteIndicatedByProvider,
+        });
+        const isRemote =
+          remoteIndicatedByProvider ||
           rawLocation.toLowerCase().includes('remote');
-        const location = cleanLocationAfterRemoteDetection(rawLocation);
         const rawTitle = (job.title as string).trim();
         const title = stripLocationFromTitle(rawTitle, location);
         const role = classifyRoleFromTitle(title);
@@ -80,6 +81,7 @@ export class AshbyAdapter implements JobProviderAdapter {
           company: sourceName,
           location,
           locationRaw: rawLocation,
+          remoteIndicatedByProvider,
           isRemote,
           postedAt: new Date(job.publishedAt as string),
           url,

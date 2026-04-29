@@ -151,6 +151,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   },
   { provider: SourceProvider.ASHBY, externalId: 'hiive', name: 'Hiive' },
   { provider: SourceProvider.ASHBY, externalId: 'kestra', name: 'Kestra' },
+  { provider: SourceProvider.ASHBY, externalId: 'dash0', name: 'Dash0' },
 
   {
     provider: SourceProvider.GREENHOUSE,

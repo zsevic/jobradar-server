@@ -13,6 +13,8 @@ const REGION_ALIASES: Record<string, string> = {
   europe: 'europe',
   'european union': 'eu',
   eu: 'eu',
+  'east coast': 'east coast',
+  'west coast': 'west coast',
 };
 
 const COUNTRY_ALIASES: Record<string, string> = {
@@ -141,22 +143,30 @@ function normalizeToken(value: string): string {
     .toLowerCase()
     .replace(/\boffice\b/g, '')
     .replace(/\bremote\b\s*[-,:]?\s*/g, '')
-    .replace(/\bnortheast\b\s*[-,:]?\s*/g, '')
-    .replace(/\bsoutheast\b\s*[-,:]?\s*/g, '')
-    .replace(/\bnorthwest\b\s*[-,:]?\s*/g, '')
-    .replace(/\bsouthwest\b\s*[-,:]?\s*/g, '')
-    .replace(/\bcentral\b\s*[-,:]?\s*/g, '')
-    .replace(/\bwest coast\b\s*[-,:]?\s*/g, '')
+    .replace(/\banywhere\b\s*[-,:]?\s*/g, '')
     .replace(/[.;]/g, ' ')
     .replace(/\s+/g, ' ')
+    .replace(/^[\s\-–—]+|[\s\-–—]+$/g, '')
     .trim();
 }
 
+/** Split on ; | / and on spaced hyphens "Geo - Remote" so countries/regions parse. */
 function splitLocation(raw: string): string[] {
-  return raw
+  const segments: string[] = [];
+  const topLevel = raw
     .split(/[;/|]/g)
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
+
+  for (const chunk of topLevel) {
+    const hyphenParts = chunk
+      .split(/\s+[-–—]\s+/g)
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+    segments.push(...hyphenParts);
+  }
+
+  return segments;
 }
 
 export function extractLocationFacets(rawLocation: string): LocationFacets {
@@ -177,20 +187,24 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       .filter((bit) => bit.length > 0);
 
     for (const bit of commaBits.length > 0 ? commaBits : [normalizedPart]) {
-      tokens.add(bit);
+      const trimmedBit = bit.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim();
+      if (!trimmedBit) {
+        continue;
+      }
+      tokens.add(trimmedBit);
 
-      const mappedRegion = REGION_ALIASES[bit];
+      const mappedRegion = REGION_ALIASES[trimmedBit];
       if (mappedRegion) {
         regions.add(mappedRegion);
       }
 
-      const mappedCountry = COUNTRY_ALIASES[bit] ?? bit;
+      const mappedCountry = COUNTRY_ALIASES[trimmedBit] ?? trimmedBit;
       if (KNOWN_COUNTRIES.has(mappedCountry)) {
         countries.add(mappedCountry);
         tokens.add(mappedCountry);
       }
 
-      const hintedCountry = CITY_COUNTRY_HINTS[bit];
+      const hintedCountry = CITY_COUNTRY_HINTS[trimmedBit];
       if (hintedCountry) {
         countries.add(hintedCountry);
         tokens.add(hintedCountry);

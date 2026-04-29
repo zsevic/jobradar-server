@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 import { Job } from '../../database/entities/job.entity';
 import { JOB_PROCESS_QUEUE } from '../jobs.constants';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
-import { formatRawLocation } from '../utils/clean-location';
+import { formatRawLocation, resolveNormalizedLocation } from '../utils/clean-location';
 import { extractLocationFacets } from '../utils/normalize-location';
 import { JobsService } from '../jobs.service';
 
@@ -47,9 +47,14 @@ export class JobProcessProcessor extends WorkerHost {
       return;
     }
 
+    const formattedRawLocation = formatRawLocation(input.locationRaw ?? input.location);
+    const normalizedLocation = resolveNormalizedLocation(formattedRawLocation, {
+      remoteIndicatedByProvider: input.remoteIndicatedByProvider ?? false,
+    });
     const normalizedJob: NormalizedJob = {
       ...input,
       postedAt,
+      location: normalizedLocation,
     };
     const jobId = `${normalizedJob.provider}:${normalizedJob.externalId}`;
     const hash = this.buildJobHash(normalizedJob);
@@ -70,15 +75,21 @@ export class JobProcessProcessor extends WorkerHost {
       return;
     }
 
-    const formattedRawLocation = formatRawLocation(input.locationRaw ?? input.location);
-    const locationFacets = extractLocationFacets(formattedRawLocation);
+    const rawForFacets =
+      formattedRawLocation.toLowerCase() === 'unknown'
+        ? ''
+        : formattedRawLocation;
+    const locationFacets =
+      normalizedLocation === 'Remote'
+        ? { tokens: ['remote'], countries: [], regions: [] }
+        : extractLocationFacets(rawForFacets);
     const saved = await this.jobRepository.save({
       id: jobId,
       provider: input.provider,
       externalId: input.externalId,
       title: input.title,
       company: input.company,
-      location: input.location,
+      location: normalizedLocation,
       locationRaw: formattedRawLocation,
       locationTokens: locationFacets.tokens,
       locationCountries: locationFacets.countries,

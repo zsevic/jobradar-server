@@ -7,6 +7,8 @@ export interface NormalizedJob {
   company: string;
   location: string;
   locationRaw: string;
+  /** Ashby/Workable: API/structured fields say remote while location text may be empty */
+  remoteIndicatedByProvider?: boolean;
   isRemote: boolean;
   postedAt: Date;
   url: string;

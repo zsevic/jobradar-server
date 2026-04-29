@@ -4,10 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
-import {
-  cleanLocationAfterRemoteDetection,
-  formatRawLocation,
-} from '../utils/clean-location';
+import { formatRawLocation, resolveNormalizedLocation } from '../utils/clean-location';
 import { extractSeniorityFromTitle } from '../utils/extract-seniority';
 import {
   classifyRoleFromTitle,
@@ -66,7 +63,7 @@ export class GreenhouseAdapter implements JobProviderAdapter {
         const isRemote =
           locationLower.includes('remote') ||
           locationLower.includes('anywhere');
-        const location = cleanLocationAfterRemoteDetection(rawLocation);
+        const location = resolveNormalizedLocation(rawLocation);
         const title = stripLocationFromTitle(job.title.trim(), location);
         const role = classifyRoleFromTitle(title);
         const stack = extractStackFromJobText(title, job.content, role);

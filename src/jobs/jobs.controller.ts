@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   Controller,
   Get,
+  NotFoundException,
   Post,
   Query,
   Req,
@@ -65,5 +67,25 @@ export class JobsController {
   async pollWorkable() {
     await this.jobsService.enqueueWorkableSources();
     return { status: 'queued' };
+  }
+
+  @Post('poll/company')
+  async pollSpecificCompany(@Query('company') company?: string) {
+    const value = company?.trim();
+    if (!value) {
+      throw new BadRequestException('Query param "company" is required');
+    }
+
+    const queued = await this.jobsService.enqueueSourceByCompany(value);
+    if (!queued) {
+      throw new NotFoundException(
+        `No active source found for company "${value}"`,
+      );
+    }
+
+    return {
+      status: 'queued',
+      source: queued,
+    };
   }
 }

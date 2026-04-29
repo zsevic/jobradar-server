@@ -135,6 +135,58 @@ export class JobsService {
     this.logger.log(`Enqueued ${workableSources.length} workable sources`);
   }
 
+  async enqueueSourceByCompany(company: string): Promise<{
+    sourceId: string;
+    provider: SourceProvider;
+    externalId: string;
+    name: string;
+  } | null> {
+    const normalized = company.trim().toLowerCase();
+    if (!normalized) {
+      return null;
+    }
+
+    const source = await this.sourceRepository
+      .createQueryBuilder('source')
+      .where('source.isActive = :isActive', { isActive: true })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('LOWER(source.name) = :normalized', { normalized });
+          qb.orWhere('LOWER(source.externalId) = :normalized', { normalized });
+        }),
+      )
+      .getOne();
+
+    if (!source) {
+      return null;
+    }
+
+    const payload = { sourceId: source.id };
+    const queueOptions = {
+      removeOnComplete: true,
+      removeOnFail: 200,
+    };
+
+    if (source.provider === SourceProvider.ASHBY) {
+      await this.ashbyFetchQueue.add('fetch-source', payload, queueOptions);
+    } else if (source.provider === SourceProvider.GREENHOUSE) {
+      await this.greenhouseFetchQueue.add('fetch-source', payload, queueOptions);
+    } else {
+      await this.workableFetchQueue.add('fetch-source', payload, queueOptions);
+    }
+
+    this.logger.log(
+      `Enqueued specific source poll for ${source.provider}:${source.externalId}`,
+    );
+
+    return {
+      sourceId: source.id,
+      provider: source.provider,
+      externalId: source.externalId,
+      name: source.name,
+    };
+  }
+
   async enqueueJobForProcessing(payload: {
     sourceId: string;
     normalizedJob: NormalizedJob;

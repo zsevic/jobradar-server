@@ -4,10 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
-import {
-  cleanLocationAfterRemoteDetection,
-  formatRawLocation,
-} from '../utils/clean-location';
+import { formatRawLocation, resolveNormalizedLocation } from '../utils/clean-location';
 import { extractSeniorityFromTitle } from '../utils/extract-seniority';
 import {
   classifyRoleFromTitle,
@@ -78,8 +75,12 @@ export class WorkableAdapter implements JobProviderAdapter {
       })
       .map((job) => {
         const rawLocation = formatRawLocation(this.resolveLocation(job));
+        const remoteIndicatedByProvider =
+          this.isRemoteFromStructuredFields(job);
+        const location = resolveNormalizedLocation(rawLocation, {
+          remoteIndicatedByProvider,
+        });
         const isRemote = this.resolveIsRemote(job, rawLocation);
-        const location = cleanLocationAfterRemoteDetection(rawLocation);
         const rawTitle = (job.title as string).trim();
         const title = stripLocationFromTitle(rawTitle, location);
         const seniority =
@@ -96,6 +97,7 @@ export class WorkableAdapter implements JobProviderAdapter {
           company: sourceName,
           location,
           locationRaw: rawLocation,
+          remoteIndicatedByProvider,
           isRemote,
           postedAt: job.created_at ? new Date(job.created_at) : new Date(),
           url: (job.url || job.shortlink) as string,
@@ -104,6 +106,18 @@ export class WorkableAdapter implements JobProviderAdapter {
           seniority,
         };
       });
+  }
+
+  private isRemoteFromStructuredFields(job: WorkableJob): boolean {
+    const primary =
+      Boolean(job.location?.telecommuting) ||
+      (job.location?.workplace_type ?? '').toLowerCase() === 'remote';
+    const structured = (job.locations ?? []).some(
+      (entry) =>
+        Boolean(entry.telecommuting) ||
+        (entry.workplace_type ?? '').toLowerCase() === 'remote',
+    );
+    return primary || structured;
   }
 
   private resolveSeniorityFromExperience(experience?: string): string | null {
