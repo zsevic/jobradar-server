@@ -4,7 +4,10 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
-import { cleanLocationAfterRemoteDetection } from '../utils/clean-location';
+import {
+  cleanLocationAfterRemoteDetection,
+  formatRawLocation,
+} from '../utils/clean-location';
 import { extractSeniorityFromTitle } from '../utils/extract-seniority';
 import {
   classifyRoleFromTitle,
@@ -57,7 +60,7 @@ export class AshbyAdapter implements JobProviderAdapter {
         (job) => (job.isListed ?? true) && !!job.title && !!job.publishedAt,
       )
       .map((job) => {
-        const rawLocation = job.location?.trim() || 'Unknown';
+        const rawLocation = formatRawLocation(job.location?.trim() || 'Unknown');
         const url = job.jobUrl || job.applyUrl || '';
         const isRemote =
           Boolean(job.isRemote) ||

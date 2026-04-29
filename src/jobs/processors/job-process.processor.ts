@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { Job } from '../../database/entities/job.entity';
 import { JOB_PROCESS_QUEUE } from '../jobs.constants';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
+import { formatRawLocation } from '../utils/clean-location';
 import { extractLocationFacets } from '../utils/normalize-location';
 import { JobsService } from '../jobs.service';
 
@@ -69,9 +70,8 @@ export class JobProcessProcessor extends WorkerHost {
       return;
     }
 
-    const locationFacets = extractLocationFacets(
-      input.locationRaw ?? input.location,
-    );
+    const formattedRawLocation = formatRawLocation(input.locationRaw ?? input.location);
+    const locationFacets = extractLocationFacets(formattedRawLocation);
     const saved = await this.jobRepository.save({
       id: jobId,
       provider: input.provider,
@@ -79,7 +79,7 @@ export class JobProcessProcessor extends WorkerHost {
       title: input.title,
       company: input.company,
       location: input.location,
-      locationRaw: input.locationRaw ?? input.location,
+      locationRaw: formattedRawLocation,
       locationTokens: locationFacets.tokens,
       locationCountries: locationFacets.countries,
       locationRegions: locationFacets.regions,

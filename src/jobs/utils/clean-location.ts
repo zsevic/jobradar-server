@@ -19,3 +19,16 @@ export function cleanLocationAfterRemoteDetection(location: string): string {
 
   return cleaned.length > 0 ? cleaned : 'Unknown';
 }
+
+export function formatRawLocation(location: string): string {
+  const trimmed = location.trim();
+  if (!trimmed) {
+    return 'Unknown';
+  }
+
+  return trimmed
+    .replace(/\s*;\s*/g, ', ')
+    .replace(/,\s*,+/g, ', ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}

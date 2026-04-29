@@ -122,11 +122,6 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'xpreso', name: 'Xpreso' },
   { provider: SourceProvider.ASHBY, externalId: 'phonely', name: 'Phonely' },
   { provider: SourceProvider.ASHBY, externalId: 'colonist', name: 'Colonist' },
-  {
-    provider: SourceProvider.ASHBY,
-    externalId: 'Superhuman%20Platform%20Inc',
-    name: 'Superhuman Platform Inc',
-  },
   { provider: SourceProvider.ASHBY, externalId: 'speak', name: 'Speak' },
   { provider: SourceProvider.ASHBY, externalId: 'acorns', name: 'Acorns' },
   {
