@@ -271,6 +271,8 @@ export class JobsService {
       title: string;
       company: string;
       location: string;
+      locationPrimary: string;
+      locationSecondary: string[];
       isRemote: boolean;
       postedAt: string;
       isNew: boolean;
@@ -329,6 +331,7 @@ export class JobsService {
       query.skip(skip).take(limit);
       const [jobs, total] = await query.getManyAndCount();
       const items = jobs.map((job) => ({
+        ...this.getApiLocationParts(job),
         id: job.id,
         title: job.title,
         company: job.company,
@@ -363,6 +366,7 @@ export class JobsService {
     const pagedJobs = filtered.slice(skip, skip + limit);
 
     const items = pagedJobs.map((job) => ({
+      ...this.getApiLocationParts(job),
       id: job.id,
       title: job.title,
       company: job.company,
@@ -392,6 +396,8 @@ export class JobsService {
       title: string;
       company: string;
       location: string;
+      locationPrimary: string;
+      locationSecondary: string[];
       isRemote: boolean;
       postedAt: string;
       isNew: boolean;
@@ -406,6 +412,7 @@ export class JobsService {
 
     const now = Date.now();
     return jobs.map((job) => ({
+      ...this.getApiLocationParts(job),
       id: job.id,
       title: job.title,
       company: job.company,
@@ -416,5 +423,65 @@ export class JobsService {
         now - job.postedAt.getTime() <=
         this.NEW_JOB_WINDOW_HOURS * 60 * 60 * 1000,
     }));
+  }
+
+  private getApiLocationParts(job: Job): {
+    locationPrimary: string;
+    locationSecondary: string[];
+  } {
+    const raw = (job.locationRaw ?? '').trim();
+    if (!raw) {
+      return {
+        locationPrimary: job.location,
+        locationSecondary: [],
+      };
+    }
+
+    // Preferred format (new Ashby ingest): "primary | secondary1 | secondary2"
+    if (raw.includes('|')) {
+      const parts = raw
+        .split('|')
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0);
+      if (parts.length > 0) {
+        return {
+          locationPrimary: parts[0],
+          locationSecondary: parts.slice(1),
+        };
+      }
+    }
+
+    // Backward-compatible fallback for older Ashby records stored as comma list.
+    if (job.provider === SourceProvider.ASHBY) {
+      const bits = raw
+        .split(',')
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0);
+      if (bits.length > 0) {
+        const hasRemote = bits.some((part) => part.toLowerCase() === 'remote');
+        if (hasRemote) {
+          const firstGeo = bits.find((part) => part.toLowerCase() !== 'remote');
+          const remainder = bits.filter(
+            (part, index) =>
+              part.toLowerCase() !== 'remote' &&
+              part !== firstGeo &&
+              index !== bits.indexOf(firstGeo ?? ''),
+          );
+          return {
+            locationPrimary: firstGeo ? `${firstGeo}, Remote` : 'Remote',
+            locationSecondary: remainder,
+          };
+        }
+        return {
+          locationPrimary: bits[0],
+          locationSecondary: bits.slice(1),
+        };
+      }
+    }
+
+    return {
+      locationPrimary: job.location,
+      locationSecondary: [],
+    };
   }
 }

@@ -16,6 +16,7 @@ interface AshbyApiJob {
   id?: string;
   title?: string;
   location?: string;
+  secondaryLocations?: AshbySecondaryLocation[];
   isRemote?: boolean;
   workplaceType?: string;
   publishedAt?: string;
@@ -23,6 +24,17 @@ interface AshbyApiJob {
   applyUrl?: string;
   descriptionPlain?: string;
   isListed?: boolean;
+}
+
+interface AshbySecondaryLocation {
+  location?: string;
+  address?: {
+    postalAddress?: {
+      addressCountry?: string;
+      addressRegion?: string;
+      addressLocality?: string;
+    };
+  };
 }
 
 interface AshbyApiResponse {
@@ -57,7 +69,7 @@ export class AshbyAdapter implements JobProviderAdapter {
         (job) => (job.isListed ?? true) && !!job.title && !!job.publishedAt,
       )
       .map((job) => {
-        const rawLocation = formatRawLocation(job.location?.trim() || 'Unknown');
+        const { rawLocation, countryHints } = this.resolveRawLocation(job);
         const url = job.jobUrl || job.applyUrl || '';
         const remoteIndicatedByProvider =
           Boolean(job.isRemote) ||
@@ -81,6 +93,7 @@ export class AshbyAdapter implements JobProviderAdapter {
           company: sourceName,
           location,
           locationRaw: rawLocation,
+          locationCountryHints: countryHints,
           remoteIndicatedByProvider,
           isRemote,
           postedAt: new Date(job.publishedAt as string),
@@ -91,5 +104,42 @@ export class AshbyAdapter implements JobProviderAdapter {
         };
       })
       .filter((job) => job.url.length > 0);
+  }
+
+  private resolveRawLocation(job: AshbyApiJob): {
+    rawLocation: string;
+    countryHints: string[];
+  } {
+    const primary = job.location?.trim() || 'Unknown';
+    const secondary = new Set<string>();
+    const countryHints = new Set<string>();
+    for (const entry of job.secondaryLocations ?? []) {
+      this.addLocationValue(secondary, entry.location);
+      this.addLocationValue(
+        countryHints,
+        entry.address?.postalAddress?.addressCountry,
+      );
+    }
+
+    const parts = [primary, ...Array.from(secondary)];
+    return {
+      rawLocation: formatRawLocation(parts.join(' | ') || 'Unknown'),
+      countryHints: Array.from(countryHints),
+    };
+  }
+
+  private addLocationValue(target: Set<string>, value?: string): void {
+    const cleaned = value?.trim();
+    if (!cleaned) {
+      return;
+    }
+
+    const dedupeKey = cleaned.toLowerCase();
+    const existing = Array.from(target).some(
+      (item) => item.toLowerCase() === dedupeKey,
+    );
+    if (!existing) {
+      target.add(cleaned);
+    }
   }
 }

@@ -83,6 +83,19 @@ export class JobProcessProcessor extends WorkerHost {
       normalizedLocation === 'Remote'
         ? { tokens: ['remote'], countries: [], regions: [] }
         : extractLocationFacets(rawForFacets);
+    const hintedCountries = (input.locationCountryHints ?? [])
+      .map((country) => country.trim().toLowerCase())
+      .filter((country) => country.length > 0);
+    if (hintedCountries.length > 0) {
+      const mergedCountries = new Set<string>([
+        ...locationFacets.countries,
+        ...hintedCountries,
+      ]);
+      locationFacets.countries = Array.from(mergedCountries);
+      locationFacets.tokens = Array.from(
+        new Set<string>([...locationFacets.tokens, ...locationFacets.countries]),
+      );
+    }
     const saved = await this.jobRepository.save({
       id: jobId,
       provider: input.provider,
