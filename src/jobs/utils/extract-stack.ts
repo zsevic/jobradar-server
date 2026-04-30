@@ -77,7 +77,7 @@ function standaloneGoLanguageInText(normalized: string): boolean {
   if (/\bgo\s+live\b/i.test(normalized)) {
     return false;
   }
-  return /\bgo\b/.test(normalized);
+  return /(?:^|[\s([{/,-])go(?:$|[\s)\]}",/.-])/.test(normalized);
 }
 
 function detectStackInText(
