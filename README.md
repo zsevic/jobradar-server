@@ -132,6 +132,8 @@ POST /api/jobs/poll/workable
 }
 ```
 
+License keys are validated against Gumroad on every login and are **not** stored in the database.
+
 If Gumroad validation passes, API returns an `accessToken` JWT and user email.
 
 ## Run tests
