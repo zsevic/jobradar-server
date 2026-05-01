@@ -1816,6 +1816,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'january', name: 'January' },
   { provider: SourceProvider.ASHBY, externalId: 'joko', name: 'Joko' },
   { provider: SourceProvider.ASHBY, externalId: 'julius', name: 'Julius' },
+  { provider: SourceProvider.ASHBY, externalId: 'jump', name: 'Jump' },
   { provider: SourceProvider.ASHBY, externalId: 'kindred', name: 'Kindred' },
   { provider: SourceProvider.ASHBY, externalId: 'kovo', name: 'Kovo' },
   { provider: SourceProvider.ASHBY, externalId: 'kraken.com', name: 'Kraken' },
