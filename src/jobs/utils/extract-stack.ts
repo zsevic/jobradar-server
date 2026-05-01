@@ -90,7 +90,9 @@ function detectStackInText(
   Object.entries(STACK_ALIASES).forEach(([stack, aliases]) => {
     aliases.forEach((alias) => {
       const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+      // `\b` fails for aliases starting/ending with non-word chars (e.g. ".net", "c#").
+      // Match aliases with alphanumeric boundaries instead.
+      const regex = new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`, 'i');
       if (regex.test(normalized)) {
         detected.add(stack);
       }
