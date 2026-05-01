@@ -152,12 +152,17 @@ function readHtml(filePath: string): string {
   return readFileSync(filePath, 'utf8');
 }
 
+/** Spreadsheet / paste exports sometimes append a trailing comma to URLs. */
+function sanitizeHref(rawHref: string): string {
+  return rawHref.trim().replace(/,+$/g, '');
+}
+
 function detectFromUrl(
   rawHref: string,
 ): { provider: Provider; slug: string } | null {
   if (!rawHref) return null;
 
-  const trimmed = rawHref.trim();
+  const trimmed = sanitizeHref(rawHref);
   if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('javascript:')) {
     return null;
   }

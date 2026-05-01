@@ -15,6 +15,7 @@
     "seed:sources": "node --require ts-node/register src/database/seeds/seed-sources.ts",
     "validate:sources": "node --require ts-node/register scripts/validate-sources.ts",
     "extract:sources-html": "node --require ts-node/register scripts/extract-sources-from-html.ts",
+    "extract:ashby-html-swe": "node --require ts-node/register scripts/ashby-company-pages-to-extracted-json.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
