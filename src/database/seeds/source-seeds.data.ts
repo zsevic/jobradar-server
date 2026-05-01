@@ -257,6 +257,18 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'kontakt', name: 'Kontakt' },
   { provider: SourceProvider.ASHBY, externalId: 'seon', name: 'SEON' },
   { provider: SourceProvider.ASHBY, externalId: 'truelogic', name: 'Truelogic' },
+  { provider: SourceProvider.ASHBY, externalId: 'sofarocean', name: 'Sofar Ocean' },
+  { provider: SourceProvider.ASHBY, externalId: 'moab', name: 'Moab' },
+  { provider: SourceProvider.ASHBY, externalId: 'juicebox', name: 'Juicebox' },
+  { provider: SourceProvider.ASHBY, externalId: 'two-dots', name: 'Two Dots' },
+  { provider: SourceProvider.ASHBY, externalId: 'vetcove', name: 'Vetcove' },
+  { provider: SourceProvider.ASHBY, externalId: 'imprint', name: 'Imprint' },
+  { provider: SourceProvider.ASHBY, externalId: 'camber', name: 'Camber' },
+  { provider: SourceProvider.ASHBY, externalId: 'traba', name: 'Traba' },
+  { provider: SourceProvider.ASHBY, externalId: 'brellium', name: 'Brellium' },
+  { provider: SourceProvider.ASHBY, externalId: 'owner', name: 'Owner' },
+  { provider: SourceProvider.ASHBY, externalId: 'cleric', name: 'Cleric' },
+  { provider: SourceProvider.ASHBY, externalId: 'dust', name: 'Dust' },
 
   {
     provider: SourceProvider.GREENHOUSE,
