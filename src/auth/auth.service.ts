@@ -27,7 +27,6 @@ export class AuthService {
     const user = await this.userRepository.save({
       id: existingUser?.id,
       email: normalizedEmail,
-      licenseKey: payload.licenseKey,
     });
 
     const token = await this.jwtService.signAsync({

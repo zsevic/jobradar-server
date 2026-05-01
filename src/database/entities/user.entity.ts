@@ -13,9 +13,6 @@ export class User {
   @Column({ type: 'varchar', unique: true })
   email!: string;
 
-  @Column({ type: 'varchar' })
-  licenseKey!: string;
-
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 }
