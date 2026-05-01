@@ -1560,5 +1560,27 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'novacredit',
     name: 'Nova Credit',
   },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'gravitypayments17',
+    name: 'Gravity Payments',
+  },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'deepmind', name: 'DeepMind' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'verkada', name: 'Verkada' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'zoo', name: 'Zoo' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'attentive', name: 'Attentive' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'impiricus', name: 'Impiricus' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'roku', name: 'Roku' },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'aurorainnovation',
+    name: 'Aurora Innovation',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'digitalocean98',
+    name: 'DigitalOcean',
+  },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'ownwell', name: 'Ownwell' },
 ];
 
