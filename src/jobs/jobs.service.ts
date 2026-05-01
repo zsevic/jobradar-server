@@ -403,12 +403,14 @@ export class JobsService {
       isNew: boolean;
     }>
   > {
-    const jobs = await this.jobsRepository.find({
-      order: {
-        postedAt: 'DESC',
-      },
-      take: limit,
-    });
+    // Public preview: only jobs with a classified role (see job-process classification).
+    const jobs = await this.jobsRepository
+      .createQueryBuilder('job')
+      .where('job.role IS NOT NULL')
+      .andWhere("length(trim(job.role)) > 0")
+      .orderBy('job.postedAt', 'DESC')
+      .take(limit)
+      .getMany();
 
     const now = Date.now();
     return jobs.map((job) => ({
