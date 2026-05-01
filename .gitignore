@@ -28,5 +28,5 @@ Thumbs.db
 .env.production.local
 
 # generated extractor output
-/scripts/extracted-sources.txt
+/scripts/extracted-sources.json
 /sources.html

@@ -19,7 +19,7 @@
  * - Embed/iframe URL forms are intentionally out of scope.
  */
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as cheerio from 'cheerio';
 
@@ -28,7 +28,7 @@ type Provider = 'greenhouse' | 'ashby' | 'workable';
 interface Extracted {
   provider: Provider;
   externalId: string;
-  name: string;
+  name: string | null;
 }
 
 interface ScriptOptions {
@@ -46,12 +46,6 @@ interface VerificationResult {
 }
 
 const API_TIMEOUT_MS = 15_000;
-
-const PROVIDER_ENUM: Record<Provider, string> = {
-  greenhouse: 'SourceProvider.GREENHOUSE',
-  ashby: 'SourceProvider.ASHBY',
-  workable: 'SourceProvider.WORKABLE',
-};
 
 const PROVIDER_ORDER: Provider[] = ['greenhouse', 'ashby', 'workable'];
 
@@ -92,7 +86,7 @@ function parseArgs(argv: string[]): {
   let provider: Provider | null = null;
   let verifySoftwareEngineer = false;
   let onlyVerified = false;
-  let outputFile = 'scripts/extracted-sources.txt';
+  let outputFile = 'scripts/extracted-sources.json';
 
   for (const arg of args) {
     if (arg === '-h' || arg === '--help') {
@@ -144,7 +138,7 @@ function printHelpAndExit(code = 0): never {
     'Flags:',
     '  --verify-software-engineer   Call ATS APIs and verify if source has software engineer roles',
     '  --only-verified              Keep only sources that pass verification (requires --verify-software-engineer)',
-    '  --output=path                Save results to file (default: scripts/extracted-sources.txt)',
+    '  --output=path                Save/merge JSON array file (default: scripts/extracted-sources.json)',
   ].join('\n');
   if (code === 0) {
     console.log(msg);
@@ -214,8 +208,7 @@ function collapseWhitespace(value: string): string {
 function pickName(
   $: cheerio.CheerioAPI,
   $anchor: cheerio.Cheerio<any>,
-  slug: string,
-): string {
+): string | null {
   const fromImg = collapseWhitespace($anchor.find('img[alt]').first().attr('alt') ?? '');
   if (fromImg && !isGenericName(fromImg)) return fromImg;
 
@@ -256,11 +249,7 @@ function pickName(
     if (containerText && !isGenericName(containerText)) return containerText;
   }
 
-  return slug;
-}
-
-function escapeSingleQuotes(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  return null;
 }
 
 function extract(html: string): Extracted[] {
@@ -277,7 +266,7 @@ function extract(html: string): Extracted[] {
     const key = `${provider}:${slug.toLowerCase()}`;
     if (seen.has(key)) return;
 
-    const name = pickName($, $a, slug);
+    const name = pickName($, $a);
     seen.set(key, { provider, externalId: slug, name });
   });
 
@@ -383,67 +372,91 @@ function pickCompanyNameFromPayload(
   const record = payload as Record<string, unknown>;
 
   if (entry.provider === 'greenhouse') {
-    const greenhouseName = record.name;
-    if (typeof greenhouseName === 'string' && greenhouseName.trim()) {
-      return greenhouseName.trim();
+    const topLevelCompanyName = record.company_name;
+    if (typeof topLevelCompanyName === 'string' && topLevelCompanyName.trim()) {
+      return topLevelCompanyName.trim();
     }
+    const companyNames: string[] = [];
+    collectStringFieldsByKeyDeep(payload, new Set(['company_name']), companyNames);
+    return companyNames.map((value) => value.trim()).find(Boolean) ?? null;
   }
 
   if (entry.provider === 'ashby') {
-    const ashbyTop =
-      (typeof record.name === 'string' && record.name.trim()) ||
-      (typeof record.organizationName === 'string' && record.organizationName.trim()) ||
-      (typeof record.companyName === 'string' && record.companyName.trim());
-    if (ashbyTop) {
-      return ashbyTop;
-    }
+    return null;
   }
 
   if (entry.provider === 'workable') {
-    const workableTop =
-      (typeof record.company_name === 'string' && record.company_name.trim()) ||
-      (typeof record.companyName === 'string' && record.companyName.trim()) ||
-      (typeof record.name === 'string' && record.name.trim());
-    if (workableTop) {
-      return workableTop;
+    const workableName = record.name;
+    if (typeof workableName === 'string' && workableName.trim()) {
+      return workableName.trim();
     }
+    return null;
   }
 
-  const names: string[] = [];
-  collectStringFieldsByKeyDeep(
-    payload,
-    new Set(['company_name', 'companyname', 'organizationname', 'company', 'name']),
-    names,
-  );
-  const candidate = names
-    .map((value) => value.trim())
-    .find((value) => Boolean(value) && !isGenericName(value));
-  return candidate ?? null;
+  return null;
 }
 
-function format(entries: Extracted[], filter: Provider | null): string {
-  const bodyLines: string[] = [];
-  for (const provider of PROVIDER_ORDER) {
-    if (filter && provider !== filter) continue;
-    const group = entries
-      .filter((e) => e.provider === provider)
-      .sort((a, b) => a.externalId.localeCompare(b.externalId));
-    if (group.length === 0) continue;
-    bodyLines.push(`  // ${provider} (${group.length})`);
-    for (const entry of group) {
-      bodyLines.push(
-        `  { provider: ${PROVIDER_ENUM[provider]}, externalId: '${escapeSingleQuotes(
-          entry.externalId,
-        )}', name: '${escapeSingleQuotes(entry.name)}' },`,
-      );
+function sortEntries(entries: Extracted[]): Extracted[] {
+  return [...entries].sort((a, b) => {
+    const providerCmp = PROVIDER_ORDER.indexOf(a.provider) - PROVIDER_ORDER.indexOf(b.provider);
+    if (providerCmp !== 0) return providerCmp;
+    return a.externalId.localeCompare(b.externalId);
+  });
+}
+
+function loadExistingEntries(absoluteOutputPath: string): Extracted[] {
+  if (!existsSync(absoluteOutputPath)) {
+    return [];
+  }
+
+  const raw = readFileSync(absoluteOutputPath, 'utf8').trim();
+  if (!raw) return [];
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Output file is not valid JSON (${absoluteOutputPath}): ${message}`);
+  }
+
+  if (!Array.isArray(parsed)) {
+    throw new Error(`Output file must contain a JSON array: ${absoluteOutputPath}`);
+  }
+
+  const valid: Extracted[] = [];
+  for (const item of parsed) {
+    if (!item || typeof item !== 'object') continue;
+    const row = item as Record<string, unknown>;
+    const provider = row.provider;
+    const externalId = row.externalId;
+    const name = row.name;
+    if (
+      (provider === 'greenhouse' || provider === 'ashby' || provider === 'workable') &&
+      typeof externalId === 'string' &&
+      (typeof name === 'string' || name === null)
+    ) {
+      valid.push({
+        provider,
+        externalId,
+        name: name ?? null,
+      });
     }
-    bodyLines.push('');
   }
-  const trimmedBody = bodyLines.join('\n').trimEnd();
-  if (!trimmedBody) {
-    return '[]\n';
+
+  return valid;
+}
+
+function mergeEntries(existing: Extracted[], incoming: Extracted[]): Extracted[] {
+  const byKey = new Map<string, Extracted>();
+  for (const entry of existing) {
+    byKey.set(`${entry.provider}:${entry.externalId.toLowerCase()}`, entry);
   }
-  return `[\n${trimmedBody}\n]\n`;
+  for (const entry of incoming) {
+    // New runs update existing rows with fresh name/slug casing.
+    byKey.set(`${entry.provider}:${entry.externalId.toLowerCase()}`, entry);
+  }
+  return sortEntries(Array.from(byKey.values()));
 }
 
 async function main(): Promise<void> {
@@ -477,14 +490,14 @@ async function main(): Promise<void> {
       const nameFromApi = pickCompanyNameFromPayload(entry, payload);
       enrichedEntries.push({
         ...entry,
-        name: nameFromApi ?? entry.name,
+        name: nameFromApi,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(
-        `! ${entry.provider}:${entry.externalId} name enrichment failed (${message}), using HTML-derived name`,
+        `! ${entry.provider}:${entry.externalId} name enrichment failed (${message}), using null name`,
       );
-      enrichedEntries.push(entry);
+      enrichedEntries.push({ ...entry, name: null });
     }
   }
 
@@ -529,18 +542,20 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const outputText = format(outputEntries, provider);
   const absoluteOutputPath = resolve(outputFile);
+  const existingEntries = loadExistingEntries(absoluteOutputPath);
+  const mergedEntries = mergeEntries(existingEntries, outputEntries);
+  const outputText = JSON.stringify(mergedEntries, null, 2) + '\n';
   writeFileSync(absoluteOutputPath, outputText, 'utf8');
 
   const counts: string[] = [];
   for (const p of PROVIDER_ORDER) {
     if (provider && p !== provider) continue;
-    const n = outputEntries.filter((e) => e.provider === p).length;
+    const n = mergedEntries.filter((e) => e.provider === p).length;
     if (n > 0) counts.push(`${p}=${n}`);
   }
   console.error(
-    `\nOutput ${outputEntries.length} unique source(s) [${counts.join(', ')}]. Saved to ${absoluteOutputPath}`,
+    `\nMerged ${outputEntries.length} source(s) from this run. Total stored: ${mergedEntries.length} [${counts.join(', ')}]. Saved to ${absoluteOutputPath}`,
   );
 }
 
