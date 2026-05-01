@@ -114,7 +114,10 @@ export class AshbyAdapter implements JobProviderAdapter {
     const secondary = new Set<string>();
     const countryHints = new Set<string>();
     for (const entry of job.secondaryLocations ?? []) {
-      this.addLocationValue(secondary, entry.location);
+      this.addLocationValue(
+        secondary,
+        this.resolveSecondaryLocationLabel(entry),
+      );
       this.addLocationValue(
         countryHints,
         entry.address?.postalAddress?.addressCountry,
@@ -126,6 +129,41 @@ export class AshbyAdapter implements JobProviderAdapter {
       rawLocation: formatRawLocation(parts.join(' | ') || 'Unknown'),
       countryHints: Array.from(countryHints),
     };
+  }
+
+  /**
+   * If the secondary entry's location text is a generic, non-geographic label
+   * (e.g. "Remote", "Hybrid"), append the postal country so it is preserved
+   * after stripping remote tokens (e.g. "Remote" + "United States" →
+   * "Remote, United States"). City/region/country labels keep their original
+   * text — country still flows into locationCountries via countryHints.
+   */
+  private resolveSecondaryLocationLabel(
+    entry: AshbySecondaryLocation,
+  ): string | undefined {
+    const location = entry.location?.trim();
+    if (!location) {
+      return undefined;
+    }
+
+    const country = entry.address?.postalAddress?.addressCountry?.trim();
+    if (!country) {
+      return location;
+    }
+
+    const isGeneric =
+      /^(remote|anywhere|distributed|hybrid|on[-\s]?site|onsite)$/i.test(
+        location,
+      );
+    if (!isGeneric) {
+      return location;
+    }
+
+    if (location.toLowerCase().includes(country.toLowerCase())) {
+      return location;
+    }
+
+    return `${location}, ${country}`;
   }
 
   private addLocationValue(target: Set<string>, value?: string): void {

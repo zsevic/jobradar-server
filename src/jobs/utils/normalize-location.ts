@@ -96,6 +96,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   zurich: 'switzerland',
   frankfurt: 'germany',
   amsterdam: 'netherlands',
+  'são paulo': 'brazil',
+  'sao paulo': 'brazil',
   bengaluru: 'india',
   praha: 'czechia',
   prague: 'czechia',

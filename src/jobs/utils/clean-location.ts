@@ -19,7 +19,24 @@ export function cleanLocationAfterRemoteDetection(location: string): string {
     .replace(/\s{2,}/g, ' ')
     .trim();
 
-  return cleaned.length > 0 ? cleaned : 'Unknown';
+  if (!cleaned) {
+    return 'Unknown';
+  }
+
+  // Dedupe repeated location segments while preserving order (e.g. country
+  // repeated in both a city entry and a remote entry).
+  const uniqueParts: string[] = [];
+  const seen = new Set<string>();
+  for (const part of cleaned.split(',')) {
+    const normalizedPart = part.trim().toLowerCase();
+    if (!normalizedPart || seen.has(normalizedPart)) {
+      continue;
+    }
+    seen.add(normalizedPart);
+    uniqueParts.push(part.trim());
+  }
+
+  return uniqueParts.length > 0 ? uniqueParts.join(', ') : 'Unknown';
 }
 
 export function formatRawLocation(location: string): string {
