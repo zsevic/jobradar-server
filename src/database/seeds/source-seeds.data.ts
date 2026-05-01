@@ -1509,5 +1509,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.GREENHOUSE, externalId: 'intercom', name: 'Intercom' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'branch', name: 'Branch' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'sezzle', name: 'Sezzle' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'gympass', name: 'Gympass' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'stone', name: 'Stone' },
 ];
 
