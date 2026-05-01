@@ -1499,5 +1499,15 @@ export const sourceSeeds: SourceSeedItem[] = [
     name: 'Keyfactor',
   },
   { provider: SourceProvider.GREENHOUSE, externalId: 'recharge', name: 'Recharge' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'circleci', name: 'CircleCI' },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'connectwise',
+    name: 'ConnectWise',
+  },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'postman', name: 'Postman' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'intercom', name: 'Intercom' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'branch', name: 'Branch' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'sezzle', name: 'Sezzle' },
 ];
 
