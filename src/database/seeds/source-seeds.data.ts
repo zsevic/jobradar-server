@@ -1634,6 +1634,11 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.GREENHOUSE, externalId: 'hatchcareers', name: 'Hatch' },
   {
     provider: SourceProvider.GREENHOUSE,
+    externalId: 'rushstreetinteractive',
+    name: 'Rush Street Interactive',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
     externalId: 'sonyinteractiveentertainmentglobal',
     name: 'Sony Interactive Entertainment',
   },
