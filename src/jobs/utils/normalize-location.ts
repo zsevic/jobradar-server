@@ -32,6 +32,9 @@ const COUNTRY_ALIASES: Record<string, string> = {
   bosnia: 'bosnia and herzegovina',
   macedonia: 'north macedonia',
   'republic of north macedonia': 'north macedonia',
+  "lao people's democratic republic": 'laos',
+  'lao people’s democratic republic': 'laos',
+  'lao pdr': 'laos',
 };
 
 const KNOWN_COUNTRIES = new Set<string>([
@@ -132,6 +135,13 @@ const KNOWN_COUNTRIES = new Set<string>([
   'north macedonia',
   'ethiopia',
   'montenegro',
+  'papua new guinea',
+  'luxembourg',
+  'uzbekistan',
+  'kyrgyzstan',
+  'turkmenistan',
+  'lebanon',
+  'laos',
 ]);
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
