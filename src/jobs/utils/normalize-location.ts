@@ -87,6 +87,23 @@ const KNOWN_COUNTRIES = new Set<string>([
   'croatia',
   'kazakhstan',
   'philippines',
+  'pakistan',
+  'kenya',
+  'saudi arabia',
+  'ecuador',
+  'paraguay',
+  'el salvador',
+  'honduras',
+  'malaysia',
+  'egypt',
+  'jordan',
+  'moldova',
+  'nicaragua',
+  'latvia',
+  'morocco',
+  'hungary',
+  'georgia',
+  'ghana',
 ]);
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -148,6 +165,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   split: 'croatia',
   almaty: 'kazakhstan',
   cebu: 'philippines',
+  gibraltar: 'united kingdom',
 };
 
 function normalizeToken(value: string): string {
