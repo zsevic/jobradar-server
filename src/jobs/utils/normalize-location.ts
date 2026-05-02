@@ -71,6 +71,9 @@ const KNOWN_COUNTRIES = new Set<string>([
   'vietnam',
   'ukraine',
   'peru',
+  'uruguay',
+  'panama',
+  'dominican republic',
   'greece',
   'slovakia',
   'romania',
@@ -98,6 +101,9 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   amsterdam: 'netherlands',
   'são paulo': 'brazil',
   'sao paulo': 'brazil',
+  bogota: 'colombia',
+  bogotá: 'colombia',
+  'santo domingo': 'dominican republic',
   bengaluru: 'india',
   praha: 'czechia',
   prague: 'czechia',
@@ -142,6 +148,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
 
 function normalizeToken(value: string): string {
   return value
+    .normalize('NFC')
     .toLowerCase()
     .replace(/\boffice\b/g, '')
     .replace(/\bremote\b\s*[-,:]?\s*/g, '')
