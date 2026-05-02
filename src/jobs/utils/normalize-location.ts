@@ -110,6 +110,9 @@ const KNOWN_COUNTRIES = new Set<string>([
   'bolivia',
   'russia',
   'venezuela',
+  'jamaica',
+  'albania',
+  'libya',
 ]);
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
