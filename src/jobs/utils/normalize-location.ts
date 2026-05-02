@@ -28,6 +28,10 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'republic of korea': 'south korea',
   'russian federation': 'russia',
   'syrian arab republic': 'syria',
+  türkiye: 'turkey',
+  bosnia: 'bosnia and herzegovina',
+  macedonia: 'north macedonia',
+  'republic of north macedonia': 'north macedonia',
 };
 
 const KNOWN_COUNTRIES = new Set<string>([
@@ -123,6 +127,11 @@ const KNOWN_COUNTRIES = new Set<string>([
   'cambodia',
   'thailand',
   'bangladesh',
+  'turkey',
+  'bosnia and herzegovina',
+  'north macedonia',
+  'ethiopia',
+  'montenegro',
 ]);
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
