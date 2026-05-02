@@ -229,10 +229,28 @@ function normalizeToken(value: string): string {
     .trim();
 }
 
+/** Expands parenthesized `A | B` lists so each item becomes its own split segment. */
+function expandParentheticalPipeLists(raw: string): string {
+  return raw.replace(/\(\s*([^)]+)\s*\)/g, (_, inner: string) => {
+    if (!inner.includes('|')) {
+      return `(${inner})`;
+    }
+    const parts = inner
+      .split('|')
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+    if (parts.length === 0) {
+      return '';
+    }
+    return `;${parts.join(';')}`;
+  });
+}
+
 /** Split on ; | / and on spaced hyphens "Geo - Remote" so countries/regions parse. */
 function splitLocation(raw: string): string[] {
   const segments: string[] = [];
-  const topLevel = raw
+  const expanded = expandParentheticalPipeLists(raw);
+  const topLevel = expanded
     .split(/[;/|]/g)
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
