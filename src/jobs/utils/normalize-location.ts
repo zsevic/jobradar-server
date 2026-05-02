@@ -172,6 +172,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   praha: 'czechia',
   prague: 'czechia',
   warszawa: 'poland',
+  warsaw: 'poland',
   atlanta: 'united states',
   'mexico city': 'mexico',
   seattle: 'united states',
