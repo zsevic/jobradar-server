@@ -35,6 +35,7 @@ const COUNTRY_ALIASES: Record<string, string> = {
   "lao people's democratic republic": 'laos',
   'lao people’s democratic republic': 'laos',
   'lao pdr': 'laos',
+  'u s': 'united states',
 };
 
 const KNOWN_COUNTRIES = new Set<string>([
@@ -150,12 +151,16 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   paris: 'france',
   'san francisco': 'united states',
   'new york': 'united states',
+  nyc: 'united states',
+  'new york city': 'united states',
   'new jersey': 'united states',
   nj: 'united states',
   secaucas: 'united states',
   bloomington: 'united states',
   zurich: 'switzerland',
   frankfurt: 'germany',
+  munich: 'germany',
+  münchen: 'germany',
   amsterdam: 'netherlands',
   'são paulo': 'brazil',
   'sao paulo': 'brazil',
@@ -163,6 +168,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   bogotá: 'colombia',
   'santo domingo': 'dominican republic',
   bengaluru: 'india',
+  jaipur: 'india',
   praha: 'czechia',
   prague: 'czechia',
   warszawa: 'poland',
@@ -173,6 +179,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   california: 'united states',
   bangalore: 'india',
   madrid: 'spain',
+  milan: 'italy',
   dallas: 'united states',
   texas: 'united states',
   chicago: 'united states',
@@ -182,6 +189,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   limassol: 'cyprus',
   birkirkara: 'malta',
   london: 'united kingdom',
+  manchester: 'united kingdom',
   auckland: 'new zealand',
   'hong kong': 'hong kong',
   galway: 'ireland',
@@ -189,6 +197,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   jakarta: 'indonesia',
   oslo: 'norway',
   shanghai: 'china',
+  tokyo: 'japan',
   hanoi: 'vietnam',
   kyiv: 'ukraine',
   lima: 'peru',
@@ -204,6 +213,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   almaty: 'kazakhstan',
   cebu: 'philippines',
   gibraltar: 'united kingdom',
+  'puerto rico': 'united states',
 };
 
 function normalizeToken(value: string): string {
