@@ -25,7 +25,7 @@ export function extractSeniorityFromTitle(
     return 'staff';
   }
 
-  const hasSenior = /\b(senior|sr|snr|expert)\b/i.test(normalized);
+  const hasSenior = /\b(senior|sr|snr|expert|ssenior)\b/i.test(normalized);
   if (hasSenior) {
     return 'senior';
   }
