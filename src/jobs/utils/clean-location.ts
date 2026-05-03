@@ -1,5 +1,11 @@
 import { extractLocationFacets } from './normalize-location';
 
+/**
+ * Sole location tokens that are employer / product names, not geography (ATS
+ * sometimes echoes the company into the location field).
+ */
+const STANDALONE_NON_GEO_LOCATIONS = new Set<string>(['omnea']);
+
 const LOCATION_PART_ALIASES: Record<string, string> = {
   uk: 'united kingdom',
   us: 'united states',
@@ -89,13 +95,21 @@ export function stripCompanyNameFromLocation(
   company: string,
 ): string {
   const loc = raw.trim();
+  if (!loc) {
+    return raw;
+  }
+  const locSolo = loc.toLowerCase();
+  if (STANDALONE_NON_GEO_LOCATIONS.has(locSolo)) {
+    return 'Unknown';
+  }
+
   const comp = company.trim();
-  if (!loc || !comp) {
+  if (!comp) {
     return raw;
   }
 
-  if (loc.toLowerCase() === comp.toLowerCase()) {
-    return raw;
+  if (locSolo === comp.toLowerCase()) {
+    return 'Unknown';
   }
 
   const words = comp.split(/\s+/).filter(Boolean);
