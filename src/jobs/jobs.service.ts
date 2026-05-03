@@ -240,6 +240,15 @@ export class JobsService {
         'site reliability',
       ],
       qa: ['qa', 'quality assurance', 'test engineer', 'automation engineer'],
+      management: [
+        'engineering manager',
+        'director of engineering',
+        'head of engineering',
+        'vp of engineering',
+        'tech lead',
+        'technical lead',
+        'team lead',
+      ],
     };
 
     return keywordMap[role] ?? [];
@@ -249,7 +258,7 @@ export class JobsService {
     const seniorityMatches =
       !preset.seniority || !job.seniority || job.seniority === preset.seniority;
 
-    const rolesWithoutStack = ['devops', 'qa'];
+    const rolesWithoutStack = ['devops', 'qa', 'management'];
     const stackRequired =
       !rolesWithoutStack.includes(preset.role) && preset.stack.length > 0;
 

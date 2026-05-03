@@ -57,6 +57,7 @@ export type JobRoleKind =
   | 'backend'
   | 'devops'
   | 'qa'
+  | 'management'
   | 'other';
 
 function normalizeText(value: string): string {
@@ -122,7 +123,7 @@ export function extractStackFromJobText(
   const merged = new Set<string>([...fromTitle, ...fromDescription]);
   const extracted = Array.from(merged);
 
-  if (role === 'devops' || role === 'qa') {
+  if (role === 'devops' || role === 'qa' || role === 'management') {
     return [];
   }
 
@@ -154,6 +155,14 @@ function mentionsFullStackRole(normalized: string): boolean {
 export function classifyRoleFromTitle(title: string): JobRoleKind {
   const normalized = title.toLowerCase();
 
+  if (
+    /\b(engineering\s+manager|director\s+of\s+engineering|head\s+of\s+engineering|vp\s+of\s+engineering|tech(?:nical)?\s+lead|team\s+lead|staff\s+(?:engineering\s+)?manager|engineering\s+director)\b/i.test(
+      normalized,
+    )
+  ) {
+    return 'management';
+  }
+
   if (mentionsFullStackRole(normalized)) {
     return 'fullstack';
   }
@@ -165,7 +174,7 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
     return 'mobile';
   }
   if (
-    /\b(front[\s-]?end|frontend|ui|web)\b/i.test(normalized) &&
+    /\b(front[\s-]?end|frontend|ui)\b/i.test(normalized) &&
     !/\b(back[\s-]?end|backend)\b/i.test(normalized)
   ) {
     return 'frontend';
