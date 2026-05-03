@@ -262,7 +262,6 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   brooklyn: 'united states',
   'mountain view': 'united states',
   'new york': 'united states',
-  'new york city': 'united states',
   'new jersey': 'united states',
   nj: 'united states',
   secaucas: 'united states',
@@ -272,6 +271,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   munich: 'germany',
   münchen: 'germany',
   amsterdam: 'netherlands',
+  alkmaar: 'netherlands',
   'são paulo': 'brazil',
   'sao paulo': 'brazil',
   bogota: 'colombia',
@@ -303,6 +303,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   london: 'united kingdom',
   belfast: 'united kingdom',
   manchester: 'united kingdom',
+  basingstoke: 'united kingdom',
   auckland: 'new zealand',
   sydney: 'australia',
   'hong kong': 'hong kong',
@@ -322,6 +323,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   colombo: 'sri lanka',
   taipei: 'taiwan',
   lagos: 'nigeria',
+  'abu dhabi': 'united arab emirates',
   abuja: 'nigeria',
   abidjan: COTE_DIVOIRE,
   dakar: 'senegal',
@@ -390,7 +392,9 @@ function normalizeKnownLocationPhrases(raw: string): string {
   return raw
     .replace(/\btechnological\s+pole\s+almada\b/gi, 'Lisbon, Portugal')
     .replace(/\bsan\s+francisco\s+bay\s+area\b/gi, 'Bay Area')
-    .replace(/\bcongo\s*,?\s*brazzaville\b/gi, 'Congo - Brazzaville');
+    .replace(/\bcongo\s*,?\s*brazzaville\b/gi, 'Congo - Brazzaville')
+    .replace(/\bnew\s+york\s+city\s+area\b/gi, 'New York')
+    .replace(/\bnew\s+york\s+city\b/gi, 'New York');
 }
 
 /** Split on ; | /, spaced hyphens, and " or " so alternatives become separate segments. */
