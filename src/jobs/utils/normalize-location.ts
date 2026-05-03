@@ -9,6 +9,8 @@ const REGION_ALIASES: Record<string, string> = {
   emea: 'emea',
   latam: 'latam',
   americas: 'americas',
+  /** Corporate shorthand for Americas (e.g. jobs tagged AMER / Americas region). */
+  amer: 'americas',
   namer: 'north america',
   'north america': 'north america',
   europe: 'europe',
