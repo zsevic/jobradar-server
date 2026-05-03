@@ -175,6 +175,11 @@ function isProductManagementTitle(normalized: string): boolean {
   );
 }
 
+/** Delivery/project PM — before `ai` so e.g. "… - AI Fintech" does not steal the role. */
+function isProjectManagementTitle(normalized: string): boolean {
+  return /\bproject\s+manager\b/i.test(normalized);
+}
+
 export function classifyRoleFromTitle(title: string): JobRoleKind {
   const normalized = title.toLowerCase();
 
@@ -187,6 +192,10 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
   }
 
   if (isProductManagementTitle(normalized)) {
+    return 'management';
+  }
+
+  if (isProjectManagementTitle(normalized)) {
     return 'management';
   }
 
@@ -217,10 +226,12 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
   if (/\b(back[\s-]?end|backend|api|server[\s-]?side)\b/i.test(normalized)) {
     return 'backend';
   }
+  // Do not match bare "platform" (e.g. product/growth platform); only platform-eng titles.
   if (
-    /\b(devops|sre|platform engineer|site reliability|cloud\s+infrastructure|infrastructure\s+engineer)\b/i.test(
+    /\b(devops|sre|site reliability|cloud\s+infrastructure|infrastructure\s+engineer)\b/i.test(
       normalized,
-    )
+    ) ||
+    /\bplatform\s+(?:software\s+)?engineer\b/i.test(normalized)
   ) {
     return 'devops';
   }

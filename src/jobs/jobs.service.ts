@@ -235,7 +235,7 @@ export class JobsService {
       devops: [
         'devops',
         'sre',
-        'platform',
+        'platform engineer',
         'infrastructure',
         'site reliability',
       ],
@@ -265,6 +265,7 @@ export class JobsService {
         'tech lead',
         'technical lead',
         'team lead',
+        'project manager',
         'product manager',
         'product marketing manager',
         'group product manager',
