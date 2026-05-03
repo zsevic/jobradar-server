@@ -117,11 +117,28 @@ export class AshbyAdapter implements JobProviderAdapter {
       .filter((job) => job.url.length > 0);
   }
 
+  /**
+   * Ashby may set `addressCountry` to the macro-region "European Union"; that
+   * is not a country facet and is merged as a region hint — skip it entirely.
+   */
+  private sanitizeAshbyAddressCountry(country?: string): string | undefined {
+    const t = country?.trim();
+    if (!t) {
+      return undefined;
+    }
+    if (t.replace(/\s+/g, ' ').toLowerCase() === 'european union') {
+      return undefined;
+    }
+    return t;
+  }
+
   private resolveRawLocation(job: AshbyApiJob): {
     rawLocation: string;
     countryHints: string[];
   } {
-    const primaryCountry = job.address?.postalAddress?.addressCountry;
+    const primaryCountry = this.sanitizeAshbyAddressCountry(
+      job.address?.postalAddress?.addressCountry,
+    );
     const primaryLabel = job.location?.trim();
     const primary =
       (primaryLabel
@@ -137,7 +154,9 @@ export class AshbyAdapter implements JobProviderAdapter {
       );
       this.addLocationValue(
         countryHints,
-        entry.address?.postalAddress?.addressCountry,
+        this.sanitizeAshbyAddressCountry(
+          entry.address?.postalAddress?.addressCountry,
+        ),
       );
     }
 
@@ -186,7 +205,9 @@ export class AshbyAdapter implements JobProviderAdapter {
     }
     return this.enrichGenericLocationWithCountry(
       location,
-      entry.address?.postalAddress?.addressCountry,
+      this.sanitizeAshbyAddressCountry(
+        entry.address?.postalAddress?.addressCountry,
+      ),
     );
   }
 
