@@ -9,6 +9,7 @@ const REGION_ALIASES: Record<string, string> = {
   emea: 'emea',
   latam: 'latam',
   americas: 'americas',
+  namer: 'north america',
   'north america': 'north america',
   europe: 'europe',
   'european union': 'eu',
@@ -39,6 +40,7 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'lao people’s democratic republic': 'laos',
   'lao pdr': 'laos',
   'u s': 'united states',
+  korea: 'south korea',
   'ivory coast': COTE_DIVOIRE,
   "cote d'ivoire": COTE_DIVOIRE,
   "côte d'ivoire": COTE_DIVOIRE,
@@ -248,6 +250,30 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   'bay area': ['san francisco', 'california'],
   emeryville: ['california'],
   sunnyvale: ['california'],
+  'san jose': ['california'],
+  'palo alto': ['california'],
+  'san mateo': ['california'],
+  'santa clara': ['california'],
+  hawthorne: ['california'],
+  'mountain view': ['california'],
+  bellevue: ['washington'],
+  redmond: ['washington'],
+  woodinville: ['washington'],
+  'huntington beach': ['california'],
+  'las vegas': ['nevada'],
+  gilbert: ['arizona'],
+  'new albany': ['ohio'],
+  pittsburgh: ['pennsylvania'],
+  denver: ['colorado'],
+  woburn: ['massachusetts'],
+  bastrop: ['texas'],
+  mcgregor: ['texas'],
+  starbase: ['texas'],
+  'cape canaveral': ['florida'],
+  arlington: ['virginia'],
+  chantilly: ['virginia'],
+  'annapolis junction': ['maryland'],
+  lehi: ['utah'],
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -294,8 +320,46 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   milan: 'italy',
   dallas: 'united states',
   texas: 'united states',
+  utah: 'united states',
   chicago: 'united states',
   illinois: 'united states',
+  'san jose': 'united states',
+  'palo alto': 'united states',
+  'san mateo': 'united states',
+  'santa clara': 'united states',
+  hawthorne: 'united states',
+  bellevue: 'united states',
+  redmond: 'united states',
+  woodinville: 'united states',
+  'huntington beach': 'united states',
+  'las vegas': 'united states',
+  gilbert: 'united states',
+  'new albany': 'united states',
+  pittsburgh: 'united states',
+  denver: 'united states',
+  boston: 'united states',
+  austin: 'united states',
+  woburn: 'united states',
+  bastrop: 'united states',
+  mcgregor: 'united states',
+  starbase: 'united states',
+  'cape canaveral': 'united states',
+  arlington: 'united states',
+  chantilly: 'united states',
+  'annapolis junction': 'united states',
+  lehi: 'united states',
+  vilnius: 'lithuania',
+  stockholm: 'sweden',
+  budapest: 'hungary',
+  barcelona: 'spain',
+  lausanne: 'switzerland',
+  manila: 'philippines',
+  curitiba: 'brazil',
+  helsinki: 'finland',
+  'cape town': 'south africa',
+  gurugram: 'india',
+  pune: 'india',
+  shenzhen: 'china',
   lisbon: 'portugal',
   yerevan: 'armenia',
   limassol: 'cyprus',
@@ -337,6 +401,218 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'bay area': 'united states',
 };
 
+/** Single generic English tokens that can precede geography but are not employer names. */
+const PREFIX_WORD_BLOCKLIST = new Set([
+  'research',
+  'sales',
+  'marketing',
+  'engineering',
+  'product',
+  'operations',
+  'north',
+  'south',
+  'east',
+  'west',
+  'greater',
+  'metro',
+  'central',
+  'upper',
+  'lower',
+  'new',
+  'old',
+]);
+
+function buildSortedGeoSuffixCandidates(): string[] {
+  const set = new Set<string>();
+  for (const c of KNOWN_COUNTRIES) {
+    set.add(c);
+  }
+  for (const v of Object.values(COUNTRY_ALIASES)) {
+    set.add(v);
+  }
+  for (const key of Object.keys(CITY_COUNTRY_HINTS)) {
+    if (key.length >= 4 || key.includes(' ')) {
+      set.add(key);
+    }
+  }
+  for (const k of Object.keys(REGION_ALIASES)) {
+    set.add(k);
+  }
+  for (const v of Object.values(REGION_ALIASES)) {
+    set.add(v);
+  }
+  for (const v of Object.values(US_STATE_POSTAL_TO_TOKEN)) {
+    set.add(v);
+  }
+  for (const v of Object.values(CANADA_PROVINCE_POSTAL_TO_TOKEN)) {
+    set.add(v);
+  }
+  return Array.from(set).sort((a, b) => b.length - a.length);
+}
+
+const SORTED_GEO_SUFFIXES = buildSortedGeoSuffixCandidates();
+
+function collapseEmployerNoiseSpaces(s: string): string {
+  return s
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^[\s,;/|–\-]+/g, '')
+    .trim();
+}
+
+function geoHintWordsInSegment(s: string): boolean {
+  const lower = s.toLowerCase();
+  if (/\b(united states|united kingdom|south korea|north macedonia|new zealand|hong kong)\b/.test(lower)) {
+    return true;
+  }
+  for (const w of lower.split(/\s+/).filter(Boolean)) {
+    if (KNOWN_COUNTRIES.has(w)) {
+      return true;
+    }
+    if (CITY_COUNTRY_HINTS[w]) {
+      return true;
+    }
+    if (REGION_ALIASES[w]) {
+      return true;
+    }
+    const mapped = COUNTRY_ALIASES[w as keyof typeof COUNTRY_ALIASES];
+    if (mapped && KNOWN_COUNTRIES.has(mapped)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function shouldSkipSuffixPeel(prefix: string, suffix: string): boolean {
+  const p = prefix.toLowerCase();
+  const s = suffix.toLowerCase();
+  if (s === 'california' && /^baja\b/.test(p)) {
+    return true;
+  }
+  if (s === 'york' && /\bnew\b/.test(p)) {
+    return true;
+  }
+  if (s === 'jersey' && /\bnew\b/.test(p)) {
+    return true;
+  }
+  if (s === 'mexico' && /\bnew\b/.test(p)) {
+    return true;
+  }
+  return false;
+}
+
+function isLikelyEmployerPrefix(prefix: string): boolean {
+  const pk = prefix.toLowerCase().replace(/\s+/g, ' ').trim();
+  if (!pk) {
+    return false;
+  }
+  if (pk.includes(',')) {
+    return false;
+  }
+  const words = pk.split(/\s+/);
+  if (words.length > 5) {
+    return false;
+  }
+  if (CITY_COUNTRY_HINTS[pk]) {
+    return false;
+  }
+  if (REGION_ALIASES[pk]) {
+    return false;
+  }
+  if (KNOWN_COUNTRIES.has(pk)) {
+    return false;
+  }
+  for (const key of Object.keys(CITY_COUNTRY_HINTS)) {
+    if (key.includes(' ') && pk === key) {
+      return false;
+    }
+  }
+  if (words.length === 1 && PREFIX_WORD_BLOCKLIST.has(words[0])) {
+    return false;
+  }
+  return true;
+}
+
+function applyHyphenEmployerBrandSplit(t: string): string {
+  const parts = t.split(/\s+[-–—]\s+/);
+  if (parts.length < 2) {
+    return t;
+  }
+  const left = parts[0].trim();
+  const right = parts.slice(1).join(' - ').trim();
+  if (!left || !right) {
+    return t;
+  }
+  if (
+    /[,]/.test(left) &&
+    !/\b(headquarters|hq|campus|home\s+office)\b/i.test(left)
+  ) {
+    return t;
+  }
+  const leftCorp = /\b(headquarters|hq|campus|home\s+office)\b/i.test(left);
+  const rightGeo =
+    /[,]/.test(right) ||
+    /\([^)]+\)/.test(right) ||
+    /\b(remote|hybrid|distributed|worldwide)\b/i.test(right) ||
+    geoHintWordsInSegment(right);
+  if (leftCorp || rightGeo) {
+    return right;
+  }
+  return t;
+}
+
+function applySuffixEmployerBrandPeel(t: string): string {
+  const lower = t.toLowerCase();
+  for (const suffix of SORTED_GEO_SUFFIXES) {
+    const sl = suffix.toLowerCase();
+    if (sl.length < 4 && !sl.includes(' ')) {
+      continue;
+    }
+    const idx = lower.lastIndexOf(sl);
+    if (idx === -1) {
+      continue;
+    }
+    if (idx !== lower.length - sl.length) {
+      continue;
+    }
+    if (idx > 0 && lower[idx - 1] !== ' ') {
+      continue;
+    }
+    const prefix = t.slice(0, idx).trim();
+    if (!prefix) {
+      continue;
+    }
+    if (shouldSkipSuffixPeel(prefix, suffix)) {
+      continue;
+    }
+    if (!isLikelyEmployerPrefix(prefix)) {
+      continue;
+    }
+    return t.slice(idx).trim();
+  }
+  return t;
+}
+
+/**
+ * Removes leading employer / listing noise so country & city tokens reflect geography only.
+ * Heuristics: `Brand — Place`, `Brand Place` when Place matches known geo (not Mapbox-specific).
+ */
+function stripEmployerBrandFromLocation(raw: string): string {
+  let t = raw.trim();
+  if (!t) {
+    return t;
+  }
+  t = applyHyphenEmployerBrandSplit(t);
+  t = t.trim();
+  if (!t) {
+    return t;
+  }
+  if (/,/.test(t)) {
+    return collapseEmployerNoiseSpaces(t);
+  }
+  t = applySuffixEmployerBrandPeel(t);
+  return collapseEmployerNoiseSpaces(t);
+}
+
 function normalizeToken(value: string): string {
   return value
     .normalize('NFC')
@@ -344,12 +620,18 @@ function normalizeToken(value: string): string {
     .replace(/^\*?\s*hq\b\s*(?:[\-–—:,]+\s*)?/g, '')
     .replace(/\banywhere\s+in\b/g, '')
     .replace(/\bhq\b/g, '')
+    .replace(/\b(headquarters|head\s+office)\b/g, '')
+    .replace(/\bin\s*[- ]?\s*office\b/g, '')
     .replace(/\boffice\b/g, '')
+    .replace(/\b(hybrid|onsite)\b/g, '')
+    .replace(/\bm\s*,\s*w\s*,\s*f\b/gi, '')
+    .replace(/\bm\s+w\s+f\b/gi, '')
     .replace(/\bremote\b\s*[-,:]?\s*/g, '')
     .replace(/\banywhere\b\s*[-,:]?\s*/g, '')
     .replace(/[.;]/g, ' ')
     .replace(/\s+/g, ' ')
     .replace(/^[\s\-–—]+|[\s\-–—]+$/g, '')
+    .replace(/\s+\bin\s*$/g, '')
     .trim();
 }
 
@@ -381,7 +663,8 @@ function expandParentheticalLists(raw: string): string {
         .map((p) => p.trim())
         .filter((p) => p.length > 0);
     } else {
-      return `(${inner})`;
+      // Single token / phrase: unwrap so e.g. `Remote (USA)` → `Remote USA`, `(Lehi, UT)` uses comma branch above.
+      return ` ${inner.trim()} `;
     }
     if (parts.length === 0) {
       return '';
@@ -391,16 +674,29 @@ function expandParentheticalLists(raw: string): string {
 }
 
 function normalizeKnownLocationPhrases(raw: string): string {
-  return raw
+  return stripEmployerBrandFromLocation(raw)
     .replace(/\bae\s*[-–—]\s*dubai\b/gi, 'Dubai')
     .replace(/\bca\s*[-–—]\s*toronto\b/gi, 'Toronto, Canada')
     .replace(/\bil\s*[-–—]\s*tel\s+aviv\b/gi, 'Tel Aviv, Israel')
     .replace(/\bsg\s*[-–—]\s*singapore\b/gi, 'Singapore')
+    .replace(/\bhk\s*[-–—]\s*hong\s+kong\b/gi, 'Hong Kong')
+    .replace(/\buk\s*[-–—]\s*london\b/gi, 'London, United Kingdom')
+    .replace(/\bus\s*[-–—]\s*san\s+francisco\b/gi, 'San Francisco, California')
+    .replace(/\bus\s*[-–—]\s*san\s+jose\b/gi, 'San Jose, California')
+    .replace(/\bindia\s*[-–—]\s*pune\b/gi, 'Pune, India')
+    .replace(/\blimassol\s+cyprus\b/gi, 'Limassol, Cyprus')
     .replace(/\btechnological\s+pole\s+almada\b/gi, 'Lisbon, Portugal')
     .replace(/\bsan\s+francisco\s+bay\s+area\b/gi, 'Bay Area')
     .replace(/\bcongo\s*,?\s*brazzaville\b/gi, 'Congo - Brazzaville')
     .replace(/\bnew\s+york\s+city\s+area\b/gi, 'New York')
-    .replace(/\bnew\s+york\s+city\b/gi, 'New York');
+    .replace(/\bnew\s+york\s+city\b/gi, 'New York')
+    .replace(/,\s*ca\s+united\s+states\b/gi, ', CA, United States')
+    .replace(/\busa\s+-\s*remote\b/gi, 'United States')
+    .replace(/\bremote\s+-\s*us\s*&?\s*canada\b/gi, 'United States, Canada')
+    .replace(/\bunited\s+states\s*\(\s*remote\s*\)/gi, 'United States')
+    .replace(/\bcanada\s*\(\s*hybrid\s*\)\b/gi, 'Canada')
+    .replace(/\bremote\s*\(\s*canada\s*\)/gi, 'Canada')
+    .replace(/\b([a-z0-9]+)\s*\(\s*can\s*\)/gi, '$1, Canada');
 }
 
 /** Split on ; | /, spaced hyphens, and " or " so alternatives become separate segments. */
