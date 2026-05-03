@@ -200,6 +200,26 @@ const US_STATE_POSTAL_TO_TOKEN: Record<string, string> = {
   dc: 'district of columbia',
 };
 
+/**
+ * Canadian province/territory postal abbreviations (lowercase) → region token.
+ * US map is applied first; `on` is not a US state code so it resolves here for "City, ON".
+ */
+const CANADA_PROVINCE_POSTAL_TO_TOKEN: Record<string, string> = {
+  ab: 'alberta',
+  bc: 'british columbia',
+  mb: 'manitoba',
+  nb: 'new brunswick',
+  nl: 'newfoundland and labrador',
+  ns: 'nova scotia',
+  nt: 'northwest territories',
+  nu: 'nunavut',
+  on: 'ontario',
+  pe: 'prince edward island',
+  qc: 'quebec',
+  sk: 'saskatchewan',
+  yt: 'yukon',
+};
+
 /** Extra geographic tokens to record when a city hint matches (e.g. known metro region). */
 const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   'redwood city': ['california'],
@@ -236,6 +256,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   prague: 'czechia',
   warszawa: 'poland',
   warsaw: 'poland',
+  toronto: 'canada',
   atlanta: 'united states',
   'mexico city': 'mexico',
   seattle: 'united states',
@@ -363,7 +384,10 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
         continue;
       }
 
-      const facetKey = US_STATE_POSTAL_TO_TOKEN[trimmedBit] ?? trimmedBit;
+      const facetKey =
+        US_STATE_POSTAL_TO_TOKEN[trimmedBit] ??
+        CANADA_PROVINCE_POSTAL_TO_TOKEN[trimmedBit] ??
+        trimmedBit;
       tokens.add(facetKey);
 
       const mappedRegion = REGION_ALIASES[facetKey];
