@@ -283,6 +283,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   limassol: 'cyprus',
   birkirkara: 'malta',
   london: 'united kingdom',
+  belfast: 'united kingdom',
   manchester: 'united kingdom',
   auckland: 'new zealand',
   'hong kong': 'hong kong',
