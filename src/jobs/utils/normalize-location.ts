@@ -22,6 +22,7 @@ const REGION_ALIASES: Record<string, string> = {
   /** Corporate catch-all (e.g. `Global Remote` after token cleanup). */
   global: 'global',
   worldwide: 'worldwide',
+  'middle east': 'middle east',
 };
 
 /** Lowercase; matches `Intl.DisplayNames(['en'], { type: 'region' }).of('CI').toLowerCase()` (d’Ivoire uses U+2019). */
@@ -152,6 +153,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'bangladesh',
   'turkey',
   'bosnia and herzegovina',
+  'bermuda',
   'north macedonia',
   'ethiopia',
   'montenegro',
@@ -288,6 +290,7 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   mcgregor: ['texas'],
   starbase: ['texas'],
   'cape canaveral': ['florida'],
+  'foster city': ['california'],
   arlington: ['virginia'],
   chantilly: ['virginia'],
   'annapolis junction': ['maryland'],
@@ -367,6 +370,14 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'annapolis junction': 'united states',
   lehi: 'united states',
   vilnius: 'lithuania',
+  kaunas: 'lithuania',
+  marseille: 'france',
+  montreal: 'canada',
+  montréal: 'canada',
+  detroit: 'united states',
+  borlange: 'sweden',
+  borlänge: 'sweden',
+  'foster city': 'united states',
   stockholm: 'sweden',
   budapest: 'hungary',
   barcelona: 'spain',
@@ -751,7 +762,17 @@ function expandParentheticalLists(raw: string): string {
 function normalizeKnownLocationPhrases(raw: string): string {
   const preStripped = raw
     .replace(/\bglobal\s*,\s*remote\b/gi, 'Worldwide')
-    .replace(/\bindia[-–—]bangalore\b/gi, 'Bangalore, India');
+    .replace(/\bindia[-–—]bangalore\b/gi, 'Bangalore, India')
+    .replace(/^\s*all locations\s*$/gi, '')
+    .replace(/^\s*no location\s*$/gi, '')
+    .replace(
+      /\bedt\s*\/\s*est\s*\([^)]*us\s+east\s+coast[^)]*\)/gi,
+      'United States',
+    )
+    .replace(
+      /\bremote\s+first\s*[-–—]\s*western\s+european\s*\+\s*eastern\s+time\s+zones\b/gi,
+      'Europe, United States',
+    );
   return stripEmployerBrandFromLocation(preStripped)
     .replace(
       /\bdistributed\s*\(\s*([^)]+)\s*\)/gi,
@@ -775,6 +796,10 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bnew\s+york\s+city\s+area\b/gi, 'New York')
     .replace(/\bnew\s+york\s+city\b/gi, 'New York')
     .replace(/,\s*ca\s+united\s+states\b/gi, ', CA, United States')
+    .replace(/\bhq\s*:\s*/gi, '')
+    .replace(/\bremote\s+u\.s\.?\b/gi, 'United States')
+    .replace(/\bremote\s*,\s*usa\b/gi, 'United States')
+    .replace(/\bnew\s+york\s+city\s+office\b/gi, 'New York')
     .replace(/\busa\s+-\s*remote\b/gi, 'United States')
     .replace(/\bunited\s+states\s*[-–—]\s*remote\b/gi, 'United States')
     .replace(/\bindia\s*[-–—]\s*bangalore\b/gi, 'Bangalore, India')
