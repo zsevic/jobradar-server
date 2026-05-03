@@ -148,6 +148,16 @@ const KNOWN_COUNTRIES = new Set<string>([
 ]);
 
 /**
+ * Common US city abbreviations → normalized city tokens (applied before state abbreviations).
+ * `la` maps here so it means Los Angeles, not Louisiana’s postal code LA.
+ */
+const US_METRO_ABBREV_TO_TOKEN: Record<string, string> = {
+  nyc: 'new york',
+  la: 'los angeles',
+  sf: 'san francisco',
+};
+
+/**
  * Two-letter US postal codes → lowercase state/region name for tokens (omit codes that
  * collide with English words or country names: ga, in, me, ok, or).
  */
@@ -167,7 +177,6 @@ const US_STATE_POSTAL_TO_TOKEN: Record<string, string> = {
   ia: 'iowa',
   ks: 'kansas',
   ky: 'kentucky',
-  la: 'louisiana',
   md: 'maryland',
   ma: 'massachusetts',
   mi: 'michigan',
@@ -230,11 +239,11 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   berlin: 'germany',
   paris: 'france',
   'san francisco': 'united states',
+  'los angeles': 'united states',
   'redwood city': 'united states',
   brooklyn: 'united states',
   'mountain view': 'united states',
   'new york': 'united states',
-  nyc: 'united states',
   'new york city': 'united states',
   'new jersey': 'united states',
   nj: 'united states',
@@ -385,6 +394,7 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       }
 
       const facetKey =
+        US_METRO_ABBREV_TO_TOKEN[trimmedBit] ??
         US_STATE_POSTAL_TO_TOKEN[trimmedBit] ??
         CANADA_PROVINCE_POSTAL_TO_TOKEN[trimmedBit] ??
         trimmedBit;
