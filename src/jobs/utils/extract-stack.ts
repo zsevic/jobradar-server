@@ -173,7 +173,11 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
   if (/\b(back[\s-]?end|backend|api|server[\s-]?side)\b/i.test(normalized)) {
     return 'backend';
   }
-  if (/\b(devops|sre|platform engineer|site reliability)\b/i.test(normalized)) {
+  if (
+    /\b(devops|sre|platform engineer|site reliability|cloud\s+infrastructure|infrastructure\s+engineer)\b/i.test(
+      normalized,
+    )
+  ) {
     return 'devops';
   }
   if (
