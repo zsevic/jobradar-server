@@ -29,4 +29,5 @@ Thumbs.db
 
 # generated extractor output
 /scripts/extracted-sources.json
+/scripts/output
 /sources.html
