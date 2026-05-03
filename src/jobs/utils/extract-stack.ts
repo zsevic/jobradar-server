@@ -193,6 +193,14 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
   ) {
     return 'mobile';
   }
+  // Before UI/frontend: titles like "UI QA Automation Engineer" must not match `\bui\b` alone.
+  if (
+    /\b(qa|quality assurance|test automation|tester|test engineer|sdet|software development engineer in test)\b/i.test(
+      normalized,
+    )
+  ) {
+    return 'qa';
+  }
   if (
     /\b(front[\s-]?end|frontend|ui)\b/i.test(normalized) &&
     !/\b(back[\s-]?end|backend)\b/i.test(normalized)
@@ -208,13 +216,6 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
     )
   ) {
     return 'devops';
-  }
-  if (
-    /\b(qa|quality assurance|test automation|tester|test engineer|sdet|software development engineer in test)\b/i.test(
-      normalized,
-    )
-  ) {
-    return 'qa';
   }
 
   return 'other';

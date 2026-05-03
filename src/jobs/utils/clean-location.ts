@@ -20,8 +20,17 @@ function canonicalLocationPart(value: string): string {
   return LOCATION_PART_ALIASES[cleaned] ?? cleaned;
 }
 
+/** Strips empty parentheses `()` / `( )` left after label removal or ATS noise. */
+function stripEmptyParentheses(value: string): string {
+  let t = value.trim();
+  while (/\(\s*\)/.test(t)) {
+    t = t.replace(/\(\s*\)/g, ' ').replace(/\s{2,}/g, ' ').trim();
+  }
+  return t;
+}
+
 export function cleanLocationAfterRemoteDetection(location: string): string {
-  const trimmed = location.trim();
+  const trimmed = stripEmptyParentheses(location);
   if (!trimmed) {
     return 'Unknown';
   }
@@ -69,7 +78,8 @@ export function cleanLocationAfterRemoteDetection(location: string): string {
     }
   }
 
-  return uniqueParts.length > 0 ? uniqueParts.join(', ') : 'Unknown';
+  const joined = uniqueParts.length > 0 ? uniqueParts.join(', ') : 'Unknown';
+  return joined === 'Unknown' ? joined : stripEmptyParentheses(joined);
 }
 
 export function formatRawLocation(location: string): string {
@@ -78,11 +88,13 @@ export function formatRawLocation(location: string): string {
     return 'Unknown';
   }
 
-  return trimmed
-    .replace(/\s*;\s*/g, ', ')
-    .replace(/,\s*,+/g, ', ')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
+  return stripEmptyParentheses(
+    trimmed
+      .replace(/\s*;\s*/g, ', ')
+      .replace(/,\s*,+/g, ', ')
+      .replace(/\s{2,}/g, ' ')
+      .trim(),
+  );
 }
 
 /**
@@ -105,7 +117,7 @@ export function stripCompanyNameFromLocation(
 
   const comp = company.trim();
   if (!comp) {
-    return raw;
+    return loc;
   }
 
   if (locSolo === comp.toLowerCase()) {
@@ -114,7 +126,7 @@ export function stripCompanyNameFromLocation(
 
   const words = comp.split(/\s+/).filter(Boolean);
   if (words.length === 1 && words[0].length < 3) {
-    return raw;
+    return loc;
   }
 
   const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -132,7 +144,7 @@ export function stripCompanyNameFromLocation(
   if (!out) {
     return loc;
   }
-  return out;
+  return stripEmptyParentheses(out);
 }
 
 /**
@@ -144,7 +156,7 @@ export function resolveNormalizedLocation(
   formattedRaw: string,
   options?: { remoteIndicatedByProvider?: boolean },
 ): string {
-  const trimmed = formattedRaw.trim();
+  const trimmed = stripEmptyParentheses(formattedRaw);
   const lower = trimmed.toLowerCase();
   const forFacets =
     !trimmed || lower === 'unknown' ? '' : trimmed;
