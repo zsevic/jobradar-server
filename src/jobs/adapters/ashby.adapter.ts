@@ -16,10 +16,20 @@ import {
 } from '../utils/extract-stack';
 import { stripLocationFromTitle } from '../utils/strip-title-location';
 
+interface AshbyPostalAddress {
+  addressCountry?: string;
+  addressRegion?: string;
+  addressLocality?: string;
+}
+
 interface AshbyApiJob {
   id?: string;
   title?: string;
   location?: string;
+  /** Primary office postal data; `addressCountry` backs `locationCountryHints` like secondaries. */
+  address?: {
+    postalAddress?: AshbyPostalAddress;
+  };
   secondaryLocations?: AshbySecondaryLocation[];
   isRemote?: boolean;
   workplaceType?: string;
@@ -33,11 +43,7 @@ interface AshbyApiJob {
 interface AshbySecondaryLocation {
   location?: string;
   address?: {
-    postalAddress?: {
-      addressCountry?: string;
-      addressRegion?: string;
-      addressLocality?: string;
-    };
+    postalAddress?: AshbyPostalAddress;
   };
 }
 
@@ -115,9 +121,15 @@ export class AshbyAdapter implements JobProviderAdapter {
     rawLocation: string;
     countryHints: string[];
   } {
-    const primary = job.location?.trim() || 'Unknown';
+    const primaryCountry = job.address?.postalAddress?.addressCountry;
+    const primaryLabel = job.location?.trim();
+    const primary =
+      (primaryLabel
+        ? this.enrichGenericLocationWithCountry(primaryLabel, primaryCountry)
+        : '') || 'Unknown';
     const secondary = new Set<string>();
     const countryHints = new Set<string>();
+    this.addLocationValue(countryHints, primaryCountry);
     for (const entry of job.secondaryLocations ?? []) {
       this.addLocationValue(
         secondary,
@@ -137,12 +149,34 @@ export class AshbyAdapter implements JobProviderAdapter {
   }
 
   /**
-   * If the secondary entry's location text is a generic, non-geographic label
-   * (e.g. "Remote", "Hybrid"), append the postal country so it is preserved
-   * after stripping remote tokens (e.g. "Remote" + "United States" →
-   * "Remote, United States"). City/region/country labels keep their original
-   * text — country still flows into locationCountries via countryHints.
+   * If the location text is a generic, non-geographic label (e.g. "Remote",
+   * "Hybrid"), append the postal country so it survives facet token cleanup
+   * (e.g. "Remote" + "United States" → "Remote, United States"). Used for the
+   * primary `location` string and for each secondary entry. Country still
+   * merges into `locationCountries` via `locationCountryHints` from the API.
    */
+  private enrichGenericLocationWithCountry(
+    location: string,
+    country?: string,
+  ): string {
+    const trimmed = location.trim();
+    const c = country?.trim();
+    if (!c) {
+      return trimmed;
+    }
+    const isGeneric =
+      /^(remote|anywhere|distributed|hybrid|on[-\s]?site|onsite)$/i.test(
+        trimmed,
+      );
+    if (!isGeneric) {
+      return trimmed;
+    }
+    if (trimmed.toLowerCase().includes(c.toLowerCase())) {
+      return trimmed;
+    }
+    return `${trimmed}, ${c}`;
+  }
+
   private resolveSecondaryLocationLabel(
     entry: AshbySecondaryLocation,
   ): string | undefined {
@@ -150,25 +184,10 @@ export class AshbyAdapter implements JobProviderAdapter {
     if (!location) {
       return undefined;
     }
-
-    const country = entry.address?.postalAddress?.addressCountry?.trim();
-    if (!country) {
-      return location;
-    }
-
-    const isGeneric =
-      /^(remote|anywhere|distributed|hybrid|on[-\s]?site|onsite)$/i.test(
-        location,
-      );
-    if (!isGeneric) {
-      return location;
-    }
-
-    if (location.toLowerCase().includes(country.toLowerCase())) {
-      return location;
-    }
-
-    return `${location}, ${country}`;
+    return this.enrichGenericLocationWithCountry(
+      location,
+      entry.address?.postalAddress?.addressCountry,
+    );
   }
 
   private addLocationValue(target: Set<string>, value?: string): void {
