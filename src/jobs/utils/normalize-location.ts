@@ -232,6 +232,7 @@ const CANADA_PROVINCE_POSTAL_TO_TOKEN: Record<string, string> = {
 /** Extra geographic tokens to record when a city hint matches (e.g. known metro region). */
 const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   'redwood city': ['california'],
+  'bay area': ['san francisco', 'california'],
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -308,6 +309,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   split: 'croatia',
   almaty: 'kazakhstan',
   cebu: 'philippines',
+  'bay area': 'united states',
 };
 
 function normalizeToken(value: string): string {
@@ -358,7 +360,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
   return raw.replace(/\btechnological\s+pole\s+almada\b/gi, 'Lisbon, Portugal');
 }
 
-/** Split on ; | / and on spaced hyphens "Geo - Remote" so countries/regions parse. */
+/** Split on ; | /, spaced hyphens, and " or " so alternatives become separate segments. */
 function splitLocation(raw: string): string[] {
   const segments: string[] = [];
   const expanded = expandParentheticalLists(normalizeKnownLocationPhrases(raw));
@@ -372,7 +374,13 @@ function splitLocation(raw: string): string[] {
       .split(/\s+[-–—]\s+/g)
       .map((part) => part.trim())
       .filter((part) => part.length > 0);
-    segments.push(...hyphenParts);
+    for (const hyphenPart of hyphenParts) {
+      const orParts = hyphenPart
+        .split(/\s+or\s+/i)
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0);
+      segments.push(...orParts);
+    }
   }
 
   return segments;
