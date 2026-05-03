@@ -324,6 +324,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   taipei: 'taiwan',
   lagos: 'nigeria',
   'abu dhabi': 'united arab emirates',
+  dubai: 'united arab emirates',
+  'tel aviv': 'israel',
   abuja: 'nigeria',
   abidjan: COTE_DIVOIRE,
   dakar: 'senegal',
@@ -390,6 +392,10 @@ function expandParentheticalLists(raw: string): string {
 
 function normalizeKnownLocationPhrases(raw: string): string {
   return raw
+    .replace(/\bae\s*[-–—]\s*dubai\b/gi, 'Dubai')
+    .replace(/\bca\s*[-–—]\s*toronto\b/gi, 'Toronto, Canada')
+    .replace(/\bil\s*[-–—]\s*tel\s+aviv\b/gi, 'Tel Aviv, Israel')
+    .replace(/\bsg\s*[-–—]\s*singapore\b/gi, 'Singapore')
     .replace(/\btechnological\s+pole\s+almada\b/gi, 'Lisbon, Portugal')
     .replace(/\bsan\s+francisco\s+bay\s+area\b/gi, 'Bay Area')
     .replace(/\bcongo\s*,?\s*brazzaville\b/gi, 'Congo - Brazzaville')
