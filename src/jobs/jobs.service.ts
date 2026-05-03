@@ -248,6 +248,13 @@ export class JobsService {
         'tech lead',
         'technical lead',
         'team lead',
+        'product manager',
+        'product marketing manager',
+        'group product manager',
+        'technical product manager',
+        'product owner',
+        'head of product',
+        'vp of product',
       ],
     };
 

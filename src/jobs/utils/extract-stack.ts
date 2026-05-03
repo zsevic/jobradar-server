@@ -152,6 +152,22 @@ function mentionsFullStackRole(normalized: string): boolean {
   return /\b(full[\s-]?stack|full stack|fullstack)\b/i.test(normalized);
 }
 
+/**
+ * Product leadership titles — same `management` facet as eng leaders (not IC
+ * engineering; avoids e.g. "… AI & Infrastructure" matching devops).
+ */
+function isProductManagementTitle(normalized: string): boolean {
+  return (
+    /\bproduct\s+(?:marketing\s+)?manager\b/i.test(normalized) ||
+    /\bgroup\s+product\s+manager\b/i.test(normalized) ||
+    /\btechnical\s+product\s+manager\b/i.test(normalized) ||
+    /\bproduct\s+owner\b/i.test(normalized) ||
+    /\bchief\s+product\s+officer\b/i.test(normalized) ||
+    /\bvp\s+of\s+product\b/i.test(normalized) ||
+    /\bhead\s+of\s+product\b/i.test(normalized)
+  );
+}
+
 export function classifyRoleFromTitle(title: string): JobRoleKind {
   const normalized = title.toLowerCase();
 
@@ -160,6 +176,10 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
       normalized,
     )
   ) {
+    return 'management';
+  }
+
+  if (isProductManagementTitle(normalized)) {
     return 'management';
   }
 
