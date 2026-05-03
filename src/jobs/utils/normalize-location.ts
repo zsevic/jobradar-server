@@ -143,6 +143,8 @@ const KNOWN_COUNTRIES = new Set<string>([
   'turkmenistan',
   'lebanon',
   'laos',
+  'puerto rico',
+  'gibraltar',
 ]);
 
 /**
@@ -274,8 +276,6 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   split: 'croatia',
   almaty: 'kazakhstan',
   cebu: 'philippines',
-  gibraltar: 'united kingdom',
-  'puerto rico': 'united states',
 };
 
 function normalizeToken(value: string): string {
