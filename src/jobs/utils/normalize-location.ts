@@ -145,11 +145,72 @@ const KNOWN_COUNTRIES = new Set<string>([
   'laos',
 ]);
 
+/**
+ * Two-letter US postal codes → lowercase state/region name for tokens (omit codes that
+ * collide with English words or country names: ga, in, me, ok, or).
+ */
+const US_STATE_POSTAL_TO_TOKEN: Record<string, string> = {
+  al: 'alabama',
+  ak: 'alaska',
+  az: 'arizona',
+  ar: 'arkansas',
+  ca: 'california',
+  co: 'colorado',
+  ct: 'connecticut',
+  de: 'delaware',
+  fl: 'florida',
+  hi: 'hawaii',
+  id: 'idaho',
+  il: 'illinois',
+  ia: 'iowa',
+  ks: 'kansas',
+  ky: 'kentucky',
+  la: 'louisiana',
+  md: 'maryland',
+  ma: 'massachusetts',
+  mi: 'michigan',
+  mn: 'minnesota',
+  ms: 'mississippi',
+  mo: 'missouri',
+  mt: 'montana',
+  ne: 'nebraska',
+  nv: 'nevada',
+  nh: 'new hampshire',
+  nj: 'new jersey',
+  nm: 'new mexico',
+  ny: 'new york',
+  nc: 'north carolina',
+  nd: 'north dakota',
+  oh: 'ohio',
+  pa: 'pennsylvania',
+  ri: 'rhode island',
+  sc: 'south carolina',
+  sd: 'south dakota',
+  tn: 'tennessee',
+  tx: 'texas',
+  ut: 'utah',
+  vt: 'vermont',
+  va: 'virginia',
+  wa: 'washington',
+  wv: 'west virginia',
+  wi: 'wisconsin',
+  wy: 'wyoming',
+  dc: 'district of columbia',
+};
+
+/** Extra geographic tokens to record when a city hint matches (e.g. known metro region). */
+const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
+  'redwood city': ['california'],
+};
+
 const CITY_COUNTRY_HINTS: Record<string, string> = {
   belgrade: 'serbia',
   berlin: 'germany',
   paris: 'france',
   'san francisco': 'united states',
+  'redwood city': 'united states',
+  brooklyn: 'united states',
+  'mountain view': 'united states',
   'new york': 'united states',
   nyc: 'united states',
   'new york city': 'united states',
@@ -221,6 +282,7 @@ function normalizeToken(value: string): string {
   return value
     .normalize('NFC')
     .toLowerCase()
+    .replace(/\bhq\b/g, '')
     .replace(/\boffice\b/g, '')
     .replace(/\bremote\b\s*[-,:]?\s*/g, '')
     .replace(/\banywhere\b\s*[-,:]?\s*/g, '')
@@ -230,16 +292,23 @@ function normalizeToken(value: string): string {
     .trim();
 }
 
-/** Expands parenthesized `A | B` lists so each item becomes its own split segment. */
-function expandParentheticalPipeLists(raw: string): string {
+/** Expands parenthesized `A | B` or `(A, B)` lists so each item becomes its own segment. */
+function expandParentheticalLists(raw: string): string {
   return raw.replace(/\(\s*([^)]+)\s*\)/g, (_, inner: string) => {
-    if (!inner.includes('|')) {
+    let parts: string[];
+    if (inner.includes('|')) {
+      parts = inner
+        .split('|')
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
+    } else if (inner.includes(',')) {
+      parts = inner
+        .split(',')
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
+    } else {
       return `(${inner})`;
     }
-    const parts = inner
-      .split('|')
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
     if (parts.length === 0) {
       return '';
     }
@@ -247,10 +316,14 @@ function expandParentheticalPipeLists(raw: string): string {
   });
 }
 
+function normalizeKnownLocationPhrases(raw: string): string {
+  return raw.replace(/\btechnological\s+pole\s+almada\b/gi, 'Lisbon, Portugal');
+}
+
 /** Split on ; | / and on spaced hyphens "Geo - Remote" so countries/regions parse. */
 function splitLocation(raw: string): string[] {
   const segments: string[] = [];
-  const expanded = expandParentheticalPipeLists(raw);
+  const expanded = expandParentheticalLists(normalizeKnownLocationPhrases(raw));
   const topLevel = expanded
     .split(/[;/|]/g)
     .map((part) => part.trim())
@@ -289,23 +362,31 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       if (!trimmedBit) {
         continue;
       }
-      tokens.add(trimmedBit);
 
-      const mappedRegion = REGION_ALIASES[trimmedBit];
+      const facetKey = US_STATE_POSTAL_TO_TOKEN[trimmedBit] ?? trimmedBit;
+      tokens.add(facetKey);
+
+      const mappedRegion = REGION_ALIASES[facetKey];
       if (mappedRegion) {
         regions.add(mappedRegion);
       }
 
-      const mappedCountry = COUNTRY_ALIASES[trimmedBit] ?? trimmedBit;
+      const mappedCountry = COUNTRY_ALIASES[facetKey] ?? facetKey;
       if (KNOWN_COUNTRIES.has(mappedCountry)) {
         countries.add(mappedCountry);
         tokens.add(mappedCountry);
       }
 
-      const hintedCountry = CITY_COUNTRY_HINTS[trimmedBit];
+      const hintedCountry = CITY_COUNTRY_HINTS[facetKey];
       if (hintedCountry) {
         countries.add(hintedCountry);
         tokens.add(hintedCountry);
+        const extraTokens = EXTRA_TOKENS_FOR_CITY_HINT[facetKey];
+        if (extraTokens) {
+          for (const extra of extraTokens) {
+            tokens.add(extra);
+          }
+        }
       }
     }
   }
