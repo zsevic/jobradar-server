@@ -286,6 +286,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   belfast: 'united kingdom',
   manchester: 'united kingdom',
   auckland: 'new zealand',
+  sydney: 'australia',
   'hong kong': 'hong kong',
   galway: 'ireland',
   ghent: 'belgium',
@@ -313,6 +314,7 @@ function normalizeToken(value: string): string {
   return value
     .normalize('NFC')
     .toLowerCase()
+    .replace(/\banywhere\s+in\b/g, '')
     .replace(/\bhq\b/g, '')
     .replace(/\boffice\b/g, '')
     .replace(/\bremote\b\s*[-,:]?\s*/g, '')
@@ -321,6 +323,11 @@ function normalizeToken(value: string): string {
     .replace(/\s+/g, ' ')
     .replace(/^[\s\-–—]+|[\s\-–—]+$/g, '')
     .trim();
+}
+
+/** Strips a leading "in " from a segment (e.g. "in France" → france). */
+function stripLeadingInSegment(segment: string): string {
+  return segment.replace(/^\s*in\s+/i, '').trim();
 }
 
 /** Expands parenthesized `A | B` or `(A, B)` lists so each item becomes its own segment. */
@@ -389,7 +396,9 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       .filter((bit) => bit.length > 0);
 
     for (const bit of commaBits.length > 0 ? commaBits : [normalizedPart]) {
-      const trimmedBit = bit.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim();
+      const trimmedBit = stripLeadingInSegment(
+        bit.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim(),
+      );
       if (!trimmedBit) {
         continue;
       }
