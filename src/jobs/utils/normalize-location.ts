@@ -17,6 +17,9 @@ const REGION_ALIASES: Record<string, string> = {
   'west coast': 'west coast',
 };
 
+/** Lowercase; matches `Intl.DisplayNames(['en'], { type: 'region' }).of('CI').toLowerCase()` (d’Ivoire uses U+2019). */
+const COTE_DIVOIRE = 'côte d\u2019ivoire';
+
 const COUNTRY_ALIASES: Record<string, string> = {
   usa: 'united states',
   us: 'united states',
@@ -36,9 +39,9 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'lao people’s democratic republic': 'laos',
   'lao pdr': 'laos',
   'u s': 'united states',
-  'ivory coast': "côte d'ivoire",
-  "cote d'ivoire": "côte d'ivoire",
-  'côte d’ivoire': "côte d'ivoire",
+  'ivory coast': COTE_DIVOIRE,
+  "cote d'ivoire": COTE_DIVOIRE,
+  "côte d'ivoire": COTE_DIVOIRE,
   'congo brazzaville': 'congo - brazzaville',
 };
 
@@ -149,9 +152,11 @@ const KNOWN_COUNTRIES = new Set<string>([
   'laos',
   'puerto rico',
   'gibraltar',
-  "côte d'ivoire",
+  COTE_DIVOIRE,
   'senegal',
   'cameroon',
+  'mali',
+  'benin',
   'congo - brazzaville',
 ]);
 
@@ -318,9 +323,10 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   taipei: 'taiwan',
   lagos: 'nigeria',
   abuja: 'nigeria',
-  abidjan: "côte d'ivoire",
+  abidjan: COTE_DIVOIRE,
   dakar: 'senegal',
   douala: 'cameroon',
+  bamako: 'mali',
   split: 'croatia',
   almaty: 'kazakhstan',
   cebu: 'philippines',
@@ -331,6 +337,7 @@ function normalizeToken(value: string): string {
   return value
     .normalize('NFC')
     .toLowerCase()
+    .replace(/^\*?\s*hq\b\s*(?:[\-–—:,]+\s*)?/g, '')
     .replace(/\banywhere\s+in\b/g, '')
     .replace(/\bhq\b/g, '')
     .replace(/\boffice\b/g, '')
@@ -347,7 +354,10 @@ function stripLeadingInSegment(segment: string): string {
   return segment.replace(/^\s*in\s+/i, '').trim();
 }
 
-/** Expands parenthesized `A | B` or `(A, B)` lists so each item becomes its own segment. */
+/**
+ * Expands parenthesized lists: `A | B`, `(A, B)`, or `(A or B)` so each item is its own
+ * top-level segment (e.g. `Remote (U.S. or Europe)`).
+ */
 function expandParentheticalLists(raw: string): string {
   return raw.replace(/\(\s*([^)]+)\s*\)/g, (_, inner: string) => {
     let parts: string[];
@@ -359,6 +369,11 @@ function expandParentheticalLists(raw: string): string {
     } else if (inner.includes(',')) {
       parts = inner
         .split(',')
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
+    } else if (/\s+or\s+/i.test(inner)) {
+      parts = inner
+        .split(/\s+or\s+/i)
         .map((p) => p.trim())
         .filter((p) => p.length > 0);
     } else {
