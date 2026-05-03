@@ -43,6 +43,7 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'lao pdr': 'laos',
   'u s': 'united states',
   korea: 'south korea',
+  phillipines: 'philippines',
   'ivory coast': COTE_DIVOIRE,
   "cote d'ivoire": COTE_DIVOIRE,
   "côte d'ivoire": COTE_DIVOIRE,
@@ -677,6 +678,11 @@ function expandParentheticalLists(raw: string): string {
 
 function normalizeKnownLocationPhrases(raw: string): string {
   return stripEmployerBrandFromLocation(raw)
+    .replace(
+      /\bdistributed\s*\(\s*([^)]+)\s*\)/gi,
+      (_m, inner: string) => inner.trim(),
+    )
+    .replace(/\bphillipines\b/gi, 'Philippines')
     .replace(/\bae\s*[-–—]\s*dubai\b/gi, 'Dubai')
     .replace(/\bca\s*[-–—]\s*toronto\b/gi, 'Toronto, Canada')
     .replace(/\bil\s*[-–—]\s*tel\s+aviv\b/gi, 'Tel Aviv, Israel')
