@@ -188,8 +188,9 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
 }
 
 /**
- * When the title yields {@link JobRoleKind} `other`, re-check plain-text
- * description (e.g. Ashby `descriptionPlain`) for full-stack wording.
+ * When the title yields {@link JobRoleKind} `other`, optionally re-check plain-text
+ * description (e.g. Ashby `descriptionPlain`) for full-stack wording — only if the
+ * title already suggests an engineering role (`engineer` / `engineers` / `engineering`).
  */
 export function classifyRoleWithDescriptionFallback(
   title: string,
@@ -197,6 +198,12 @@ export function classifyRoleWithDescriptionFallback(
 ): JobRoleKind {
   const fromTitle = classifyRoleFromTitle(title);
   if (fromTitle !== 'other' || !description?.trim()) {
+    return fromTitle;
+  }
+  const titleNorm = title.toLowerCase();
+  const titleLooksEngineering =
+    /\bengineers?\b/i.test(titleNorm) || /\bengineering\b/i.test(titleNorm);
+  if (!titleLooksEngineering) {
     return fromTitle;
   }
   if (mentionsFullStackRole(normalizeText(description))) {
