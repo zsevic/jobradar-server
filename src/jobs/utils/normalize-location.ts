@@ -233,6 +233,7 @@ const CANADA_PROVINCE_POSTAL_TO_TOKEN: Record<string, string> = {
 const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   'redwood city': ['california'],
   'bay area': ['san francisco', 'california'],
+  emeryville: ['california'],
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -242,6 +243,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'san francisco': 'united states',
   'los angeles': 'united states',
   'redwood city': 'united states',
+  emeryville: 'united states',
   brooklyn: 'united states',
   'mountain view': 'united states',
   'new york': 'united states',
@@ -357,7 +359,9 @@ function expandParentheticalLists(raw: string): string {
 }
 
 function normalizeKnownLocationPhrases(raw: string): string {
-  return raw.replace(/\btechnological\s+pole\s+almada\b/gi, 'Lisbon, Portugal');
+  return raw
+    .replace(/\btechnological\s+pole\s+almada\b/gi, 'Lisbon, Portugal')
+    .replace(/\bsan\s+francisco\s+bay\s+area\b/gi, 'Bay Area');
 }
 
 /** Split on ; | /, spaced hyphens, and " or " so alternatives become separate segments. */
