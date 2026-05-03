@@ -512,6 +512,10 @@ function isLikelyEmployerPrefix(prefix: string): boolean {
   if (!pk) {
     return false;
   }
+  // Multi-segment listings (e.g. "Germany | Helsinki") are not "CompanyName + city".
+  if (/[|;/]/.test(pk)) {
+    return false;
+  }
   if (pk.includes(',')) {
     return false;
   }
