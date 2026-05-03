@@ -19,6 +19,9 @@ const REGION_ALIASES: Record<string, string> = {
   'east coast': 'east coast',
   'west coast': 'west coast',
   africa: 'africa',
+  /** Corporate catch-all (e.g. `Global Remote` after token cleanup). */
+  global: 'global',
+  worldwide: 'worldwide',
 };
 
 /** Lowercase; matches `Intl.DisplayNames(['en'], { type: 'region' }).of('CI').toLowerCase()` (d’Ivoire uses U+2019). */
@@ -231,6 +234,9 @@ const US_STATE_POSTAL_TO_TOKEN: Record<string, string> = {
   dc: 'district of columbia',
 };
 
+/** US state / DC full tokens (values of {@link US_STATE_POSTAL_TO_TOKEN}) → imply `united states` when not a country name. */
+const US_STATE_NAME_SET = new Set<string>(Object.values(US_STATE_POSTAL_TO_TOKEN));
+
 /**
  * Canadian province/territory postal abbreviations (lowercase) → region token.
  * US map is applied first; `on` is not a US state code so it resolves here for "City, ON".
@@ -250,6 +256,11 @@ const CANADA_PROVINCE_POSTAL_TO_TOKEN: Record<string, string> = {
   sk: 'saskatchewan',
   yt: 'yukon',
 };
+
+/** Canadian province/territory full tokens → imply `canada`. */
+const CANADA_PROVINCE_NAME_SET = new Set<string>(
+  Object.values(CANADA_PROVINCE_POSTAL_TO_TOKEN),
+);
 
 /** Extra geographic tokens to record when a city hint matches (e.g. known metro region). */
 const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
@@ -400,6 +411,14 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'san luis obispo': 'united states',
   phoenix: 'united states',
   reading: 'united kingdom',
+  ottawa: 'canada',
+  philadelphia: 'united states',
+  'salt lake city': 'united states',
+  charlotte: 'united states',
+  melbourne: 'australia',
+  casablanca: 'morocco',
+  dumaguete: 'philippines',
+  tampico: 'mexico',
   lima: 'peru',
   dublin: 'ireland',
   tallinn: 'estonia',
@@ -521,6 +540,21 @@ function shouldSkipSuffixPeel(prefix: string, suffix: string): boolean {
   return false;
 }
 
+/** True when `s` is only work-arrangement / catch-all hiring words (no city/country tokens). */
+function isWorkModeOnlySegment(s: string): boolean {
+  let t = s.toLowerCase();
+  t = t.replace(/\b(fully\s+)?remote\b/g, '');
+  t = t.replace(/\bhybrid\b/g, '');
+  t = t.replace(/\b(onsite|on-site)\b/g, '');
+  t = t.replace(/\bdistributed\b/g, '');
+  t = t.replace(/\bworldwide\b/g, '');
+  t = t.replace(/\bglobal\b/g, '');
+  t = t.replace(/\binternational\b/g, '');
+  t = t.replace(/[^a-z0-9\s]/g, '');
+  t = t.replace(/\s+/g, ' ').trim();
+  return t.length === 0;
+}
+
 function isLikelyEmployerPrefix(prefix: string): boolean {
   const pk = prefix.toLowerCase().replace(/\s+/g, ' ').trim();
   if (!pk) {
@@ -579,7 +613,21 @@ function applyHyphenEmployerBrandSplit(t: string): string {
     /\([^)]+\)/.test(right) ||
     /\b(remote|hybrid|distributed|worldwide)\b/i.test(right) ||
     geoHintWordsInSegment(right);
+  const leftKey = left.toLowerCase().replace(/\s+/g, ' ').trim();
+  const leftMapped =
+    (COUNTRY_ALIASES[leftKey as keyof typeof COUNTRY_ALIASES] as
+      | string
+      | undefined) ?? leftKey;
+  const leftIsGeoAnchor =
+    !!REGION_ALIASES[leftKey] ||
+    KNOWN_COUNTRIES.has(leftKey) ||
+    KNOWN_COUNTRIES.has(leftMapped) ||
+    !!COUNTRY_ALIASES[leftKey as keyof typeof COUNTRY_ALIASES] ||
+    !!CITY_COUNTRY_HINTS[leftKey];
   if (leftCorp || rightGeo) {
+    if (leftIsGeoAnchor && isWorkModeOnlySegment(right)) {
+      return t;
+    }
     return right;
   }
   return t;
@@ -646,6 +694,7 @@ function normalizeToken(value: string): string {
     .replace(/\banywhere\s+in\b/g, '')
     .replace(/\bhq\b/g, '')
     .replace(/\b(headquarters|head\s+office)\b/g, '')
+    .replace(/^\s*labs\s*$/gi, '')
     .replace(/\s+labs\s*$/gi, '')
     .replace(/\bin\s*[- ]?\s*office\b/g, '')
     .replace(/\boffice\b/g, '')
@@ -700,7 +749,10 @@ function expandParentheticalLists(raw: string): string {
 }
 
 function normalizeKnownLocationPhrases(raw: string): string {
-  return stripEmployerBrandFromLocation(raw)
+  const preStripped = raw
+    .replace(/\bglobal\s*,\s*remote\b/gi, 'Worldwide')
+    .replace(/\bindia[-–—]bangalore\b/gi, 'Bangalore, India');
+  return stripEmployerBrandFromLocation(preStripped)
     .replace(
       /\bdistributed\s*\(\s*([^)]+)\s*\)/gi,
       (_m, inner: string) => inner.trim(),
@@ -724,6 +776,24 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bnew\s+york\s+city\b/gi, 'New York')
     .replace(/,\s*ca\s+united\s+states\b/gi, ', CA, United States')
     .replace(/\busa\s+-\s*remote\b/gi, 'United States')
+    .replace(/\bunited\s+states\s*[-–—]\s*remote\b/gi, 'United States')
+    .replace(/\bindia\s*[-–—]\s*bangalore\b/gi, 'Bangalore, India')
+    .replace(/\bindia\s*[-–—]\s*remote\b/gi, 'India')
+    .replace(/\btoronto\s*[-–—]\s*remote\b/gi, 'Toronto, Canada')
+    .replace(/\bau\s*[-–—]\s*melbourne\b/gi, 'Melbourne, Australia')
+    .replace(/\bengland\s*[-–—]\s*london\b/gi, 'London, United Kingdom')
+    .replace(/\bremote\s*\(\s*world\s*\)/gi, 'Worldwide')
+    .replace(/\bremote\s+international\b/gi, 'Worldwide')
+    .replace(/\bremote\s*[-–—]\s*international\b/gi, 'Worldwide')
+    .replace(/\bremote\s+hq\b/gi, 'Remote')
+    .replace(/\ball\s+offices\b/gi, '')
+    .replace(/\s*\(\s*hq\s*\)/gi, '')
+    .replace(/\bnyc\s*\([^)]*\)\s*hybrid\b/gi, 'New York')
+    .replace(/\bnew\s+york\s+office\s*\([^)]*\)/gi, 'New York')
+    .replace(
+      /\bsan\s+francisco\s*\(\s*on-?site\s*\)/gi,
+      'San Francisco, California',
+    )
     .replace(/\bremote\s+-\s*us\s*&?\s*canada\b/gi, 'United States, Canada')
     .replace(/\bunited\s+states\s*\(\s*remote\s*\)/gi, 'United States')
     .replace(/\bcanada\s*\(\s*hybrid\s*\)\b/gi, 'Canada')
@@ -798,6 +868,15 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
         CANADA_PROVINCE_POSTAL_TO_TOKEN[trimmedBit] ??
         trimmedBit;
       tokens.add(facetKey);
+
+      if (US_STATE_NAME_SET.has(facetKey) && !KNOWN_COUNTRIES.has(facetKey)) {
+        countries.add('united states');
+        tokens.add('united states');
+      }
+      if (CANADA_PROVINCE_NAME_SET.has(facetKey)) {
+        countries.add('canada');
+        tokens.add('canada');
+      }
 
       const mappedRegion = REGION_ALIASES[facetKey];
       if (mappedRegion) {
