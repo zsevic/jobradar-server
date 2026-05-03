@@ -4,7 +4,11 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
-import { formatRawLocation, resolveNormalizedLocation } from '../utils/clean-location';
+import {
+  formatRawLocation,
+  resolveNormalizedLocation,
+  stripCompanyNameFromLocation,
+} from '../utils/clean-location';
 import { extractSeniorityFromTitle } from '../utils/extract-seniority';
 import {
   classifyRoleFromTitle,
@@ -59,11 +63,12 @@ export class GreenhouseAdapter implements JobProviderAdapter {
         const rawLocation = formatRawLocation(
           job.location?.name?.trim() || 'Unknown',
         );
-        const locationLower = rawLocation.toLowerCase();
+        const geoRaw = stripCompanyNameFromLocation(rawLocation, sourceName);
+        const locationLower = geoRaw.toLowerCase();
         const isRemote =
           locationLower.includes('remote') ||
           locationLower.includes('anywhere');
-        const location = resolveNormalizedLocation(rawLocation);
+        const location = resolveNormalizedLocation(geoRaw);
         const title = stripLocationFromTitle(job.title.trim(), location);
         const role = classifyRoleFromTitle(title);
         const stack = extractStackFromJobText(title, job.content, role);
@@ -74,7 +79,7 @@ export class GreenhouseAdapter implements JobProviderAdapter {
           title,
           company: sourceName,
           location,
-          locationRaw: rawLocation,
+          locationRaw: geoRaw,
           isRemote,
           postedAt: job.updated_at ? new Date(job.updated_at) : new Date(),
           url: job.absolute_url as string,

@@ -1,4 +1,5 @@
 import { Job } from '../../database/entities/job.entity';
+import { formatRawLocation, stripCompanyNameFromLocation } from './clean-location';
 import { extractLocationFacets } from './normalize-location';
 
 /** Preset token for remote-friendly roles (aligned with frontend `REMOTE_LOCATION`). */
@@ -23,7 +24,12 @@ function matchesSelectedCountries(job: Job, selectedCountries: string[]): boolea
     return false;
   }
 
-  const facets = extractLocationFacets(job.locationRaw ?? job.location);
+  const facets = extractLocationFacets(
+    stripCompanyNameFromLocation(
+      formatRawLocation(job.locationRaw ?? job.location ?? ''),
+      job.company,
+    ),
+  );
 
   const countrySet = new Set<string>([
     ...job.locationCountries.map((c) => c.toLowerCase()),

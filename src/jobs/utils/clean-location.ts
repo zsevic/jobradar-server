@@ -80,6 +80,48 @@ export function formatRawLocation(location: string): string {
 }
 
 /**
+ * Removes the posting employer name from free-text location strings when it appears
+ * as a redundant label (e.g. "Mapbox Minsk", "Acme - Berlin"). Uses whole-word
+ * matches; very short single-word company names (< 3 letters) are skipped.
+ */
+export function stripCompanyNameFromLocation(
+  raw: string,
+  company: string,
+): string {
+  const loc = raw.trim();
+  const comp = company.trim();
+  if (!loc || !comp) {
+    return raw;
+  }
+
+  if (loc.toLowerCase() === comp.toLowerCase()) {
+    return raw;
+  }
+
+  const words = comp.split(/\s+/).filter(Boolean);
+  if (words.length === 1 && words[0].length < 3) {
+    return raw;
+  }
+
+  const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re =
+    words.length === 1
+      ? new RegExp(`\\b${escapeRe(words[0])}\\b`, 'gi')
+      : new RegExp(`\\b${words.map(escapeRe).join('\\s+')}\\b`, 'gi');
+
+  let out = loc.replace(re, ' ');
+  out = out
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^[\s,;/|–\-]+|[\s,;/|–\-]+$/g, '')
+    .trim();
+
+  if (!out) {
+    return loc;
+  }
+  return out;
+}
+
+/**
  * Use plain "Remote" only when there is no geographic facet (country/region) in
  * the raw string. If the text includes a country or region, normalize the full
  * string (e.g. "Remote, United States" → cleaned location with geography).

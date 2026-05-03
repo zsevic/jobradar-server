@@ -385,6 +385,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   tokyo: 'japan',
   hanoi: 'vietnam',
   kyiv: 'ukraine',
+  minsk: 'belarus',
   lima: 'peru',
   dublin: 'ireland',
   tallinn: 'estonia',

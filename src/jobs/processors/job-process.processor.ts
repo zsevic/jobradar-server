@@ -7,7 +7,11 @@ import { Repository } from 'typeorm';
 import { Job } from '../../database/entities/job.entity';
 import { JOB_PROCESS_QUEUE } from '../jobs.constants';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
-import { formatRawLocation, resolveNormalizedLocation } from '../utils/clean-location';
+import {
+  formatRawLocation,
+  resolveNormalizedLocation,
+  stripCompanyNameFromLocation,
+} from '../utils/clean-location';
 import { extractLocationFacets } from '../utils/normalize-location';
 import { JobsService } from '../jobs.service';
 
@@ -60,7 +64,11 @@ export class JobProcessProcessor extends WorkerHost {
     }
 
     const formattedRawLocation = formatRawLocation(input.locationRaw ?? input.location);
-    const normalizedLocation = resolveNormalizedLocation(formattedRawLocation, {
+    const locationForGeo = stripCompanyNameFromLocation(
+      formattedRawLocation,
+      input.company,
+    );
+    const normalizedLocation = resolveNormalizedLocation(locationForGeo, {
       remoteIndicatedByProvider: input.remoteIndicatedByProvider ?? false,
     });
     const normalizedJob: NormalizedJob = {
@@ -88,9 +96,7 @@ export class JobProcessProcessor extends WorkerHost {
     }
 
     const rawForFacets =
-      formattedRawLocation.toLowerCase() === 'unknown'
-        ? ''
-        : formattedRawLocation;
+      locationForGeo.toLowerCase() === 'unknown' ? '' : locationForGeo;
     const locationFacets =
       normalizedLocation === 'Remote'
         ? { tokens: ['remote'], countries: [], regions: [] }
@@ -131,7 +137,7 @@ export class JobProcessProcessor extends WorkerHost {
       title: input.title,
       company: input.company,
       location: normalizedLocation,
-      locationRaw: formattedRawLocation,
+      locationRaw: locationForGeo,
       locationTokens: locationFacets.tokens,
       locationCountries: locationFacets.countries,
       locationRegions: locationFacets.regions,

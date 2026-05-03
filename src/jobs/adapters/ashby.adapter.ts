@@ -4,7 +4,11 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
-import { formatRawLocation, resolveNormalizedLocation } from '../utils/clean-location';
+import {
+  formatRawLocation,
+  resolveNormalizedLocation,
+  stripCompanyNameFromLocation,
+} from '../utils/clean-location';
 import { extractSeniorityFromTitle } from '../utils/extract-seniority';
 import {
   classifyRoleFromTitle,
@@ -70,16 +74,17 @@ export class AshbyAdapter implements JobProviderAdapter {
       )
       .map((job) => {
         const { rawLocation, countryHints } = this.resolveRawLocation(job);
+        const geoRaw = stripCompanyNameFromLocation(rawLocation, sourceName);
         const url = job.jobUrl || job.applyUrl || '';
         const remoteIndicatedByProvider =
           Boolean(job.isRemote) ||
           job.workplaceType?.toLowerCase() === 'remote';
-        const location = resolveNormalizedLocation(rawLocation, {
+        const location = resolveNormalizedLocation(geoRaw, {
           remoteIndicatedByProvider,
         });
         const isRemote =
           remoteIndicatedByProvider ||
-          rawLocation.toLowerCase().includes('remote');
+          geoRaw.toLowerCase().includes('remote');
         const rawTitle = (job.title as string).trim();
         const title = stripLocationFromTitle(rawTitle, location);
         const role = classifyRoleFromTitle(title);
@@ -92,7 +97,7 @@ export class AshbyAdapter implements JobProviderAdapter {
           title,
           company: sourceName,
           location,
-          locationRaw: rawLocation,
+          locationRaw: geoRaw,
           locationCountryHints: countryHints,
           remoteIndicatedByProvider,
           isRemote,

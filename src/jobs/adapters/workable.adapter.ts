@@ -4,7 +4,11 @@ import { firstValueFrom } from 'rxjs';
 import { SourceProvider } from '../../database/entities/source.entity';
 import { JobProviderAdapter } from '../interfaces/job-provider-adapter.interface';
 import { NormalizedJob } from '../interfaces/normalized-job.interface';
-import { formatRawLocation, resolveNormalizedLocation } from '../utils/clean-location';
+import {
+  formatRawLocation,
+  resolveNormalizedLocation,
+  stripCompanyNameFromLocation,
+} from '../utils/clean-location';
 import { extractSeniorityFromTitle } from '../utils/extract-seniority';
 import {
   classifyRoleFromTitle,
@@ -75,12 +79,13 @@ export class WorkableAdapter implements JobProviderAdapter {
       })
       .map((job) => {
         const rawLocation = formatRawLocation(this.resolveLocation(job));
+        const geoRaw = stripCompanyNameFromLocation(rawLocation, sourceName);
         const remoteIndicatedByProvider =
           this.isRemoteFromStructuredFields(job);
-        const location = resolveNormalizedLocation(rawLocation, {
+        const location = resolveNormalizedLocation(geoRaw, {
           remoteIndicatedByProvider,
         });
-        const isRemote = this.resolveIsRemote(job, rawLocation);
+        const isRemote = this.resolveIsRemote(job, geoRaw);
         const rawTitle = (job.title as string).trim();
         const title = stripLocationFromTitle(rawTitle, location);
         const seniority =
@@ -96,7 +101,7 @@ export class WorkableAdapter implements JobProviderAdapter {
           title,
           company: sourceName,
           location,
-          locationRaw: rawLocation,
+          locationRaw: geoRaw,
           remoteIndicatedByProvider,
           isRemote,
           postedAt: job.created_at ? new Date(job.created_at) : new Date(),

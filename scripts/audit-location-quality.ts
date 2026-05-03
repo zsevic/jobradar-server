@@ -2,8 +2,8 @@
  * Location facet quality audit (per provider or all):
  * 1) Rows with geographic-looking raw but empty locationCountries (SQL).
  * 2) Facet drift: stored tokens/countries/regions vs recompute using the same
- *    pipeline as job ingestion (formatRawLocation → resolveNormalizedLocation →
- *    extractLocationFacets), **without** provider-specific extras such as Ashby
+ *    pipeline as job ingestion (formatRawLocation → stripCompanyNameFromLocation →
+ *    resolveNormalizedLocation → extractLocationFacets), **without** provider-specific extras such as Ashby
  *    API `locationCountryHints` (not stored on `jobs`).
  *
  * Outputs under scripts/output/: `{slug}-location-quality.json`, `.summary.txt`,
@@ -28,6 +28,7 @@ import { SourceProvider } from '../src/database/entities/source.entity';
 import {
   formatRawLocation,
   resolveNormalizedLocation,
+  stripCompanyNameFromLocation,
 } from '../src/jobs/utils/clean-location';
 import { extractLocationFacets } from '../src/jobs/utils/normalize-location';
 
@@ -126,11 +127,11 @@ interface Facets {
 /** Mirrors job-process.processor facet logic minus provider-specific hints not on `Job`. */
 function computeFacetsFromJob(job: DbJobRow): Facets {
   const formattedRaw = formatRawLocation(job.locationRaw ?? job.location ?? '');
-  const normalizedLocation = resolveNormalizedLocation(formattedRaw, {
+  const geoRaw = stripCompanyNameFromLocation(formattedRaw, job.company);
+  const normalizedLocation = resolveNormalizedLocation(geoRaw, {
     remoteIndicatedByProvider: job.isRemote,
   });
-  const rawForFacets =
-    formattedRaw.toLowerCase() === 'unknown' ? '' : formattedRaw;
+  const rawForFacets = geoRaw.toLowerCase() === 'unknown' ? '' : geoRaw;
   if (normalizedLocation === 'Remote') {
     return { tokens: ['remote'], countries: [], regions: [] };
   }
@@ -187,8 +188,13 @@ function sqlEmptyCountryGeo(provider: AuditProvider): {
 } {
   const tail = `
   COALESCE(array_length("locationCountries", 1), 0) = 0
+  AND COALESCE(array_length("locationRegions", 1), 0) = 0
   AND LENGTH(TRIM(COALESCE("locationRaw", location, ''))) > 1
   AND LOWER(TRIM(COALESCE("locationRaw", location, ''))) NOT IN ('remote', 'anywhere', 'unknown')
+  AND NOT (
+    "isRemote" = true
+    AND TRIM(COALESCE("locationRaw", location, '')) ~* '^(remote|anywhere|distributed|unknown|worldwide|global)\\s*$'
+  )
   ORDER BY "locationRaw" NULLS LAST, id`;
 
   if (provider === 'all') {
@@ -219,6 +225,7 @@ type FacetMismatchRow = DbJobRow & {
 function classifyMismatch(
   stored: Facets,
   expected: Facets,
+  job: DbJobRow,
 ): MismatchCategory {
   const sameCountries = sortKey(stored.countries) === sortKey(expected.countries);
   const sameRegions = sortKey(stored.regions) === sortKey(expected.regions);
@@ -249,6 +256,20 @@ function classifyMismatch(
   }
 
   if (expected.countries.length === 0 && stored.countries.length === 0) {
+    // Empty countries is acceptable when regions are present (region-only geo).
+    if (stored.regions.length > 0 || expected.regions.length > 0) {
+      return 'hint_delta_or_stale';
+    }
+    // Fully remote-only: empty countries with no regions is acceptable for provider-remote jobs.
+    if (job.isRemote) {
+      const remoteTokens = new Set(['remote', 'anywhere', 'distributed']);
+      const onlyRemoteTokens = (facets: Facets): boolean =>
+        facets.tokens.length > 0 &&
+        facets.tokens.every((t) => remoteTokens.has(t.toLowerCase()));
+      if (onlyRemoteTokens(stored) || onlyRemoteTokens(expected)) {
+        return 'hint_delta_or_stale';
+      }
+    }
     return 'code_gap_candidate';
   }
 
@@ -301,7 +322,7 @@ function writeCodebaseProposals(params: {
   lines.push('## Method');
   lines.push('');
   lines.push(
-    `1. **\`SQL_EMPTY_COUNTRY_GEO\`**: Jobs${params.provider === 'all' ? '' : ` for provider **${params.provider}**`} with **no** \`locationCountries\` but non-trivial \`locationRaw\` / \`location\` (excludes plain \`remote\` / \`anywhere\` / \`unknown\`). Strong **missing-country** candidates.`,
+    `1. **\`SQL_EMPTY_COUNTRY_GEO\`**: Jobs${params.provider === 'all' ? '' : ` for provider **${params.provider}**`} with **no** \`locationCountries\` **and** **no** \`locationRegions\`, non-trivial \`locationRaw\` / \`location\`, excluding plain \`remote\` / \`anywhere\` / \`unknown\`, and excluding **\`isRemote\` + remote-only** raw (whole string matches remote/global variants only). **Region-only** or **fully remote-only** rows are intentionally omitted — empty countries there is acceptable.`,
   );
   lines.push(
     `2. **Facet recompute**: For each scanned job, recompute facets from \`formatRawLocation(locationRaw ?? location)\` via \`resolveNormalizedLocation\` + \`extractLocationFacets\`, matching [\`job-process.processor.ts\`](../src/jobs/processors/job-process.processor.ts) **minus** provider-only ingest fields **not** stored on \`jobs\` (e.g. Ashby **\`locationCountryHints\`** from postal data).`,
@@ -332,7 +353,7 @@ function writeCodebaseProposals(params: {
     `| layout_only | ${params.categories.layout_only ?? 0} | Same countries/regions; token list differs — usually **cosmetic**. |`,
   );
   lines.push(
-    `| code_gap_candidate | ${params.categories.code_gap_candidate ?? 0} | Text-only recompute still has **no** country — prioritize **\`normalize-location.ts\`** rules for these \`locationRaw\` patterns. |`,
+    `| code_gap_candidate | ${params.categories.code_gap_candidate ?? 0} | Text-only recompute has **no** country **and** no regions (country-only gap). Rows with regions but no country are **not** this bucket — empty countries with regions is OK. |`,
   );
   lines.push('');
 
@@ -448,7 +469,7 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const cat = classifyMismatch(stored, expected);
+    const cat = classifyMismatch(stored, expected, row);
     categories[cat] = (categories[cat] ?? 0) + 1;
 
     facetMismatches.push({
