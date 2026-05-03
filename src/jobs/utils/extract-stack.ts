@@ -58,6 +58,8 @@ export type JobRoleKind =
   | 'devops'
   | 'qa'
   | 'management'
+  | 'engineer'
+  | 'ai'
   | 'other';
 
 function normalizeText(value: string): string {
@@ -216,6 +218,24 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
     )
   ) {
     return 'devops';
+  }
+
+  // Before generic engineer: "AI Engineer" etc. also match /\bengineers?\b/.
+  if (
+    /\b(ai|artificial intelligence|machine learning|deep learning|neural|nlp|llm|genai|generative\s+ai|computer vision)\b/i.test(
+      normalized,
+    ) ||
+    /\bml\b/i.test(normalized)
+  ) {
+    return 'ai';
+  }
+
+  if (
+    /\bmember\s+of\s+technical\s+staff\b/i.test(normalized) ||
+    /\bengineers?\b/i.test(normalized) ||
+    /\bengineering\b/i.test(normalized)
+  ) {
+    return 'engineer';
   }
 
   return 'other';

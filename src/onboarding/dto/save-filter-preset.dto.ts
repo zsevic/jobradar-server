@@ -15,6 +15,8 @@ const roles = [
   'devops',
   'qa',
   'management',
+  'engineer',
+  'ai',
 ] as const;
 const stackOptions = [
   'node.js',

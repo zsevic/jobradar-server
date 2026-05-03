@@ -240,6 +240,23 @@ export class JobsService {
         'site reliability',
       ],
       qa: ['qa', 'quality assurance', 'test engineer', 'automation engineer'],
+      engineer: [
+        'engineer',
+        'engineering',
+        'software engineer',
+        'member of technical staff',
+      ],
+      ai: [
+        'ai',
+        'artificial intelligence',
+        'machine learning',
+        'deep learning',
+        'ml',
+        'llm',
+        'nlp',
+        'computer vision',
+        'generative ai',
+      ],
       management: [
         'engineering manager',
         'director of engineering',
