@@ -176,14 +176,14 @@ function isProductManagementTitle(normalized: string): boolean {
 }
 
 /**
- * Delivery/project PM — before `ai` / devops so suffixes like "Core Infrastructure"
- * or "… - AI Fintech" do not steal the role.
+ * Delivery / program PM — before `ai` and `\bengineering\b` so e.g. "Program Manager, AI"
+ * or "Engineering Program Manager" are not IC `ai` / `engineer`.
+ * `\b(project|program)\s+manager\b` also matches the tail of "Technical Program Manager".
  */
 function isProjectManagementTitle(normalized: string): boolean {
   return (
-    /\bproject\s+manager\b/i.test(normalized) ||
-    /\btechnical\s+project\s+manager\b/i.test(normalized) ||
-    /\btechnical\s+program\s+manager\b/i.test(normalized)
+    /\b(?:project|program)\s+manager\b/i.test(normalized) ||
+    /\bengineering\s+(?:project|program)\s+manager\b/i.test(normalized)
   );
 }
 
