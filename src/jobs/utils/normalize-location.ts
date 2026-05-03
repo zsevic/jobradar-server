@@ -133,6 +133,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'venezuela',
   'jamaica',
   'albania',
+  'andorra',
   'libya',
   'tunisia',
   'syria',
