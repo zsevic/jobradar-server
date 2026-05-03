@@ -18,6 +18,7 @@ const REGION_ALIASES: Record<string, string> = {
   eu: 'eu',
   'east coast': 'east coast',
   'west coast': 'west coast',
+  africa: 'africa',
 };
 
 /** Lowercase; matches `Intl.DisplayNames(['en'], { type: 'region' }).of('CI').toLowerCase()` (d’Ivoire uses U+2019). */
@@ -386,6 +387,18 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   hanoi: 'vietnam',
   kyiv: 'ukraine',
   minsk: 'belarus',
+  seoul: 'south korea',
+  'kuala lumpur': 'malaysia',
+  bucharest: 'romania',
+  krakow: 'poland',
+  kraków: 'poland',
+  heidelberg: 'germany',
+  'menlo park': 'united states',
+  nairobi: 'kenya',
+  'buenos aires': 'argentina',
+  'san luis obispo': 'united states',
+  phoenix: 'united states',
+  reading: 'united kingdom',
   lima: 'peru',
   dublin: 'ireland',
   tallinn: 'estonia',
@@ -632,6 +645,7 @@ function normalizeToken(value: string): string {
     .replace(/\banywhere\s+in\b/g, '')
     .replace(/\bhq\b/g, '')
     .replace(/\b(headquarters|head\s+office)\b/g, '')
+    .replace(/\s+labs\s*$/gi, '')
     .replace(/\bin\s*[- ]?\s*office\b/g, '')
     .replace(/\boffice\b/g, '')
     .replace(/\b(hybrid|onsite)\b/g, '')
@@ -713,6 +727,16 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bunited\s+states\s*\(\s*remote\s*\)/gi, 'United States')
     .replace(/\bcanada\s*\(\s*hybrid\s*\)\b/gi, 'Canada')
     .replace(/\bremote\s*\(\s*canada\s*\)/gi, 'Canada')
+    .replace(/^\s*\(\s*can\s*\)\s*$/gi, 'Canada')
+    .replace(/^\s*united\s*$/gi, 'United States')
+    .replace(/\bchina\s*[-–—]\s*shanghai\b/gi, 'Shanghai, China')
+    .replace(/\bindia\s*[-–—]\s*karnataka\b/gi, 'Karnataka, India')
+    .replace(/\s*[-–—]\s*fully\s+remote\b/gi, '')
+    .replace(/\bremote\s+in\s+the\s+(usa|us)\b/gi, 'United States')
+    .replace(/\bus\s*[-–—]\s*distributed\b/gi, 'United States')
+    .replace(/\bus\s*[-–—]\s*illinois\b/gi, 'Illinois, United States')
+    .replace(/\bwashington\s+dc\b/gi, 'Washington, DC')
+    .replace(/\breading\s*\(\s*london\s*\)/gi, 'Reading, United Kingdom')
     .replace(/\b([a-z0-9]+)\s*\(\s*can\s*\)/gi, '$1, Canada');
 }
 
