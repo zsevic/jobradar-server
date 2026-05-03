@@ -147,10 +147,14 @@ export function extractStackFromJobText(
   return extracted;
 }
 
+function mentionsFullStackRole(normalized: string): boolean {
+  return /\b(full[\s-]?stack|full stack|fullstack)\b/i.test(normalized);
+}
+
 export function classifyRoleFromTitle(title: string): JobRoleKind {
   const normalized = title.toLowerCase();
 
-  if (/\b(full[\s-]?stack|full stack|fullstack)\b/i.test(normalized)) {
+  if (mentionsFullStackRole(normalized)) {
     return 'fullstack';
   }
   if (
@@ -181,4 +185,22 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
   }
 
   return 'other';
+}
+
+/**
+ * When the title yields {@link JobRoleKind} `other`, re-check plain-text
+ * description (e.g. Ashby `descriptionPlain`) for full-stack wording.
+ */
+export function classifyRoleWithDescriptionFallback(
+  title: string,
+  description?: string | null,
+): JobRoleKind {
+  const fromTitle = classifyRoleFromTitle(title);
+  if (fromTitle !== 'other' || !description?.trim()) {
+    return fromTitle;
+  }
+  if (mentionsFullStackRole(normalizeText(description))) {
+    return 'fullstack';
+  }
+  return fromTitle;
 }

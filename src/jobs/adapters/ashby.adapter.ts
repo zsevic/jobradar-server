@@ -11,7 +11,7 @@ import {
 } from '../utils/clean-location';
 import { extractSeniorityFromTitle } from '../utils/extract-seniority';
 import {
-  classifyRoleFromTitle,
+  classifyRoleWithDescriptionFallback,
   extractStackFromJobText,
 } from '../utils/extract-stack';
 import { stripLocationFromTitle } from '../utils/strip-title-location';
@@ -93,7 +93,10 @@ export class AshbyAdapter implements JobProviderAdapter {
           geoRaw.toLowerCase().includes('remote');
         const rawTitle = (job.title as string).trim();
         const title = stripLocationFromTitle(rawTitle, location);
-        const role = classifyRoleFromTitle(title);
+        const role = classifyRoleWithDescriptionFallback(
+          title,
+          job.descriptionPlain,
+        );
 
         return {
           provider: SourceProvider.ASHBY,
