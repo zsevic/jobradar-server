@@ -36,6 +36,10 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'lao people’s democratic republic': 'laos',
   'lao pdr': 'laos',
   'u s': 'united states',
+  'ivory coast': "côte d'ivoire",
+  "cote d'ivoire": "côte d'ivoire",
+  'côte d’ivoire': "côte d'ivoire",
+  'congo brazzaville': 'congo - brazzaville',
 };
 
 const KNOWN_COUNTRIES = new Set<string>([
@@ -145,6 +149,10 @@ const KNOWN_COUNTRIES = new Set<string>([
   'laos',
   'puerto rico',
   'gibraltar',
+  "côte d'ivoire",
+  'senegal',
+  'cameroon',
+  'congo - brazzaville',
 ]);
 
 /**
@@ -234,6 +242,7 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   'redwood city': ['california'],
   'bay area': ['san francisco', 'california'],
   emeryville: ['california'],
+  sunnyvale: ['california'],
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -244,6 +253,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'los angeles': 'united states',
   'redwood city': 'united states',
   emeryville: 'united states',
+  sunnyvale: 'united states',
   brooklyn: 'united states',
   'mountain view': 'united states',
   'new york': 'united states',
@@ -308,6 +318,9 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   taipei: 'taiwan',
   lagos: 'nigeria',
   abuja: 'nigeria',
+  abidjan: "côte d'ivoire",
+  dakar: 'senegal',
+  douala: 'cameroon',
   split: 'croatia',
   almaty: 'kazakhstan',
   cebu: 'philippines',
@@ -361,7 +374,8 @@ function expandParentheticalLists(raw: string): string {
 function normalizeKnownLocationPhrases(raw: string): string {
   return raw
     .replace(/\btechnological\s+pole\s+almada\b/gi, 'Lisbon, Portugal')
-    .replace(/\bsan\s+francisco\s+bay\s+area\b/gi, 'Bay Area');
+    .replace(/\bsan\s+francisco\s+bay\s+area\b/gi, 'Bay Area')
+    .replace(/\bcongo\s*,?\s*brazzaville\b/gi, 'Congo - Brazzaville');
 }
 
 /** Split on ; | /, spaced hyphens, and " or " so alternatives become separate segments. */
