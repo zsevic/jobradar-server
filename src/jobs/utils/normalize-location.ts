@@ -367,6 +367,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   gurugram: 'india',
   pune: 'india',
   shenzhen: 'china',
+  beijing: 'china',
   lisbon: 'portugal',
   yerevan: 'armenia',
   limassol: 'cyprus',
