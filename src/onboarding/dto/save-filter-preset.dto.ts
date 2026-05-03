@@ -43,7 +43,7 @@ export class SaveFilterPresetDto {
   role!: (typeof roles)[number];
 
   @ValidateIf((o: SaveFilterPresetDto) =>
-    !['devops', 'qa', 'management'].includes(o.role),
+    !['devops', 'qa', 'management', 'ai'].includes(o.role),
   )
   @IsArray()
   @ArrayMinSize(1)

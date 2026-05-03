@@ -282,7 +282,7 @@ export class JobsService {
     const seniorityMatches =
       !preset.seniority || !job.seniority || job.seniority === preset.seniority;
 
-    const rolesWithoutStack = ['devops', 'qa', 'management'];
+    const rolesWithoutStack = ['devops', 'qa', 'management', 'ai'];
     const stackRequired =
       !rolesWithoutStack.includes(preset.role) && preset.stack.length > 0;
 

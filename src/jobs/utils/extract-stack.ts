@@ -125,7 +125,12 @@ export function extractStackFromJobText(
   const merged = new Set<string>([...fromTitle, ...fromDescription]);
   const extracted = Array.from(merged);
 
-  if (role === 'devops' || role === 'qa' || role === 'management') {
+  if (
+    role === 'devops' ||
+    role === 'qa' ||
+    role === 'management' ||
+    role === 'ai'
+  ) {
     return [];
   }
 
