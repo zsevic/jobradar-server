@@ -312,7 +312,8 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
   if (
     /\b(devops|sre|site reliability)\b/i.test(normalized) ||
     /\binfrastructure\s+engineer\b/i.test(normalized) ||
-    /\bplatform\s+(?:software\s+)?engineer\b/i.test(normalized)
+    /\bplatform\s+(?:software\s+)?engineer\b/i.test(normalized) ||
+    /\bcloud\s+(?:software\s+)?engineer\b/i.test(normalized)
   ) {
     return 'devops';
   }

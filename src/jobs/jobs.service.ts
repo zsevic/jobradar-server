@@ -237,6 +237,7 @@ export class JobsService {
         'sre',
         'platform engineer',
         'infrastructure engineer',
+        'cloud engineer',
         'site reliability',
       ],
       qa: ['qa', 'quality assurance', 'test engineer', 'automation engineer'],
