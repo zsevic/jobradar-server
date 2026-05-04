@@ -64,6 +64,7 @@ export type JobRoleKind =
   | 'ai'
   | 'solutions'
   | 'recruiter'
+  | 'security'
   | 'other';
 
 function normalizeText(value: string): string {
@@ -135,7 +136,8 @@ export function extractStackFromJobText(
     role === 'management' ||
     role === 'ai' ||
     role === 'solutions' ||
-    role === 'recruiter'
+    role === 'recruiter' ||
+    role === 'security'
   ) {
     return [];
   }
@@ -258,7 +260,7 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
   const normalized = title.toLowerCase();
 
   if (
-    /\b(engineering\s+manager|director\s+of\s+engineering|head\s+of\s+engineering|vp\s+of\s+engineering|tech(?:nical)?\s+lead|team\s+lead|staff\s+(?:engineering\s+)?manager|engineering\s+director|(?:head|director|vp)\s+of\s+solutions)\b/i.test(
+    /\b(engineering\s+manager|director\s+of\s+engineering|head\s+of\s+engineering|vp\s+of\s+engineering|tech(?:nical)?\s+lead|team\s+lead|staff\s+(?:engineering\s+)?manager|engineering\s+director|(?:head|director|vp)\s+of\s+solutions|(?:head|director|vp)\s+of\s+security|chief\s+information\s+security\s+officer|ciso|security\s+manager|security\s+director)\b/i.test(
       normalized,
     )
   ) {
@@ -279,6 +281,17 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
 
   if (mentionsSolutionsRole(normalized)) {
     return 'solutions';
+  }
+
+
+/** Security IC roles; runs after solutions so sales/security titles stay `solutions`. */
+function mentionsSecurityRole(normalized: string): boolean {
+  return /\b(security|app(?:lication)?\s+security|appsec|product\s+security|cloud\s+security|cyber\s?security|cybersecurity|infosec|information\s+security|threat|vulnerability|soc|offensive\s+security|defensive\s+security|penetration\s+test(?:ing)?|pentest|red\s+team|blue\s+team)\b/i.test(
+    normalized,
+  ) && /\b(engineer|engineering|developer|architect|pentester|tester)\b/i.test(normalized);
+}
+  if (mentionsSecurityRole(normalized)) {
+    return 'security';
   }
 
   if (mentionsFullStackRole(normalized)) {

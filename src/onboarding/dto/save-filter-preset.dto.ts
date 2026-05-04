@@ -19,6 +19,7 @@ const roles = [
   'ai',
   'solutions',
   'recruiter',
+  'security',
 ] as const;
 const stackOptions = [
   'node.js',
@@ -46,7 +47,7 @@ export class SaveFilterPresetDto {
   role!: (typeof roles)[number];
 
   @ValidateIf((o: SaveFilterPresetDto) =>
-    !['devops', 'qa', 'management', 'ai', 'solutions', 'recruiter'].includes(
+    !['devops', 'qa', 'management', 'ai', 'solutions', 'recruiter', 'security'].includes(
       o.role,
     ),
   )

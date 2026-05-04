@@ -284,6 +284,24 @@ export class JobsService {
         'sourcer',
         'staffing',
       ],
+      security: [
+        'security engineer',
+        'security engineering',
+        'application security',
+        'appsec',
+        'product security',
+        'cloud security',
+        'cybersecurity',
+        'information security',
+        'infosec',
+        'security architect',
+        'offensive security',
+        'defensive security',
+        'penetration testing',
+        'pentest',
+        'soc engineer',
+        'security operations engineer',
+      ],
       management: [
         'engineering manager',
         'director of engineering',
@@ -308,6 +326,13 @@ export class JobsService {
         'head of solutions',
         'director of solutions',
         'vp of solutions',
+        'head of security',
+        'director of security',
+        'vp of security',
+        'ciso',
+        'chief information security officer',
+        'security manager',
+        'security director',
       ],
     };
 
@@ -325,6 +350,7 @@ export class JobsService {
       'ai',
       'solutions',
       'recruiter',
+      'security',
     ];
     const stackRequired =
       !rolesWithoutStack.includes(preset.role) && preset.stack.length > 0;
