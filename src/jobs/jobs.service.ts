@@ -274,6 +274,7 @@ export class JobsService {
         'presales engineer',
         'gtm engineer',
         'go-to-market engineer',
+        'forward deployed engineer',
       ],
       recruiter: [
         'recruiter',

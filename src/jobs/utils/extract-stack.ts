@@ -207,7 +207,10 @@ function mentionsSolutionsRole(normalized: string): boolean {
     /\bsolutions?\s+architect\b/i.test(normalized) ||
     /\bsolutions?\s+consultant\b/i.test(normalized) ||
     /\bgtm\s+engineer\b/i.test(normalized) ||
-    /\bgo[-\s]?to[-\s]?market\s+engineer\b/i.test(normalized)
+    /\bgo[-\s]?to[-\s]?market\s+engineer\b/i.test(normalized) ||
+    /\bforward[-\s]?deployed\s+(?:software\s+)?(?:engineer|engineering)\b/i.test(
+      normalized,
+    )
   );
 }
 
