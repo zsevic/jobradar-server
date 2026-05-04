@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   Req,
   UnauthorizedException,
@@ -10,6 +11,7 @@ import {
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SaveFilterPresetDto } from './dto/save-filter-preset.dto';
+import { UpdateAlertsDto } from './dto/update-alerts.dto';
 import { OnboardingService } from './onboarding.service';
 
 interface AuthenticatedRequest extends Request {
@@ -43,5 +45,17 @@ export class OnboardingController {
       throw new UnauthorizedException('Missing user context');
     }
     return this.onboardingService.saveFilterPreset(userId, payload);
+  }
+
+  @Patch('alerts')
+  async updateAlerts(
+    @Req() request: AuthenticatedRequest,
+    @Body() payload: UpdateAlertsDto,
+  ) {
+    const userId = request.user?.userId;
+    if (!userId) {
+      throw new UnauthorizedException('Missing user context');
+    }
+    return this.onboardingService.updateAlertsEnabled(userId, payload);
   }
 }

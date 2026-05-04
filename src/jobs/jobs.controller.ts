@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JobsQueryDto } from './dto/jobs-query.dto';
 import { JobsService } from './jobs.service';
 
 interface AuthenticatedRequest extends Request {
@@ -32,23 +33,22 @@ export class JobsController {
   @UseGuards(JwtAuthGuard)
   async getJobs(
     @Req() request: AuthenticatedRequest,
-    @Query('limit') limit?: string,
-    @Query('page') page?: string,
+    @Query() query: JobsQueryDto,
   ) {
     const userId = request.user?.userId;
     if (!userId) {
       throw new UnauthorizedException('Missing user context');
     }
 
-    const parsedLimit = Number(limit ?? 50);
-    const parsedPage = Number(page ?? 1);
+    const parsedLimit = query.limit ?? 50;
+    const parsedPage = query.page ?? 1;
     const safeLimit = Number.isFinite(parsedLimit)
       ? Math.min(Math.max(parsedLimit, 1), 200)
       : 50;
     const safePage = Number.isFinite(parsedPage)
       ? Math.max(Math.floor(parsedPage), 1)
       : 1;
-    return this.jobsService.getLatestJobsForUser(userId, safeLimit, safePage);
+    return this.jobsService.getLatestJobsForUser(userId, safeLimit, safePage, query);
   }
 
   @Post('poll/ashby')

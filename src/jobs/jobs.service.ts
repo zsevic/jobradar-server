@@ -15,6 +15,7 @@ import {
   JOB_PROCESS_QUEUE,
   WORKABLE_FETCH_QUEUE,
 } from './jobs.constants';
+import { JobsQueryDto } from './dto/jobs-query.dto';
 import { NormalizedJob } from './interfaces/normalized-job.interface';
 import { matchesJobLocationPreset } from './utils/match-location-preset';
 
@@ -339,7 +340,10 @@ export class JobsService {
     return keywordMap[role] ?? [];
   }
 
-  private matchesPresetMetadata(job: Job, preset: FilterPreset): boolean {
+  private matchesPresetMetadata(
+    job: Job,
+    preset: Pick<FilterPreset, 'role' | 'stack' | 'seniority'>,
+  ): boolean {
     const seniorityMatches =
       !preset.seniority || !job.seniority || job.seniority === preset.seniority;
 
@@ -367,6 +371,7 @@ export class JobsService {
     userId: string,
     limit = 100,
     page = 1,
+    jobsQuery?: JobsQueryDto,
   ): Promise<{
     items: Array<{
       id: string;
@@ -389,16 +394,44 @@ export class JobsService {
   }> {
     const now = Date.now();
     const skip = (page - 1) * limit;
-    const preset = await this.filterPresetRepository.findOneBy({ userId });
+
+    const rolesWithoutStackForQuery = [
+      'devops',
+      'qa',
+      'management',
+      'ai',
+      'solutions',
+      'recruiter',
+      'security',
+    ] as const;
+
+    const overridePreset =
+      jobsQuery?.role !== undefined
+        ? {
+            role: jobsQuery.role,
+            stack: rolesWithoutStackForQuery.includes(
+              jobsQuery.role as (typeof rolesWithoutStackForQuery)[number],
+            )
+              ? []
+              : (jobsQuery.stack ?? []),
+            seniority: jobsQuery.seniority!,
+            locations: jobsQuery.location!,
+            alertsEnabled: jobsQuery.alertsEnabled ?? true,
+          }
+        : null;
+
+    const preset =
+      overridePreset ??
+      (await this.filterPresetRepository.findOneBy({ userId }));
     const roleKeywords = this.getRoleTitleKeywords(preset?.role ?? '');
 
-    const query = this.jobsRepository
+    const jobQuery = this.jobsRepository
       .createQueryBuilder('job')
       .orderBy('job.postedAt', 'DESC');
 
     if (preset) {
       if (roleKeywords.length > 0) {
-        query.andWhere(
+        jobQuery.andWhere(
           new Brackets((qb) => {
             qb.where('job.role = :presetRole', {
               presetRole: preset.role,
@@ -423,15 +456,15 @@ export class JobsService {
           }),
         );
       } else if (preset.role) {
-        query.andWhere('job.role = :presetRole', {
+        jobQuery.andWhere('job.role = :presetRole', {
           presetRole: preset.role,
         });
       }
     }
 
     if (!preset) {
-      query.skip(skip).take(limit);
-      const [jobs, total] = await query.getManyAndCount();
+      jobQuery.skip(skip).take(limit);
+      const [jobs, total] = await jobQuery.getManyAndCount();
       const items = jobs.map((job) => ({
         ...this.getApiLocationParts(job),
         id: job.id,
@@ -457,7 +490,7 @@ export class JobsService {
       };
     }
 
-    const jobs = await query.getMany();
+    const jobs = await jobQuery.getMany();
     let filtered = jobs.filter((job) =>
       matchesJobLocationPreset(job, preset.locations),
     );
