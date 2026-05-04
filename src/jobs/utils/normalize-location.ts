@@ -346,6 +346,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   washington: 'united states',
   california: 'united states',
   bangalore: 'india',
+  'new delhi': 'india',
   madrid: 'spain',
   malaga: 'spain',
   málaga: 'spain',
@@ -404,6 +405,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   lisbon: 'portugal',
   yerevan: 'armenia',
   limassol: 'cyprus',
+  nicosia: 'cyprus',
   birkirkara: 'malta',
   london: 'united kingdom',
   belfast: 'united kingdom',
@@ -770,7 +772,10 @@ function normalizeToken(value: string): string {
     .replace(/\bm\s+w\s+f\b/gi, '')
     .replace(/\bremote\b\s*[-,:]?\s*/g, '')
     .replace(/\banywhere\b\s*[-,:]?\s*/g, '')
+    /** ATS boilerplate e.g. `Canada: Select locations`, `US: Select locations`. */
+    .replace(/:\s*select\s+locations\b/gi, '')
     .replace(/[.;]/g, ' ')
+    .replace(/\bselect\s+locations\b/gi, '')
     .replace(/\s+/g, ' ')
     .replace(/^[\s\-–—]+|[\s\-–—]+$/g, '')
     .replace(/\s+\bin\s*$/g, '')
