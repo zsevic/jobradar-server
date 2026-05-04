@@ -8,12 +8,17 @@ const REGION_ALIASES: Record<string, string> = {
   apac: 'apac',
   emea: 'emea',
   latam: 'latam',
+  /** Middle East & North Africa (corporate region tag). */
+  mena: 'mena',
   americas: 'americas',
   /** Corporate shorthand for Americas (e.g. jobs tagged AMER / Americas region). */
   amer: 'americas',
   namer: 'north america',
   'north america': 'north america',
+  'south america': 'south america',
+  asia: 'asia',
   europe: 'europe',
+  /** Political/economic bloc — distinct from the geographic `europe` region. */
   'european union': 'eu',
   eu: 'eu',
   'east coast': 'east coast',
@@ -456,6 +461,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   almaty: 'kazakhstan',
   cebu: 'philippines',
   'bay area': 'united states',
+  'gift city': 'india',
 };
 
 /** Single generic English tokens that can precede geography but are not employer names. */
@@ -572,13 +578,53 @@ function isWorkModeOnlySegment(s: string): boolean {
   return t.length === 0;
 }
 
+/**
+ * True when every hyphen-separated segment is a known region/country/city hint
+ * (no employer token). Used so suffix-peel does not drop e.g. "North America -
+ * South America -" before "Europe".
+ */
+function isOnlyGeoChain(pk: string): boolean {
+  const segs = pk
+    .split(/\s*[-–—]\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  if (segs.length < 2) {
+    return false;
+  }
+  for (const seg of segs) {
+    if (REGION_ALIASES[seg]) {
+      continue;
+    }
+    if (KNOWN_COUNTRIES.has(seg)) {
+      continue;
+    }
+    if (CITY_COUNTRY_HINTS[seg]) {
+      continue;
+    }
+    const mapped = COUNTRY_ALIASES[seg as keyof typeof COUNTRY_ALIASES];
+    if (mapped && KNOWN_COUNTRIES.has(mapped)) {
+      continue;
+    }
+    return false;
+  }
+  return true;
+}
+
 function isLikelyEmployerPrefix(prefix: string): boolean {
   const pk = prefix
     .toLowerCase()
-    .replace(/[\s,;/|\-–—]+$/g, '')
+    .replace(/[\s,;/|+\-–—]+$/g, '')
     .replace(/\s+/g, ' ')
     .trim();
   if (!pk) {
+    return false;
+  }
+  const shortCountry =
+    COUNTRY_ALIASES[pk as keyof typeof COUNTRY_ALIASES];
+  if (shortCountry && KNOWN_COUNTRIES.has(shortCountry)) {
+    return false;
+  }
+  if (isOnlyGeoChain(pk)) {
     return false;
   }
   // Multi-segment listings (e.g. "Germany | Helsinki") are not "CompanyName + city".
@@ -771,6 +817,12 @@ function expandParentheticalLists(raw: string): string {
 
 function normalizeKnownLocationPhrases(raw: string): string {
   const preStripped = raw
+    /** `EMEA- EU` → spaced hyphen so hyphen-split sees separate facets. */
+    .replace(/([A-Za-z]{2,})-\s+/g, '$1 - ')
+    /** GIFT City (Gujarat, India) — comma-separate so APAC and India both resolve. */
+    .replace(/\s*\(\s*gift\s+city\s*\)/gi, ', gift city')
+    /** Timezone qualifiers in parentheses, not geography. */
+    .replace(/\([^)]*\bhours\b[^)]*\)/gi, '')
     .replace(/\bglobal\s*,\s*remote\b/gi, 'Worldwide')
     .replace(/\bindia[-–—]bangalore\b/gi, 'Bangalore, India')
     .replace(/^\s*all locations\s*$/gi, '')
@@ -861,11 +913,25 @@ function splitLocation(raw: string): string[] {
       .map((part) => part.trim())
       .filter((part) => part.length > 0);
     for (const hyphenPart of hyphenParts) {
-      const orParts = hyphenPart
-        .split(/\s+or\s+/i)
+      const plusParts = hyphenPart
+        .split(/\s*\+\s*/)
         .map((part) => part.trim())
         .filter((part) => part.length > 0);
-      segments.push(...orParts);
+      for (const plusPart of plusParts) {
+        const multiSpaceParts = plusPart
+          .split(/\s{2,}/)
+          .map((part) => part.trim())
+          .filter((part) => part.length > 0);
+        const subParts =
+          multiSpaceParts.length > 0 ? multiSpaceParts : [plusPart];
+        for (const subPart of subParts) {
+          const orParts = subPart
+            .split(/\s+or\s+/i)
+            .map((part) => part.trim())
+            .filter((part) => part.length > 0);
+          segments.push(...orParts);
+        }
+      }
     }
   }
 
