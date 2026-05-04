@@ -421,6 +421,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   shanghai: 'china',
   tokyo: 'japan',
   hanoi: 'vietnam',
+  'ho chi minh': 'vietnam',
+  'ho chi minh city': 'vietnam',
   kyiv: 'ukraine',
   minsk: 'belarus',
   seoul: 'south korea',
