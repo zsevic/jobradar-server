@@ -111,6 +111,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'azerbaijan',
   'bulgaria',
   'sri lanka',
+  'nepal',
   'taiwan',
   'nigeria',
   'croatia',
