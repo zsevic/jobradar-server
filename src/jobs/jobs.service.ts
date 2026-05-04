@@ -492,8 +492,8 @@ export class JobsService {
     };
   }
 
-  async getLatestJobsPreview(limit = 5): Promise<
-    Array<{
+  async getLatestJobsPreview(limit = 5): Promise<{
+    items: Array<{
       id: string;
       title: string;
       company: string;
@@ -503,9 +503,13 @@ export class JobsService {
       isRemote: boolean;
       postedAt: string;
       isNew: boolean;
-    }>
-  > {
-    // Public preview: only jobs with a classified role (see job-process classification).
+    }>;
+    total: number;
+  }> {
+    // Total: all jobs in the table (landing page headline count).
+    const total = await this.jobsRepository.count();
+
+    // Public preview list: only jobs with a classified role (see job-process classification).
     const jobs = await this.jobsRepository
       .createQueryBuilder('job')
       .where('job.role IS NOT NULL')
@@ -515,7 +519,7 @@ export class JobsService {
       .getMany();
 
     const now = Date.now();
-    return jobs.map((job) => ({
+    const items = jobs.map((job) => ({
       ...this.getApiLocationParts(job),
       id: job.id,
       title: job.title,
@@ -527,6 +531,11 @@ export class JobsService {
         now - job.postedAt.getTime() <=
         this.NEW_JOB_WINDOW_HOURS * 60 * 60 * 1000,
     }));
+
+    return {
+      items,
+      total,
+    };
   }
 
   private getApiLocationParts(job: Job): {
