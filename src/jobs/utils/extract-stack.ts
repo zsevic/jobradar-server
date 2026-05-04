@@ -62,6 +62,7 @@ export type JobRoleKind =
   | 'management'
   | 'engineer'
   | 'ai'
+  | 'data'
   | 'solutions'
   | 'recruiter'
   | 'security'
@@ -135,6 +136,7 @@ export function extractStackFromJobText(
     role === 'qa' ||
     role === 'management' ||
     role === 'ai' ||
+    role === 'data' ||
     role === 'solutions' ||
     role === 'recruiter' ||
     role === 'security'
@@ -256,6 +258,16 @@ function mentionsAiOrMlIcRole(normalized: string): boolean {
   return false;
 }
 
+/** Data / analytics IC — after `ai` so e.g. "AI Data Engineer" stays `ai`. */
+function mentionsDataRole(normalized: string): boolean {
+  return (
+    /\b(data|analytics)\s+engineer(?:ing)?\b/i.test(normalized) ||
+    /\bdata\s+platform\s+engineer\b/i.test(normalized) ||
+    /\betl\s+engineer\b/i.test(normalized) ||
+    /\bbi\s+engineer\b/i.test(normalized)
+  );
+}
+
 export function classifyRoleFromTitle(title: string): JobRoleKind {
   const normalized = title.toLowerCase();
 
@@ -321,7 +333,8 @@ function mentionsSecurityRole(normalized: string): boolean {
   if (
     /\b(devops|sre|site reliability)\b/i.test(normalized) ||
     /\binfrastructure\s+engineer\b/i.test(normalized) ||
-    /\bplatform\s+(?:software\s+)?engineer\b/i.test(normalized) ||
+    // Exclude "Data Platform Engineer" (IC data), which also contains "platform engineer".
+    /(?<!\bdata\s)\bplatform\s+(?:software\s+)?engineer\b/i.test(normalized) ||
     /\bcloud\s+(?:software\s+)?engineer\b/i.test(normalized)
   ) {
     return 'devops';
@@ -335,6 +348,10 @@ function mentionsSecurityRole(normalized: string): boolean {
   // Before generic engineer: "AI Engineer" etc. also match /\bengineers?\b/.
   if (mentionsAiOrMlIcRole(normalized)) {
     return 'ai';
+  }
+
+  if (mentionsDataRole(normalized)) {
+    return 'data';
   }
 
   if (
