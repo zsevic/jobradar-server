@@ -24,6 +24,7 @@ const stackOptions = [
   'node.js',
   'python',
   'golang',
+  'rust',
   'java',
   '.net',
   'php',
