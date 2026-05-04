@@ -187,6 +187,47 @@ function isProjectManagementTitle(normalized: string): boolean {
   );
 }
 
+/**
+ * IC AI / ML titles — before generic `engineer` / `engineering` matches.
+ * Standalone `\bai\b` is intentionally omitted so e.g. "… - AI Fintech" or "Manager, AI"
+ * are not classified as `ai` without an ML/AI-skill phrase (engineer, ML, LLM, etc.).
+ */
+function mentionsAiOrMlIcRole(normalized: string): boolean {
+  if (
+    /\b(artificial intelligence|machine learning|deep learning|neural|nlp|llm|genai|generative\s+ai|computer vision)\b/i.test(
+      normalized,
+    )
+  ) {
+    return true;
+  }
+  if (/\bml\b/i.test(normalized)) {
+    return true;
+  }
+  if (
+    /\bai\s+(?:engineer|engineering|developer|research\s+engineer|data\s+engineer)\b/i.test(
+      normalized,
+    )
+  ) {
+    return true;
+  }
+  if (/\bmachine\s+learning\s+engineer\b/i.test(normalized)) {
+    return true;
+  }
+  if (/\bai\s+solutions\s+(?:engineer|consultant)\b/i.test(normalized)) {
+    return true;
+  }
+  if (/\bai\s*&\s*ml\s+engineer\b/i.test(normalized)) {
+    return true;
+  }
+  if (/\bai\s*\/\s*ml\s+engineer\b/i.test(normalized) || /\bai\/ml\s+engineer\b/i.test(normalized)) {
+    return true;
+  }
+  if (/\bai\s+agents?\b/i.test(normalized)) {
+    return true;
+  }
+  return false;
+}
+
 export function classifyRoleFromTitle(title: string): JobRoleKind {
   const normalized = title.toLowerCase();
 
@@ -243,12 +284,7 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
   }
 
   // Before generic engineer: "AI Engineer" etc. also match /\bengineers?\b/.
-  if (
-    /\b(ai|artificial intelligence|machine learning|deep learning|neural|nlp|llm|genai|generative\s+ai|computer vision)\b/i.test(
-      normalized,
-    ) ||
-    /\bml\b/i.test(normalized)
-  ) {
+  if (mentionsAiOrMlIcRole(normalized)) {
     return 'ai';
   }
 
