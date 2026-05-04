@@ -774,8 +774,11 @@ function normalizeToken(value: string): string {
     .replace(/\banywhere\b\s*[-,:]?\s*/g, '')
     /** ATS boilerplate e.g. `Canada: Select locations`, `US: Select locations`. */
     .replace(/:\s*select\s+locations\b/gi, '')
+    /** Same pattern with “All locations” (e.g. `US: All locations`). */
+    .replace(/:\s*all\s+locations\b/gi, '')
     .replace(/[.;]/g, ' ')
     .replace(/\bselect\s+locations\b/gi, '')
+    .replace(/\ball\s+locations\b/gi, '')
     .replace(/\s+/g, ' ')
     .replace(/^[\s\-–—]+|[\s\-–—]+$/g, '')
     .replace(/\s+\bin\s*$/g, '')
