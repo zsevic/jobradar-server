@@ -252,8 +252,6 @@ export class JobsService {
         'ai developer',
         'ai data engineer',
         'ai research engineer',
-        'ai solutions engineer',
-        'ai solutions consultant',
         'ai/ml engineer',
         'ai & ml engineer',
         'ai agents',
@@ -266,6 +264,23 @@ export class JobsService {
         'nlp',
         'computer vision',
         'generative ai',
+      ],
+      solutions: [
+        'solutions engineer',
+        'solutions architect',
+        'solutions consultant',
+        'sales engineer',
+        'pre-sales engineer',
+        'presales engineer',
+        'gtm engineer',
+        'go-to-market engineer',
+      ],
+      recruiter: [
+        'recruiter',
+        'technical recruiter',
+        'talent acquisition',
+        'sourcer',
+        'staffing',
       ],
       management: [
         'engineering manager',
@@ -288,6 +303,9 @@ export class JobsService {
         'product owner',
         'head of product',
         'vp of product',
+        'head of solutions',
+        'director of solutions',
+        'vp of solutions',
       ],
     };
 
@@ -298,7 +316,14 @@ export class JobsService {
     const seniorityMatches =
       !preset.seniority || !job.seniority || job.seniority === preset.seniority;
 
-    const rolesWithoutStack = ['devops', 'qa', 'management', 'ai'];
+    const rolesWithoutStack = [
+      'devops',
+      'qa',
+      'management',
+      'ai',
+      'solutions',
+      'recruiter',
+    ];
     const stackRequired =
       !rolesWithoutStack.includes(preset.role) && preset.stack.length > 0;
 

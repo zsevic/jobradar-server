@@ -60,6 +60,8 @@ export type JobRoleKind =
   | 'management'
   | 'engineer'
   | 'ai'
+  | 'solutions'
+  | 'recruiter'
   | 'other';
 
 function normalizeText(value: string): string {
@@ -129,7 +131,9 @@ export function extractStackFromJobText(
     role === 'devops' ||
     role === 'qa' ||
     role === 'management' ||
-    role === 'ai'
+    role === 'ai' ||
+    role === 'solutions' ||
+    role === 'recruiter'
   ) {
     return [];
   }
@@ -187,6 +191,26 @@ function isProjectManagementTitle(normalized: string): boolean {
   );
 }
 
+/** Recruiting / talent acquisition roles. */
+function mentionsRecruiterRole(normalized: string): boolean {
+  return /\b(recruiter|talent\s+acquisition|sourcer|staffing)\b/i.test(
+    normalized,
+  );
+}
+
+/** GTM / pre-sales IC — before fullstack and before `ai` (e.g. "AI Solutions Engineer"). */
+function mentionsSolutionsRole(normalized: string): boolean {
+  return (
+    /\b(solutions?|sales|pre[-\s]?sales|presales)\s+(engineer|architect|consultant)\b/i.test(
+      normalized,
+    ) ||
+    /\bsolutions?\s+architect\b/i.test(normalized) ||
+    /\bsolutions?\s+consultant\b/i.test(normalized) ||
+    /\bgtm\s+engineer\b/i.test(normalized) ||
+    /\bgo[-\s]?to[-\s]?market\s+engineer\b/i.test(normalized)
+  );
+}
+
 /**
  * IC AI / ML titles — before generic `engineer` / `engineering` matches.
  * Standalone `\bai\b` is intentionally omitted so e.g. "… - AI Fintech" or "Manager, AI"
@@ -213,9 +237,6 @@ function mentionsAiOrMlIcRole(normalized: string): boolean {
   if (/\bmachine\s+learning\s+engineer\b/i.test(normalized)) {
     return true;
   }
-  if (/\bai\s+solutions\s+(?:engineer|consultant)\b/i.test(normalized)) {
-    return true;
-  }
   if (/\bai\s*&\s*ml\s+engineer\b/i.test(normalized)) {
     return true;
   }
@@ -232,7 +253,7 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
   const normalized = title.toLowerCase();
 
   if (
-    /\b(engineering\s+manager|director\s+of\s+engineering|head\s+of\s+engineering|vp\s+of\s+engineering|tech(?:nical)?\s+lead|team\s+lead|staff\s+(?:engineering\s+)?manager|engineering\s+director)\b/i.test(
+    /\b(engineering\s+manager|director\s+of\s+engineering|head\s+of\s+engineering|vp\s+of\s+engineering|tech(?:nical)?\s+lead|team\s+lead|staff\s+(?:engineering\s+)?manager|engineering\s+director|(?:head|director|vp)\s+of\s+solutions)\b/i.test(
       normalized,
     )
   ) {
@@ -245,6 +266,14 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
 
   if (isProjectManagementTitle(normalized)) {
     return 'management';
+  }
+
+  if (mentionsRecruiterRole(normalized)) {
+    return 'recruiter';
+  }
+
+  if (mentionsSolutionsRole(normalized)) {
+    return 'solutions';
   }
 
   if (mentionsFullStackRole(normalized)) {

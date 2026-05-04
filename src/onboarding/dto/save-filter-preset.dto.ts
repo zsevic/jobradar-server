@@ -17,6 +17,8 @@ const roles = [
   'management',
   'engineer',
   'ai',
+  'solutions',
+  'recruiter',
 ] as const;
 const stackOptions = [
   'node.js',
@@ -43,7 +45,9 @@ export class SaveFilterPresetDto {
   role!: (typeof roles)[number];
 
   @ValidateIf((o: SaveFilterPresetDto) =>
-    !['devops', 'qa', 'management', 'ai'].includes(o.role),
+    !['devops', 'qa', 'management', 'ai', 'solutions', 'recruiter'].includes(
+      o.role,
+    ),
   )
   @IsArray()
   @ArrayMinSize(1)
