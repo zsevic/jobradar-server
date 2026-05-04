@@ -573,7 +573,11 @@ function isWorkModeOnlySegment(s: string): boolean {
 }
 
 function isLikelyEmployerPrefix(prefix: string): boolean {
-  const pk = prefix.toLowerCase().replace(/\s+/g, ' ').trim();
+  const pk = prefix
+    .toLowerCase()
+    .replace(/[\s,;/|\-–—]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (!pk) {
     return false;
   }
