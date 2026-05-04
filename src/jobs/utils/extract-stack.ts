@@ -290,10 +290,6 @@ function mentionsSecurityRole(normalized: string): boolean {
     normalized,
   ) && /\b(engineer|engineering|developer|architect|pentester|tester)\b/i.test(normalized);
 }
-  if (mentionsSecurityRole(normalized)) {
-    return 'security';
-  }
-
   if (mentionsFullStackRole(normalized)) {
     return 'fullstack';
   }
@@ -329,6 +325,11 @@ function mentionsSecurityRole(normalized: string): boolean {
     /\bcloud\s+(?:software\s+)?engineer\b/i.test(normalized)
   ) {
     return 'devops';
+  }
+
+  // Domain-specific IC roles (backend/frontend/mobile/devops) take precedence over security.
+  if (mentionsSecurityRole(normalized)) {
+    return 'security';
   }
 
   // Before generic engineer: "AI Engineer" etc. also match /\bengineers?\b/.
