@@ -8,7 +8,7 @@ export type ExtractedSeniority =
 /**
  * Extracts normalized seniority from a title string.
  * Precedence: staff (incl. senior staff / distinguished / fellow) > L-levels >
- * Roman level suffixes > senior > intern > junior > mid.
+ * Roman / Arabic level suffixes > senior > intern > junior > mid.
  */
 export function extractSeniorityFromTitle(
   title: string,
@@ -44,14 +44,14 @@ export function extractSeniorityFromTitle(
   }
 
   const roman = normalized.match(
-    /\b(?:software\s+(?:development\s+)?engineer|software\s+developer|software\s+engineering|member\s+of\s+technical\s+staff|engineer|developer|sde|swe|mts)\s+(iv|i{1,3})\b/i,
+    /\b(?:software\s+(?:development\s+)?engineer|software\s+developer|software\s+engineering|member\s+of\s+technical\s+staff|engineer|developer|sde|swe|mts)(?:\s+(?:level|lvl))?\s+(iv|i{1,3}|[1-5])\b/i,
   );
   if (roman) {
     const r = roman[1];
-    if (r === 'iv') return 'staff';
-    if (r === 'iii') return 'senior';
-    if (r === 'ii') return 'mid';
-    if (r === 'i') return 'junior';
+    if (r === 'iv' || r === '4' || r === '5') return 'staff';
+    if (r === 'iii' || r === '3') return 'senior';
+    if (r === 'ii' || r === '2') return 'mid';
+    if (r === 'i' || r === '1') return 'junior';
   }
 
   if (/\b(senior|sr|snr|expert|ssenior)\b/i.test(normalized)) {
