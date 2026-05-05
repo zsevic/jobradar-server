@@ -13,6 +13,7 @@ import {
   stripCompanyNameFromLocation,
 } from '../utils/clean-location';
 import { extractLocationFacets } from '../utils/normalize-location';
+import { transliterateLocationDisplay } from '../utils/transliterate-location';
 import { JobsService } from '../jobs.service';
 
 interface PersistJobPayload {
@@ -66,7 +67,9 @@ export class JobProcessProcessor extends WorkerHost {
       return;
     }
 
-    const formattedRawLocation = formatRawLocation(input.locationRaw ?? input.location);
+    const incomingRaw = input.locationRaw ?? input.location;
+    const latinizedRaw = transliterateLocationDisplay(incomingRaw);
+    const formattedRawLocation = formatRawLocation(latinizedRaw);
     const locationForGeo = stripCompanyNameFromLocation(
       formattedRawLocation,
       input.company,

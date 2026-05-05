@@ -14,6 +14,7 @@
     "migration:revert": "npm run typeorm -- migration:revert",
     "seed:sources": "node --require ts-node/register src/database/seeds/seed-sources.ts",
     "validate:sources": "node --require ts-node/register scripts/validate-sources.ts",
+    "backfill:transliterate-locations": "node --require ts-node/register -r dotenv/config scripts/backfill-location-transliteration.ts",
     "audit:locations": "node --require ts-node/register -r dotenv/config scripts/audit-location-quality.ts",
     "audit:ashby-locations": "node --require ts-node/register -r dotenv/config scripts/audit-location-quality.ts",
     "extract:sources-html": "node --require ts-node/register scripts/extract-sources-from-html.ts",
@@ -48,6 +49,7 @@
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "transliteration": "^2.6.1",
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
