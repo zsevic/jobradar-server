@@ -10,6 +10,7 @@ const STACK_ALIASES: Record<string, string[]> = {
   ],
   python: ['python', 'python3', 'django', 'fastapi', 'flask', 'pandas'],
   golang: ['golang', 'go lang'],
+  c: ['c++', 'cpp', 'cplusplus', 'c/c++'],
   rust: ['rust', 'rustlang'],
   java: ['java', 'spring', 'spring boot'],
   '.net': ['.net', 'dotnet', 'asp.net', 'c#', 'csharp'],
@@ -22,6 +23,7 @@ const STACK_ALIASES: Record<string, string[]> = {
   svelte: ['svelte'],
   'react native': ['react native', 'react-native'],
   swift: ['swift'],
+  objc: ['objective-c', 'objective c', 'objc'],
   kotlin: ['kotlin'],
   flutter: ['flutter'],
   dart: ['dart'],
@@ -38,6 +40,7 @@ const FRONTEND_STACK = new Set([
 const MOBILE_STACK = new Set([
   'react native',
   'swift',
+  'objc',
   'kotlin',
   'flutter',
   'dart',
@@ -46,6 +49,7 @@ const BACKEND_STACK = new Set([
   'node.js',
   'python',
   'golang',
+  'c',
   'rust',
   'java',
   '.net',
@@ -89,9 +93,26 @@ function standaloneGoLanguageInText(normalized: string): boolean {
   return /(?:^|[\s([{/,-])go(?:$|[\s)\]}",/.-])/.test(normalized);
 }
 
+/** Standalone "C" as a language token (title-focused; excludes C#, C++, cpp aliases). */
+function standaloneCLanguageInText(normalized: string): boolean {
+  if (/\bobjective[-\s]?c\b/i.test(normalized)) {
+    return false;
+  }
+  if (/\bc#/i.test(normalized)) {
+    return false;
+  }
+  if (/\bc\s*\+\+/i.test(normalized)) {
+    return false;
+  }
+  if (/\bcpp\b|\bcplusplus\b/i.test(normalized)) {
+    return false;
+  }
+  return /(?:^|[\s([{/,-])c(?:$|[\s)\]}",/.-])/.test(normalized);
+}
+
 function detectStackInText(
   input: string,
-  options?: { standaloneGoInTitle?: boolean },
+  options?: { standaloneGoInTitle?: boolean; standaloneCInTitle?: boolean },
 ): Set<string> {
   const normalized = normalizeText(input);
   const detected = new Set<string>();
@@ -116,6 +137,10 @@ function detectStackInText(
     detected.add('golang');
   }
 
+  if (options?.standaloneCInTitle && standaloneCLanguageInText(normalized)) {
+    detected.add('c');
+  }
+
   return detected;
 }
 
@@ -124,7 +149,10 @@ export function extractStackFromJobText(
   description?: string | null,
   role: JobRoleKind = 'other',
 ): string[] {
-  const fromTitle = detectStackInText(title, { standaloneGoInTitle: true });
+  const fromTitle = detectStackInText(title, {
+    standaloneGoInTitle: true,
+    standaloneCInTitle: true,
+  });
   const fromDescription = description
     ? detectStackInText(description)
     : new Set<string>();
@@ -380,6 +408,26 @@ function mentionsSecurityRole(normalized: string): boolean {
     /\bengineers?\b/i.test(normalized) ||
     /\bengineering\b/i.test(normalized)
   ) {
+    return 'engineer';
+  }
+
+  const stacks = detectStackInText(normalized, {
+    standaloneGoInTitle: true,
+    standaloneCInTitle: true,
+  });
+  const hasDeveloper = /\bdevelopers?\b/i.test(normalized);
+  const programmerWithStack =
+    /\bprogrammers?\b/i.test(normalized) && stacks.size > 0;
+  const computerProgrammer = /\bcomputer\s+programmers?\b/i.test(normalized);
+
+  if (hasDeveloper || programmerWithStack || computerProgrammer) {
+    const hasBackend = [...stacks].some((s) => BACKEND_STACK.has(s));
+    const hasFrontend = [...stacks].some((s) => FRONTEND_STACK.has(s));
+    const hasMobile = [...stacks].some((s) => MOBILE_STACK.has(s));
+    if (hasBackend && hasFrontend) return 'fullstack';
+    if (hasBackend) return 'backend';
+    if (hasFrontend) return 'frontend';
+    if (hasMobile) return 'mobile';
     return 'engineer';
   }
 
