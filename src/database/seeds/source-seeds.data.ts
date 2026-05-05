@@ -1805,6 +1805,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'flutterflow', name: 'FlutterFlow' },
   { provider: SourceProvider.ASHBY, externalId: 'freshpaint', name: 'Freshpaint' },
   { provider: SourceProvider.ASHBY, externalId: 'fullstory', name: 'FullStory' },
+  { provider: SourceProvider.ASHBY, externalId: 'gigaml', name: 'GigaML' },
   { provider: SourceProvider.ASHBY, externalId: 'gptzero', name: 'GPTZero' },
   { provider: SourceProvider.ASHBY, externalId: 'handshake', name: 'Handshake' },
   { provider: SourceProvider.ASHBY, externalId: 'hawk', name: 'Hawk' },
