@@ -25,8 +25,8 @@ export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
   @Get('latest')
-  async getLatestJobsPreview() {
-    return this.jobsService.getLatestJobsPreview(5);
+  async getLatestJobsPreview(@Query('country') country?: string) {
+    return this.jobsService.getLatestJobsPreview(5, country);
   }
 
   @Get()

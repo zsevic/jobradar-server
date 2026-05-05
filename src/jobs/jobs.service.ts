@@ -17,7 +17,10 @@ import {
 } from './jobs.constants';
 import { JobsQueryDto } from './dto/jobs-query.dto';
 import { NormalizedJob } from './interfaces/normalized-job.interface';
-import { matchesJobLocationPreset } from './utils/match-location-preset';
+import {
+  matchesJobLocationPreset,
+  normalizeCountryToken,
+} from './utils/match-location-preset';
 
 @Injectable()
 export class JobsService {
@@ -536,7 +539,10 @@ export class JobsService {
     };
   }
 
-  async getLatestJobsPreview(limit = 5): Promise<{
+  async getLatestJobsPreview(
+    limit = 5,
+    countryParam?: string | null,
+  ): Promise<{
     items: Array<{
       id: string;
       title: string;
@@ -549,18 +555,59 @@ export class JobsService {
       isNew: boolean;
     }>;
     total: number;
+    country: string | null;
   }> {
     // Total: all jobs in the table (landing page headline count).
     const total = await this.jobsRepository.count();
 
+    const countryName = this.resolvePreviewCountry(countryParam);
+
     // Public preview list: only jobs with a classified role (see job-process classification).
-    const jobs = await this.jobsRepository
+    const jobQuery = this.jobsRepository
       .createQueryBuilder('job')
       .where('job.role IS NOT NULL')
-      .andWhere("length(trim(job.role)) > 0")
-      .orderBy('job.postedAt', 'DESC')
-      .take(limit)
-      .getMany();
+      .andWhere("length(trim(job.role)) > 0");
+
+    const countryLike =
+      countryName !== null ? `%${countryName}%` : null;
+
+    if (countryName && countryLike) {
+      jobQuery.andWhere(
+        new Brackets((qb) => {
+          qb.where(':country = ANY(job.locationCountries)', {
+            country: countryName,
+          })
+            .orWhere('job.isRemote = TRUE')
+            .orWhere(
+              'LOWER(COALESCE(job.locationRaw, \'\')) LIKE :countryLike',
+              {
+                countryLike,
+              },
+            )
+            .orWhere('LOWER(job.location) LIKE :countryLike', {
+              countryLike,
+            });
+        }),
+      );
+
+      // Prefer in-country / location-text matches over remote-only listings.
+      jobQuery
+        .orderBy(
+          `CASE WHEN (
+            :country = ANY(job.locationCountries)
+            OR LOWER(COALESCE(job.locationRaw, '')) LIKE :countryLike
+            OR LOWER(job.location) LIKE :countryLike
+          ) THEN 0
+          WHEN job.isRemote = TRUE THEN 1
+          ELSE 2 END`,
+          'ASC',
+        )
+        .addOrderBy('job.postedAt', 'DESC');
+    } else {
+      jobQuery.orderBy('job.postedAt', 'DESC');
+    }
+
+    const jobs = await jobQuery.take(limit).getMany();
 
     const now = Date.now();
     const items = jobs.map((job) => ({
@@ -579,7 +626,37 @@ export class JobsService {
     return {
       items,
       total,
+      country: countryName,
     };
+  }
+
+  /** Resolves `?country=` to a normalized lowercase country token for preview filtering. */
+  private resolvePreviewCountry(countryParam?: string | null): string | null {
+    const raw = countryParam?.trim();
+    if (!raw) {
+      return null;
+    }
+
+    if (/^[A-Za-z]{2}$/.test(raw)) {
+      try {
+        const code = raw.toUpperCase();
+        const display = new Intl.DisplayNames(['en'], {
+          type: 'region',
+        }).of(code);
+        if (!display || display === code) {
+          return null;
+        }
+        if (display.toLowerCase().includes('unknown')) {
+          return null;
+        }
+        return normalizeCountryToken(display);
+      } catch {
+        return null;
+      }
+    }
+
+    const token = normalizeCountryToken(raw);
+    return token.length > 0 ? token : null;
   }
 
   private getApiLocationParts(job: Job): {
