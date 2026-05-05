@@ -7,7 +7,8 @@ export type ExtractedSeniority =
 
 /**
  * Extracts normalized seniority from a title string.
- * Precedence is highest level first: staff > senior > intern > junior > mid.
+ * Precedence: staff (incl. senior staff / distinguished / fellow) > L-levels >
+ * Roman level suffixes > senior > intern > junior > mid.
  */
 export function extractSeniorityFromTitle(
   title: string,
@@ -22,33 +23,54 @@ export function extractSeniorityFromTitle(
     return null;
   }
 
-  const hasStaff =
-    /\b(lead|principal|staff|head|architect|manager|director|vp|chief)\b/i.test(
+  if (
+    /\b(senior\s+staff|sr\s+staff|distinguished|fellow)\b/i.test(normalized) ||
+    /\b(lead|principal|head|architect|manager|director|vp|chief)\b/i.test(
       normalized,
-    );
-  if (hasStaff) {
+    ) ||
+    // IC "Member of Technical Staff" contains the word "staff" — exclude that phrase.
+    /(?<!\btechnical\s)\bstaff\b/i.test(normalized)
+  ) {
     return 'staff';
   }
 
-  const hasSenior = /\b(senior|sr|snr|expert|ssenior)\b/i.test(normalized);
-  if (hasSenior) {
+  const lLevel = normalized.match(/\bl(\d{1,2})\b/i);
+  if (lLevel) {
+    const n = Number.parseInt(lLevel[1], 10);
+    if (n >= 6) return 'staff';
+    if (n === 5) return 'senior';
+    if (n === 4) return 'mid';
+    if (n >= 1) return 'junior';
+  }
+
+  const roman = normalized.match(
+    /\b(?:software\s+(?:development\s+)?engineer|software\s+developer|software\s+engineering|member\s+of\s+technical\s+staff|engineer|developer|sde|swe|mts)\s+(iv|i{1,3})\b/i,
+  );
+  if (roman) {
+    const r = roman[1];
+    if (r === 'iv') return 'staff';
+    if (r === 'iii') return 'senior';
+    if (r === 'ii') return 'mid';
+    if (r === 'i') return 'junior';
+  }
+
+  if (/\b(senior|sr|snr|expert|ssenior)\b/i.test(normalized)) {
     return 'senior';
   }
 
-  const hasIntern = /\b(intern|internship)\b/i.test(normalized);
-  if (hasIntern) {
+  if (/\b(intern|internship)\b/i.test(normalized)) {
     return 'intern';
   }
 
-  const hasJunior = /\b(junior|jr|entry level|graduate|trainee)\b/i.test(
-    normalized,
-  );
-  if (hasJunior) {
+  if (
+    /\b(junior|jr|entry\s+level|graduate|trainee|new\s+grad(?:uate)?|early\s+career|apprentice(?:ship)?)\b/i.test(
+      normalized,
+    )
+  ) {
     return 'junior';
   }
 
-  const hasMid = /\b(mid|middle|mid level|intermediate)\b/i.test(normalized);
-  if (hasMid) {
+  if (/\b(mid|middle|mid\s+level|intermediate)\b/i.test(normalized)) {
     return 'mid';
   }
 
