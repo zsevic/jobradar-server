@@ -255,7 +255,6 @@ export class JobsService {
         'bi engineer',
         'decision scientist',
         'marketing scientist',
-        'product scientist',
         'business scientist',
         'growth scientist',
       ],

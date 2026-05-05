@@ -265,9 +265,9 @@ function mentionsAiOrMlIcRole(normalized: string): boolean {
   return false;
 }
 
-/** Product/marketing/etc. data scientist — must run before {@link mentionsAiOrMlIcRole} so "Marketing Data Scientist" stays `data` while "AI Data Engineer" stays `ai`. */
+/** Decision/marketing/business/growth-flavored *Scientist — must run before {@link mentionsAiOrMlIcRole} so "Marketing Data Scientist" stays `data` while "AI Data Engineer" stays `ai`. Excludes `product` so "Consumer Product Data Scientist" maps to `ai`. */
 const ANALYTICS_FLAVOR_SCIENTIST_RE =
-  /\b(decision|marketing|product|business|growth)\s+(?:data\s+)?scientist\b/i;
+  /\b(decision|marketing|business|growth)\s+(?:data\s+)?scientist\b/i;
 
 function mentionsAnalyticsFlavorScientist(normalized: string): boolean {
   return ANALYTICS_FLAVOR_SCIENTIST_RE.test(normalized);
