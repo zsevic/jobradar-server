@@ -253,6 +253,11 @@ export class JobsService {
         'data platform engineer',
         'etl engineer',
         'bi engineer',
+        'decision scientist',
+        'marketing scientist',
+        'product scientist',
+        'business scientist',
+        'growth scientist',
       ],
       engineer: [
         'engineer',
@@ -278,6 +283,9 @@ export class JobsService {
         'nlp',
         'computer vision',
         'generative ai',
+        'data scientist',
+        'applied scientist',
+        'research scientist',
       ],
       solutions: [
         'solutions engineer',

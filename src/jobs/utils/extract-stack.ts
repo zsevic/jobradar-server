@@ -255,7 +255,22 @@ function mentionsAiOrMlIcRole(normalized: string): boolean {
   if (/\bai\s+agents?\b/i.test(normalized)) {
     return true;
   }
+  if (
+    /\b(?:senior|sr|principal|staff|lead|chief)?\s*(?:(?:data\s+scientist)|(?:applied\s+scientist)|(?:research\s+scientist))\b/i.test(
+      normalized,
+    )
+  ) {
+    return true;
+  }
   return false;
+}
+
+/** Product/marketing/etc. data scientist — must run before {@link mentionsAiOrMlIcRole} so "Marketing Data Scientist" stays `data` while "AI Data Engineer" stays `ai`. */
+const ANALYTICS_FLAVOR_SCIENTIST_RE =
+  /\b(decision|marketing|product|business|growth)\s+(?:data\s+)?scientist\b/i;
+
+function mentionsAnalyticsFlavorScientist(normalized: string): boolean {
+  return ANALYTICS_FLAVOR_SCIENTIST_RE.test(normalized);
 }
 
 /** Data / analytics IC — after `ai` so e.g. "AI Data Engineer" stays `ai`. */
@@ -264,7 +279,8 @@ function mentionsDataRole(normalized: string): boolean {
     /\b(data|analytics)\s+engineer(?:ing)?\b/i.test(normalized) ||
     /\bdata\s+platform\s+engineer\b/i.test(normalized) ||
     /\betl\s+engineer\b/i.test(normalized) ||
-    /\bbi\s+engineer\b/i.test(normalized)
+    /\bbi\s+engineer\b/i.test(normalized) ||
+    mentionsAnalyticsFlavorScientist(normalized)
   );
 }
 
@@ -343,6 +359,11 @@ function mentionsSecurityRole(normalized: string): boolean {
   // Domain-specific IC roles (backend/frontend/mobile/devops) take precedence over security.
   if (mentionsSecurityRole(normalized)) {
     return 'security';
+  }
+
+  // Before AI: analytics-flavored *Scientist (see mentionsDataRole); keeps "AI Data Engineer" on `ai` below.
+  if (mentionsAnalyticsFlavorScientist(normalized)) {
+    return 'data';
   }
 
   // Before generic engineer: "AI Engineer" etc. also match /\bengineers?\b/.
