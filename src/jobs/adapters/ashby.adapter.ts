@@ -114,7 +114,7 @@ export class AshbyAdapter implements JobProviderAdapter {
           url,
           role: role === 'other' ? null : role,
           stack: extractStackFromJobText(title, job.descriptionPlain, role),
-          seniority: extractSeniorityFromTitle(title),
+          seniorities: extractSeniorityFromTitle(title),
         };
       })
       .filter((job) => job.url.length > 0);

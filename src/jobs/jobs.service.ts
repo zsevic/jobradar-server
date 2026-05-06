@@ -238,6 +238,7 @@ export class JobsService {
       mobile: ['mobile', 'android', 'ios', 'react native', 'swift', 'kotlin'],
       devops: [
         'devops',
+        'devsecops',
         'sre',
         'platform engineer',
         'infrastructure engineer',
@@ -364,7 +365,9 @@ export class JobsService {
     preset: Pick<FilterPreset, 'role' | 'stack' | 'seniority'>,
   ): boolean {
     const seniorityMatches =
-      !preset.seniority || !job.seniority || job.seniority === preset.seniority;
+      !preset.seniority ||
+      job.seniorities.length === 0 ||
+      job.seniorities.includes(preset.seniority);
 
     const rolesWithoutStack = [
       'devops',
@@ -405,7 +408,7 @@ export class JobsService {
       isNew: boolean;
       url: string;
       stack: string[];
-      seniority: string | null;
+      seniorities: string[];
     }>;
     page: number;
     limit: number;
@@ -499,7 +502,7 @@ export class JobsService {
           this.NEW_JOB_WINDOW_HOURS * 60 * 60 * 1000,
         url: job.url,
         stack: job.stack,
-        seniority: job.seniority,
+        seniorities: job.seniorities,
       }));
 
       return {
@@ -534,7 +537,7 @@ export class JobsService {
         this.NEW_JOB_WINDOW_HOURS * 60 * 60 * 1000,
       url: job.url,
       stack: job.stack,
-      seniority: job.seniority,
+      seniorities: job.seniorities,
     }));
 
     return {

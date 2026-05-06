@@ -152,7 +152,7 @@ export class JobProcessProcessor extends WorkerHost {
       postedAt: normalizedJob.postedAt,
       url: input.url,
       stack: input.stack,
-      seniority: input.seniority,
+      seniorities: input.seniorities,
       hash,
     });
 

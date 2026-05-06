@@ -28,6 +28,7 @@ export class FilterPreset {
   stack!: string[];
 
   @Column({ type: 'varchar' })
+  /** One selected level per user (not an array). */
   seniority!: string;
 
   @Column({ type: 'text', array: true, default: '{}' })

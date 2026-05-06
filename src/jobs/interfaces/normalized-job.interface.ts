@@ -16,5 +16,5 @@ export interface NormalizedJob {
   url: string;
   role: string | null;
   stack: string[];
-  seniority: string | null;
+  seniorities: string[];
 }

@@ -375,7 +375,7 @@ function mentionsSecurityRole(normalized: string): boolean {
   }
   // Bare "platform" / "infrastructure" (e.g. team or domain names) are not devops.
   if (
-    /\b(devops|sre|site reliability)\b/i.test(normalized) ||
+    /\b(devops|devsecops|sre|site reliability)\b/i.test(normalized) ||
     /\binfrastructure\s+engineer\b/i.test(normalized) ||
     // Exclude "Data Platform Engineer" (IC data), which also contains "platform engineer".
     /(?<!\bdata\s)\bplatform\s+(?:software\s+)?engineer\b/i.test(normalized) ||

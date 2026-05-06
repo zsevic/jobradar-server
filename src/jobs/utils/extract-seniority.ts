@@ -5,14 +5,47 @@ export type ExtractedSeniority =
   | 'senior'
   | 'staff';
 
+const SENIORITY_ORDER: ExtractedSeniority[] = [
+  'intern',
+  'junior',
+  'mid',
+  'senior',
+  'staff',
+];
+
+/** Whole-token Roman / Arabic level suffixes (ordered longest-first). `i\\b` avoids matching `intern`. */
+const LEVEL_TOKEN = '(?:iv|iii|ii|i\\b|[1-5])';
+
+function tokenToLevel(token: string): ExtractedSeniority {
+  const s = token.toLowerCase();
+  if (s === 'iv' || s === '4' || s === '5') return 'staff';
+  if (s === 'iii' || s === '3') return 'senior';
+  if (s === 'ii' || s === '2') return 'mid';
+  return 'junior';
+}
+
+function expandInclusive(levels: ExtractedSeniority[]): ExtractedSeniority[] {
+  if (levels.length === 0) {
+    return [];
+  }
+  const indices = levels.map((l) => SENIORITY_ORDER.indexOf(l));
+  const min = Math.min(...indices);
+  const max = Math.max(...indices);
+  return SENIORITY_ORDER.slice(min, max + 1);
+}
+
 /**
- * Extracts normalized seniority from a title string.
- * Precedence: staff (incl. senior staff / distinguished / fellow) > L-levels >
- * Roman / Arabic level suffixes > senior > intern > junior > mid.
+ * Extracts normalized seniority bucket(s) from a title string.
+ * Band titles like "Engineer II – IV" expand inclusively (mid … staff).
+ * Unknown titles yield an empty array.
+ *
+ * Precedence: intern / junior (explicit early-career) > mid–senior phrase
+ * (beats leadership words like manager) > staff (incl. leadership keywords) >
+ * L-levels > Roman / Arabic level suffix lists > senior keyword > mid keyword.
  */
 export function extractSeniorityFromTitle(
   title: string,
-): ExtractedSeniority | null {
+): ExtractedSeniority[] {
   const normalized = title
     .toLowerCase()
     .replace(/[.,/()_-]+/g, ' ')
@@ -20,46 +53,11 @@ export function extractSeniorityFromTitle(
     .trim();
 
   if (!normalized) {
-    return null;
-  }
-
-  if (
-    /\b(senior\s+staff|sr\s+staff|distinguished|fellow)\b/i.test(normalized) ||
-    /\b(lead|principal|head|architect|manager|director|vp|chief)\b/i.test(
-      normalized,
-    ) ||
-    // IC "Member of Technical Staff" contains the word "staff" — exclude that phrase.
-    /(?<!\btechnical\s)\bstaff\b/i.test(normalized)
-  ) {
-    return 'staff';
-  }
-
-  const lLevel = normalized.match(/\bl(\d{1,2})\b/i);
-  if (lLevel) {
-    const n = Number.parseInt(lLevel[1], 10);
-    if (n >= 6) return 'staff';
-    if (n === 5) return 'senior';
-    if (n === 4) return 'mid';
-    if (n >= 1) return 'junior';
-  }
-
-  const roman = normalized.match(
-    /\b(?:software\s+(?:development\s+)?engineer|software\s+developer|software\s+engineering|member\s+of\s+technical\s+staff|engineer|developer|sde|swe|mts)(?:\s+(?:level|lvl))?\s+(iv|i{1,3}|[1-5])\b/i,
-  );
-  if (roman) {
-    const r = roman[1];
-    if (r === 'iv' || r === '4' || r === '5') return 'staff';
-    if (r === 'iii' || r === '3') return 'senior';
-    if (r === 'ii' || r === '2') return 'mid';
-    if (r === 'i' || r === '1') return 'junior';
-  }
-
-  if (/\b(senior|sr|snr|expert|ssenior)\b/i.test(normalized)) {
-    return 'senior';
+    return [];
   }
 
   if (/\b(intern|internship)\b/i.test(normalized)) {
-    return 'intern';
+    return ['intern'];
   }
 
   if (
@@ -67,12 +65,56 @@ export function extractSeniorityFromTitle(
       normalized,
     )
   ) {
-    return 'junior';
+    return ['junior'];
+  }
+
+  // "Mid-Senior", "Mid | Senior", "mid/senior" normalize to `mid senior`. Must run
+  // before leadership keywords so "… Manager | Mid-Senior" is not forced to staff.
+  if (/\bmid\s+senior\b/i.test(normalized)) {
+    return ['mid', 'senior'];
+  }
+
+  if (
+    /\b(senior\s+staff|sr\s+staff|distinguished|fellow)\b/i.test(normalized) ||
+    /\b(lead|principal|head|architect|manager|director|vp|chief)\b/i.test(
+      normalized,
+    ) ||
+    /(?<!\btechnical\s)\bstaff\b/i.test(normalized)
+  ) {
+    return ['staff'];
+  }
+
+  const lLevel = normalized.match(/\bl(\d{1,2})\b/i);
+  if (lLevel) {
+    const n = Number.parseInt(lLevel[1], 10);
+    if (n >= 6) return ['staff'];
+    if (n === 5) return ['senior'];
+    if (n === 4) return ['mid'];
+    if (n >= 1) return ['junior'];
+  }
+
+  const levelTail = normalized.match(
+    new RegExp(
+      `\\b(?:software\\s+(?:development\\s+)?engineer|software\\s+developer|software\\s+engineering|member\\s+of\\s+technical\\s+staff|engineer|developer|sde|swe|mts)(?:\\s+(?:level|lvl))?\\s+(${LEVEL_TOKEN}(?:\\s+${LEVEL_TOKEN})*)`,
+      'i',
+    ),
+  );
+  if (levelTail) {
+    const tokens = levelTail[1]
+      .trim()
+      .split(/\s+/)
+      .filter((t) => t.length > 0);
+    const levels = tokens.map(tokenToLevel);
+    return expandInclusive(levels);
+  }
+
+  if (/\b(senior|sr|snr|expert|ssenior)\b/i.test(normalized)) {
+    return ['senior'];
   }
 
   if (/\b(mid|middle|mid\s+level|intermediate)\b/i.test(normalized)) {
-    return 'mid';
+    return ['mid'];
   }
 
-  return null;
+  return [];
 }

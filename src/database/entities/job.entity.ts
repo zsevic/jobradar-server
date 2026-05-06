@@ -52,8 +52,8 @@ export class Job {
   @Column({ type: 'text', array: true, default: '{}' })
   stack!: string[];
 
-  @Column({ type: 'varchar', nullable: true })
-  seniority!: string | null;
+  @Column({ type: 'text', array: true, default: '{}' })
+  seniorities!: string[];
 
   @Column({ type: 'timestamptz' })
   postedAt!: Date;

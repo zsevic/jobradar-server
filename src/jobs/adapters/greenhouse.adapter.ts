@@ -85,7 +85,7 @@ export class GreenhouseAdapter implements JobProviderAdapter {
           url: job.absolute_url as string,
           role: role === 'other' ? null : role,
           stack,
-          seniority: extractSeniorityFromTitle(title),
+          seniorities: extractSeniorityFromTitle(title),
         };
       });
   }

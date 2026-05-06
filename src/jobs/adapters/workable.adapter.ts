@@ -9,7 +9,10 @@ import {
   resolveNormalizedLocation,
   stripCompanyNameFromLocation,
 } from '../utils/clean-location';
-import { extractSeniorityFromTitle } from '../utils/extract-seniority';
+import {
+  extractSeniorityFromTitle,
+  type ExtractedSeniority,
+} from '../utils/extract-seniority';
 import {
   classifyRoleFromTitle,
   extractStackFromJobText,
@@ -88,9 +91,9 @@ export class WorkableAdapter implements JobProviderAdapter {
         const isRemote = this.resolveIsRemote(job, geoRaw);
         const rawTitle = (job.title as string).trim();
         const title = stripLocationFromTitle(rawTitle, location);
-        const seniority =
-          this.resolveSeniorityFromExperience(job.experience) ??
-          extractSeniorityFromTitle(title);
+        const fromExp = this.resolveSeniorityFromExperience(job.experience);
+        const fromTitle = extractSeniorityFromTitle(title);
+        const seniorities = fromExp.length > 0 ? fromExp : fromTitle;
         const descriptionText = `${job.description ?? ''} ${job.full_description ?? ''}`;
         const role = classifyRoleFromTitle(title);
         const stack = extractStackFromJobText(title, descriptionText, role);
@@ -108,7 +111,7 @@ export class WorkableAdapter implements JobProviderAdapter {
           url: (job.url || job.shortlink) as string,
           role: role === 'other' ? null : role,
           stack,
-          seniority,
+          seniorities,
         };
       });
   }
@@ -125,10 +128,12 @@ export class WorkableAdapter implements JobProviderAdapter {
     return primary || structured;
   }
 
-  private resolveSeniorityFromExperience(experience?: string): string | null {
+  private resolveSeniorityFromExperience(
+    experience?: string,
+  ): ExtractedSeniority[] {
     const value = experience?.toLowerCase().trim();
     if (!value) {
-      return null;
+      return [];
     }
 
     if (
@@ -138,11 +143,11 @@ export class WorkableAdapter implements JobProviderAdapter {
       value.includes('vp') ||
       value.includes('chief')
     ) {
-      return 'staff';
+      return ['staff'];
     }
 
     if (value.includes('senior')) {
-      return 'senior';
+      return ['senior'];
     }
 
     if (
@@ -151,7 +156,7 @@ export class WorkableAdapter implements JobProviderAdapter {
       value.includes('intern') ||
       value.includes('trainee')
     ) {
-      return 'junior';
+      return ['junior'];
     }
 
     if (
@@ -159,10 +164,10 @@ export class WorkableAdapter implements JobProviderAdapter {
       value.includes('mid') ||
       value.includes('intermediate')
     ) {
-      return 'mid';
+      return ['mid'];
     }
 
-    return null;
+    return [];
   }
 
   private resolveLocation(job: WorkableJob): string {

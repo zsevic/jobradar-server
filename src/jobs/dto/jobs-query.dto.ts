@@ -98,6 +98,7 @@ export class JobsQueryDto {
   @Transform(({ value }) => toStringArray(value))
   stack?: Array<(typeof stackOptions)[number]>;
 
+  /** Single seniority filter (user selects one level). */
   @ValidateIf((o: JobsQueryDto) => !!o.role)
   @IsIn(seniorityOptions as unknown as string[])
   seniority?: (typeof seniorityOptions)[number];
