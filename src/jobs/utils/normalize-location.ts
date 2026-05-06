@@ -316,6 +316,7 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   chantilly: ['virginia'],
   'annapolis junction': ['maryland'],
   lehi: ['utah'],
+  hillsboro: ['oregon'],
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -351,6 +352,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   cologne: 'germany',
   amsterdam: 'netherlands',
   alkmaar: 'netherlands',
+  hilversum: 'netherlands',
   'são paulo': 'brazil',
   'sao paulo': 'brazil',
   bogota: 'colombia',
@@ -394,6 +396,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'new albany': 'united states',
   pittsburgh: 'united states',
   denver: 'united states',
+  hillsboro: 'united states',
   boston: 'united states',
   austin: 'united states',
   woburn: 'united states',
@@ -947,6 +950,11 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bft\.?\s*meade\b/gi, 'Fort Meade, MD')
     .replace(/\bcentral\s*\/\s*western\s+us\b/gi, 'United States')
     .replace(/\bcentral\s+us\b/gi, 'Central US, United States')
+    /** OR omitted from postal map (English “or”); spell out Oregon for facets. */
+    .replace(/\bhillsboro\s*,\s*or\b/gi, 'Hillsboro, Oregon')
+    .replace(/\bhillsboro\s+or\b/gi, 'Hillsboro, Oregon')
+    .replace(/\bhanover\s*,\s*md\b/gi, 'Hanover, MD')
+    .replace(/\bhanover\s+md\b/gi, 'Hanover, MD')
     .replace(/\bchantilly\s+va\b/gi, 'Chantilly, VA')
     .replace(/\bconcord\s+ca\b/gi, 'Concord, CA')
     .replace(/\bdetroit\s+mi\b/gi, 'Detroit, MI')
