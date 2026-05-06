@@ -2084,6 +2084,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'peek', name: 'Peek' },
   { provider: SourceProvider.ASHBY, externalId: 'posthog', name: 'PostHog' },
   { provider: SourceProvider.ASHBY, externalId: 'primer', name: 'Primer' },
+  { provider: SourceProvider.ASHBY, externalId: 'pragmatike', name: 'Pragmatike' },
   { provider: SourceProvider.ASHBY, externalId: 'pylon-labs', name: 'Pylon Labs' },
   { provider: SourceProvider.ASHBY, externalId: 'quicknode', name: 'QuickNode' },
   { provider: SourceProvider.ASHBY, externalId: 'ravio', name: 'Ravio' },
