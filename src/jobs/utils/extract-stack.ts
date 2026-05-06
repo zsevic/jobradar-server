@@ -353,8 +353,38 @@ function mentionsDataRole(normalized: string): boolean {
   );
 }
 
+/**
+ * HR / People function titles. When matched without explicit IC engineering nouns
+ * (`engineer` / `developer` / `architect`), classify as `other` so bare `engineering`
+ * in partner org names (e.g. "Product & Engineering") does not map to `engineer`.
+ */
+function mentionsHrRole(normalized: string): boolean {
+  return (
+    /\bhrbp\b/i.test(normalized) ||
+    /\bhr\s+(?:business\s+partner|generalist|specialist|coordinator|manager|director|partner|lead)\b/i.test(
+      normalized,
+    ) ||
+    /\bhuman\s+resources\b/i.test(normalized) ||
+    /\b(?:head|director|vp)\s+of\s+(?:hr|human\s+resources|people)\b/i.test(
+      normalized,
+    ) ||
+    /\bchief\s+(?:hr|human\s+resources|people)\s+officer\b/i.test(normalized) ||
+    /\bchro\b/i.test(normalized) ||
+    /\bpeople\s+(?:manager|director|partner|operations|ops|business\s+partner|lead)\b/i.test(
+      normalized,
+    )
+  );
+}
+
 export function classifyRoleFromTitle(title: string): JobRoleKind {
   const normalized = title.toLowerCase();
+
+  if (
+    mentionsHrRole(normalized) &&
+    !/\b(engineer|developer|architect)\b/i.test(normalized)
+  ) {
+    return 'other';
+  }
 
   if (
     /\b(engineering\s+manager|director\s+of\s+engineering|head\s+of\s+engineering|vp\s+of\s+engineering|tech(?:nical)?\s+lead|team\s+lead|staff\s+(?:engineering\s+)?manager|engineering\s+director|(?:head|director|vp)\s+of\s+solutions|(?:head|director|vp)\s+of\s+security|chief\s+information\s+security\s+officer|ciso|security\s+manager|security\s+director)\b/i.test(
@@ -501,6 +531,12 @@ export function classifyRoleWithDescriptionFallback(
     return fromTitle;
   }
   const titleNorm = title.toLowerCase();
+  if (
+    mentionsHrRole(titleNorm) &&
+    !/\b(engineer|developer|architect)\b/i.test(titleNorm)
+  ) {
+    return fromTitle;
+  }
   const titleLooksEngineering =
     /\bengineers?\b/i.test(titleNorm) || /\bengineering\b/i.test(titleNorm);
   if (!titleLooksEngineering) {
