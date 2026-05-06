@@ -40,8 +40,9 @@ function expandInclusive(levels: ExtractedSeniority[]): ExtractedSeniority[] {
  * Unknown titles yield an empty array.
  *
  * Precedence: intern / junior (explicit early-career) > mid–senior phrase
- * (beats leadership words like manager) > staff (incl. leadership keywords) >
- * L-levels > Roman / Arabic level suffix lists > senior keyword > mid keyword.
+ * (beats leadership words like manager) > senior lead / senior principal (IC
+ * band) > staff (incl. leadership keywords) > L-levels > Roman / Arabic level
+ * suffix lists > senior keyword > mid keyword.
  */
 export function extractSeniorityFromTitle(
   title: string,
@@ -74,9 +75,14 @@ export function extractSeniorityFromTitle(
     return ['mid', 'senior'];
   }
 
+  // "Senior/Lead", "Senior or Lead", "Senior/Principal" — IC band; must run before `lead` / `principal` in staff.
+  if (/\bsenior\s+(?:or\s+)?(?:lead|principal)\b/i.test(normalized)) {
+    return ['senior', 'staff'];
+  }
+
   if (
     /\b(senior\s+staff|sr\s+staff|distinguished|fellow)\b/i.test(normalized) ||
-    /\b(lead|principal|head|architect|manager|director|vp|chief)\b/i.test(
+    /(?:\blead(?!\s+(?:the|a|an)\b)|\bprincipal\b|\bhead\b|\barchitect\b|\bmanager\b|\bdirector\b|\bvp\b|\bchief\b)/i.test(
       normalized,
     ) ||
     /(?<!\btechnical\s)\bstaff\b/i.test(normalized)
