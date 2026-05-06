@@ -136,6 +136,10 @@ export class WorkableAdapter implements JobProviderAdapter {
       return [];
     }
 
+    const hasMidSignal =
+      value.includes('mid') || value.includes('intermediate');
+    const hasSeniorSignal = value.includes('senior');
+
     if (
       value.includes('director') ||
       value.includes('executive') ||
@@ -146,7 +150,12 @@ export class WorkableAdapter implements JobProviderAdapter {
       return ['staff'];
     }
 
-    if (value.includes('senior')) {
+    // Workable frequently uses compound labels like "Mid-Senior level".
+    if (hasMidSignal && hasSeniorSignal) {
+      return ['mid', 'senior'];
+    }
+
+    if (hasSeniorSignal) {
       return ['senior'];
     }
 
@@ -161,8 +170,7 @@ export class WorkableAdapter implements JobProviderAdapter {
 
     if (
       value.includes('associate') ||
-      value.includes('mid') ||
-      value.includes('intermediate')
+      hasMidSignal
     ) {
       return ['mid'];
     }
