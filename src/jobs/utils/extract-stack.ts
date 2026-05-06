@@ -70,6 +70,7 @@ export type JobRoleKind =
   | 'solutions'
   | 'recruiter'
   | 'security'
+  | 'designer'
   | 'other';
 
 function normalizeText(value: string): string {
@@ -167,7 +168,8 @@ export function extractStackFromJobText(
     role === 'data' ||
     role === 'solutions' ||
     role === 'recruiter' ||
-    role === 'security'
+    role === 'security' ||
+    role === 'designer'
   ) {
     return [];
   }
@@ -209,7 +211,8 @@ function isProductManagementTitle(normalized: string): boolean {
     /\bproduct\s+owner\b/i.test(normalized) ||
     /\bchief\s+product\s+officer\b/i.test(normalized) ||
     /\bvp\s+of\s+product\b/i.test(normalized) ||
-    /\bhead\s+of\s+product\b/i.test(normalized)
+    /\bhead\s+of\s+product\b/i.test(normalized) ||
+    /\bproduct\s+management\b/i.test(normalized)
   );
 }
 
@@ -243,6 +246,36 @@ function mentionsSolutionsRole(normalized: string): boolean {
     /\bgtm\s+engineer\b/i.test(normalized) ||
     /\bgo[-\s]?to[-\s]?market\s+engineer\b/i.test(normalized) ||
     /\bforward[-\s]?deployed\s+(?:software\s+)?(?:engineer|engineering)\b/i.test(
+      normalized,
+    )
+  );
+}
+
+/**
+ * IC + leadership designer / UX / UI titles. `Design Engineer` / `UX Engineer` stay on the
+ * engineering path because they don't contain `designer` and the
+ * `*\s+(manager|director|lead)` patterns below don't include `engineer`.
+ */
+function mentionsDesignerRole(normalized: string): boolean {
+  return (
+    /\bdesigner\b/i.test(normalized) ||
+    /\b(?:ux|user\s+experience)\s+researcher\b/i.test(normalized) ||
+    /\b(?:design|ux|ui|ux\/ui|ui\/ux|ux\s+ui|ui\s+ux)\s+(?:manager|director|lead)\b/i.test(
+      normalized,
+    ) ||
+    /\b(?:head|director|vp)\s+of\s+(?:design|ux|ui|product\s+design)\b/i.test(
+      normalized,
+    )
+  );
+}
+
+/** Security IC roles; runs after solutions so sales/security titles stay `solutions`. */
+function mentionsSecurityRole(normalized: string): boolean {
+  return (
+    /\b(security|app(?:lication)?\s+security|appsec|product\s+security|cloud\s+security|cyber\s?security|cybersecurity|infosec|information\s+security|threat|vulnerability|soc|offensive\s+security|defensive\s+security|penetration\s+test(?:ing)?|pentest|red\s+team|blue\s+team)\b/i.test(
+      normalized,
+    ) &&
+    /\b(engineer|engineering|developer|architect|pentester|tester)\b/i.test(
       normalized,
     )
   );
@@ -347,13 +380,10 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
     return 'solutions';
   }
 
+  if (mentionsDesignerRole(normalized)) {
+    return 'designer';
+  }
 
-/** Security IC roles; runs after solutions so sales/security titles stay `solutions`. */
-function mentionsSecurityRole(normalized: string): boolean {
-  return /\b(security|app(?:lication)?\s+security|appsec|product\s+security|cloud\s+security|cyber\s?security|cybersecurity|infosec|information\s+security|threat|vulnerability|soc|offensive\s+security|defensive\s+security|penetration\s+test(?:ing)?|pentest|red\s+team|blue\s+team)\b/i.test(
-    normalized,
-  ) && /\b(engineer|engineering|developer|architect|pentester|tester)\b/i.test(normalized);
-}
   if (mentionsFullStackRole(normalized)) {
     return 'fullstack';
   }
@@ -372,8 +402,23 @@ function mentionsSecurityRole(normalized: string): boolean {
   ) {
     return 'qa';
   }
+  // Desktop UI toolkit (Microsoft stack) + .NET signal => fullstack.
+  // Runs before the bare `\bui\b` frontend rule so e.g. "C# WinUI Developer"
+  // doesn't become `backend` via the `c# -> .net` developer fallback alone.
   if (
-    /\b(front[\s-]?end|frontend|ui)\b/i.test(normalized) &&
+    /\b(?:winui|wpf|maui|xaml)\b/i.test(normalized) &&
+    /(?<![a-z0-9])(?:c#|csharp|dotnet|asp\.net|\.net)(?![a-z0-9])/i.test(
+      normalized,
+    )
+  ) {
+    return 'fullstack';
+  }
+  if (
+    (/\b(front[\s-]?end|frontend|ui)\b/i.test(normalized) ||
+      /\bux\s+engineer\b/i.test(normalized) ||
+      /\bux\s+developer\b/i.test(normalized) ||
+      /\bdesign\s+engineer\b/i.test(normalized) ||
+      /\bproduct\s+design\s+engineer\b/i.test(normalized)) &&
     !/\b(back[\s-]?end|backend)\b/i.test(normalized)
   ) {
     return 'frontend';

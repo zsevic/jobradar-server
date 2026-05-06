@@ -48,7 +48,7 @@ export class GreenhouseAdapter implements JobProviderAdapter {
         params: {
           content: true,
         },
-        timeout: 10000,
+        timeout: 5000,
       }),
     );
 

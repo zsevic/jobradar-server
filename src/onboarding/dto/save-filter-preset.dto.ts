@@ -21,6 +21,7 @@ const roles = [
   'solutions',
   'recruiter',
   'security',
+  'designer',
 ] as const;
 const stackOptions = [
   'node.js',
@@ -57,6 +58,7 @@ export class SaveFilterPresetDto {
       'solutions',
       'recruiter',
       'security',
+      'designer',
     ].includes(o.role),
   )
   @IsArray()

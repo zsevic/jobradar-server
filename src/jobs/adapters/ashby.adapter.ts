@@ -65,7 +65,7 @@ export class AshbyAdapter implements JobProviderAdapter {
     const endpoint = `${this.baseUrl}/${encodeURIComponent(sourceExternalId)}`;
     const { data } = await firstValueFrom(
       this.httpService.get<AshbyApiResponse>(endpoint, {
-        timeout: 10000,
+        timeout: 5000,
       }),
     );
 

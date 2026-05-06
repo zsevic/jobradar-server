@@ -311,6 +311,42 @@ export class JobsService {
         'sourcer',
         'staffing',
       ],
+      designer: [
+        'designer',
+        'ui designer',
+        'ui ux designer',
+        'ui/ux design',
+        'ui/ux designer',
+        'ui/ ux designer',
+        'uxui designer',
+        'ux designer',
+        'ux product designer',
+        'ui and graphic designer',
+        'product designer',
+        'visual designer',
+        'interaction designer',
+        'service designer',
+        'web designer',
+        'graphic designer',
+        'game designer',
+        'ux researcher',
+        'user experience designer',
+        'user experience researcher',
+        'ux/ui manager',
+        'ui/ux manager',
+        'ux manager',
+        'ui manager',
+        'design manager',
+        'design director',
+        'design lead',
+        'ux lead',
+        'ui lead',
+        'ux/ui lead',
+        'ui/ux lead',
+        'head of design',
+        'director of design',
+        'vp of design',
+      ],
       security: [
         'security engineer',
         'security engineering',
@@ -384,6 +420,7 @@ export class JobsService {
       'solutions',
       'recruiter',
       'security',
+      'designer',
     ];
     const stackRequired =
       !rolesWithoutStack.includes(preset.role) && preset.stack.length > 0;
@@ -433,6 +470,7 @@ export class JobsService {
       'solutions',
       'recruiter',
       'security',
+      'designer',
     ] as const;
 
     const overridePreset =

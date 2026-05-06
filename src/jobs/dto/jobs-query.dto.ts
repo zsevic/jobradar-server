@@ -26,6 +26,7 @@ const roles = [
   'solutions',
   'recruiter',
   'security',
+  'designer',
 ] as const;
 
 const stackOptions = [
@@ -60,6 +61,7 @@ const noStackRoles = [
   'solutions',
   'recruiter',
   'security',
+  'designer',
 ] as const;
 
 function toStringArray(value: unknown): string[] | undefined {

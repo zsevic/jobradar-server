@@ -65,7 +65,7 @@ export class WorkableAdapter implements JobProviderAdapter {
     const { data } = await firstValueFrom(
       this.httpService.get<WorkableJobsResponse>(endpoint, {
         params: { details: true },
-        timeout: 10000,
+        timeout: 5000,
       }),
     );
 
