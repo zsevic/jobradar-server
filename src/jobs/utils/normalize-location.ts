@@ -40,6 +40,9 @@ const REGION_ALIASES: Record<string, string> = {
   'east asia': 'east asia',
   'southeast asia': 'southeast asia',
   'central us': 'central us',
+  /** Corporate remote macro-regions. */
+  'northeast asia': 'northeast asia',
+  cis: 'cis',
 };
 
 /** Lowercase; matches `Intl.DisplayNames(['en'], { type: 'region' }).of('CI').toLowerCase()` (d’Ivoire uses U+2019). */
@@ -202,6 +205,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'congo - kinshasa',
   'haiti',
   'qatar',
+  'iceland',
 ]);
 
 /**
@@ -333,6 +337,7 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   northlake: ['illinois'],
   walnut: ['california'],
   'glen cove': ['new york'],
+  memphis: ['tennessee'],
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -447,6 +452,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   manila: 'philippines',
   curitiba: 'brazil',
   helsinki: 'finland',
+  oulu: 'finland',
   'cape town': 'south africa',
   johannesburg: 'south africa',
   durban: 'south africa',
@@ -476,6 +482,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   ghent: 'belgium',
   jakarta: 'indonesia',
   oslo: 'norway',
+  reykjavik: 'iceland',
+  reykjavík: 'iceland',
   shanghai: 'china',
   tokyo: 'japan',
   fukuoka: 'japan',
@@ -496,8 +504,17 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   corby: 'united kingdom',
   darmstadt: 'germany',
   stuttgart: 'germany',
+  hannover: 'germany',
+  kassel: 'germany',
+  mainz: 'germany',
+  nürnberg: 'germany',
+  nuremberg: 'germany',
+  münster: 'germany',
+  munster: 'germany',
   'buenos aires': 'argentina',
   'rio de janeiro': 'brazil',
+  'são josé dos campos': 'brazil',
+  'sao jose dos campos': 'brazil',
   montevideo: 'uruguay',
   birmingham: 'united kingdom',
   bochum: 'germany',
@@ -518,6 +535,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   augusta: 'united states',
   'san luis obispo': 'united states',
   phoenix: 'united states',
+  indianapolis: 'united states',
+  memphis: 'united states',
   omaha: 'united states',
   'san antonio': 'united states',
   northlake: 'united states',
@@ -545,7 +564,9 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   lagos: 'nigeria',
   'abu dhabi': 'united arab emirates',
   dubai: 'united arab emirates',
+  tbilisi: 'georgia',
   'tel aviv': 'israel',
+  'ramat gan': 'israel',
   abuja: 'nigeria',
   abidjan: COTE_DIVOIRE,
   dakar: 'senegal',
@@ -1000,13 +1021,49 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bremote\s*-\s*u\.s\.a\.?\b/gi, 'United States')
     .replace(/\bremote\s+us\s+central\b/gi, 'Central US, United States')
     .replace(/\bremote\s*-\s*ga\b/gi, 'Georgia, United States')
-    /** Drop trailing timezone hiring blurbs after “Remote |”. */
-    .replace(/\bremote\s*\|\s*utc\b[^|]*$/gi, 'Remote')
+    /** Drop timezone blurbs after “Remote |” (not only end-of-string). */
+    .replace(/\bremote\s*\|\s*utc\b[^,;|]*/gi, 'Remote')
     /** ATS noise — not a geography (whole string only). */
     .replace(/^\s*field\s*$/gi, '')
     .replace(/^\s*permanent\s*$/gi, '')
     /** City + “Office” before comma clutter. */
-    .replace(/\bthiruvananthapuram\s+office\b/gi, 'Thiruvananthapuram');
+    .replace(/\bthiruvananthapuram\s+office\b/gi, 'Thiruvananthapuram')
+    /** China / Canada / UK ATS spacing. */
+    .replace(/\bshang\s+hai\b/gi, 'Shanghai')
+    .replace(/\btoronto\s+canada\b/gi, 'Toronto, Canada')
+    .replace(/\bwallingford\s+uk\b/gi, 'Wallingford, United Kingdom')
+    /** US state postal `IN` / `OR` — spell out (not India / English “or”). */
+    .replace(/\bindianapolis\s*,\s*in\b/gi, 'Indianapolis, Indiana')
+    .replace(/\bremote\s*-\s*in\b/gi, 'Indiana, United States')
+    .replace(/\bremote\s*-\s*or\b/gi, 'Oregon, United States')
+    .replace(
+      /\bremote\s*-\s*washington\s*(?:d\.c\.|dc)\b/gi,
+      'Washington, DC',
+    )
+    .replace(/\bind\s+remote\b/gi, 'India')
+    /** Regional remote macros. */
+    .replace(/\bremote-northeast\s+asia\b/gi, 'Northeast Asia')
+    .replace(/\bremote\s+us\s+west\b/gi, 'West Coast, United States')
+    .replace(/\bremote\s+roles\s*-\s*cis\b/gi, 'CIS')
+    /** Israel ATS hyphen blob (`Israel-Tel-Aviv Yafo Office`). Escaped `-` avoids regexp ambiguity. */
+    .replace(
+      /israel\s*-\s*tel\s*-\s*aviv\s+yafo\s+office/gi,
+      'Tel Aviv, Israel',
+    )
+    /** Portugal / EN hybrid + glued city. */
+    .replace(/\bhybrid\s*,\s*sanfrancisco\b/gi, 'San Francisco, California')
+    .replace(/\bsingapore\s+city\b/gi, 'Singapore')
+    /** Finland hybrid + on-site duplicate (ATS lists both modes). */
+    .replace(
+      /\bhybrid\s*-\s*oulu\s*,\s*north\s+ostrobothnia\s*,\s*on-site\s*-\s*oulu\s*,\s*north\s+ostrobothnia\b/gi,
+      'Oulu, Finland',
+    )
+    .replace(
+      /\b(?:hybrid|on-site)\s*-\s*oulu\s*,\s*north\s+ostrobothnia\b/gi,
+      'Oulu, Finland',
+    )
+    /** Non-geographic ATS filler. */
+    .replace(/\bflexible\s*-\s*any\s+site\b/gi, '');
   return stripEmployerBrandFromLocation(preStripped)
     /** Cape Town / Durban datacenter site codes — not US District of Columbia. */
     .replace(/\bcape\s+town\s+dc\d*\b/gi, 'Cape Town')
@@ -1098,12 +1155,20 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bsan\s+francisco-hq\b/gi, 'San Francisco')
     .replace(/\bpalo\s+alto\s+office\b/gi, 'Palo Alto')
     .replace(/\bnew\s+york-office\s*\([^)]*\)/gi, 'New York')
+    /** Foster City + ATS hybrid / schedule noise (specific before generic `[^,|]*`). */
     .replace(
-      /\bfoster\s+city\s*,\s*ca\s*\([^)]*\)/gi,
+      /\bfoster\s+city\s*,\s*ca\s*\(\s*hybrid\s*\)\s*in\s+office\s*m\s*,?\s*w\s*,?\s*f\b/gi,
       'Foster City, CA',
     )
+    .replace(/\bfoster\s+city\s*,\s*ca\s*\([^)]*\)[^,|]*/gi, 'Foster City, CA')
     /** Omaha campus-style suffix (Nebraska). */
-    .replace(/\bomaha\s+riverfront\b/gi, 'Omaha, NE');
+    .replace(/\bomaha\s+riverfront\b/gi, 'Omaha, NE')
+    .replace(/\bmoonachie\s+nj\b/gi, 'Moonachie, NJ')
+    /** PA office + legal boilerplate. */
+    .replace(
+      /\bwest\s+chester\s*,\s*pa\b\s+and\s+unanticipated\s+worksites/gi,
+      'West Chester, PA',
+    );
 }
 
 /** Split on ; | /, spaced hyphens, and " or " so alternatives become separate segments. */
