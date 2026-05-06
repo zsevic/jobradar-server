@@ -436,6 +436,16 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'menlo park': 'united states',
   nairobi: 'kenya',
   'buenos aires': 'argentina',
+  birmingham: 'united kingdom',
+  bochum: 'germany',
+  bonn: 'germany',
+  bristol: 'united kingdom',
+  caen: 'france',
+  cairo: 'egypt',
+  canberra: 'australia',
+  brussels: 'belgium',
+  brussel: 'belgium',
+  boise: 'united states',
   ahmedabad: 'india',
   aichi: 'japan',
   annecy: 'france',
@@ -872,6 +882,11 @@ function normalizeKnownLocationPhrases(raw: string): string {
       'Europe, United States',
     );
   return stripEmployerBrandFromLocation(preStripped)
+    .replace(/\bcanada\s*&\s*usa\b/gi, 'Canada, United States')
+    .replace(/\busa\s*&\s*canada\b/gi, 'United States, Canada')
+    .replace(/\bbelgium\s*[-–—]\s*brussels?\s+office\b/gi, 'Brussels, Belgium')
+    .replace(/\bcdmx\d+\b/gi, 'Mexico City, Mexico')
+    .replace(/,\s*([a-z]{2})\s+united\s+states\b/gi, ', $1, United States')
     .replace(
       /\bdistributed\s*\(\s*([^)]+)\s*\)/gi,
       (_m, inner: string) => inner.trim(),
