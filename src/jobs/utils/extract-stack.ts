@@ -301,13 +301,21 @@ function mentionsAnalyticsFlavorScientist(normalized: string): boolean {
   return ANALYTICS_FLAVOR_SCIENTIST_RE.test(normalized);
 }
 
-/** Data / analytics IC — after `ai` so e.g. "AI Data Engineer" stays `ai`. */
+/**
+ * Data / analytics IC — after `ai` so e.g. "AI Data Engineer" stays `ai`.
+ * Includes technical analyst titles (Data / Analytics / Insights / Reporting / BI /
+ * Business Intelligence Analyst); domain analysts (business / product / marketing /
+ * financial / operations / risk) intentionally excluded so they remain `other`.
+ */
 function mentionsDataRole(normalized: string): boolean {
   return (
     /\b(data|analytics)\s+engineer(?:ing)?\b/i.test(normalized) ||
     /\bdata\s+platform\s+engineer\b/i.test(normalized) ||
     /\betl\s+engineer\b/i.test(normalized) ||
     /\bbi\s+engineer\b/i.test(normalized) ||
+    /\b(?:data|analytics|insights|reporting|bi|business\s+intelligence)\s+analyst\b/i.test(
+      normalized,
+    ) ||
     mentionsAnalyticsFlavorScientist(normalized)
   );
 }
