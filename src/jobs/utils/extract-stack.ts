@@ -255,6 +255,7 @@ function mentionsSolutionsRole(normalized: string): boolean {
  * IC + leadership designer / UX / UI titles. `Design Engineer` / `UX Engineer` stay on the
  * engineering path because they don't contain `designer` and the
  * `*\s+(manager|director|lead)` patterns below don't include `engineer`.
+ * `UI Artist` / `UX Artist` (game / visual UI) are `designer`, not bare-`ui` `frontend`.
  */
 function mentionsDesignerRole(normalized: string): boolean {
   return (
@@ -264,6 +265,9 @@ function mentionsDesignerRole(normalized: string): boolean {
       normalized,
     ) ||
     /\b(?:head|director|vp)\s+of\s+(?:design|ux|ui|product\s+design)\b/i.test(
+      normalized,
+    ) ||
+    /\b(?:ui|ux|ui\s*\/\s*ux|ux\s*\/\s*ui|ui\s+ux|ux\s+ui)\s+artist\b/i.test(
       normalized,
     )
   );
