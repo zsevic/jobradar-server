@@ -1,10 +1,11 @@
 /**
  * Location facet quality audit (per provider or all):
  * 1) Rows with geographic-looking raw but empty locationCountries (SQL).
- * 2) Facet drift: stored tokens/countries/regions vs recompute using the same
- *    pipeline as job ingestion (formatRawLocation → stripCompanyNameFromLocation →
+ * 2) Facet drift: stored vs recomputed facets via the same pipeline as ingestion
+ *    (formatRawLocation → stripCompanyNameFromLocation →
  *    resolveNormalizedLocation → extractLocationFacets), **without** provider-specific extras such as Ashby
- *    API `locationCountryHints` (not stored on `jobs`).
+ *    API `locationCountryHints` (not stored on `jobs`). Jobs whose trimmed `locationRaw`
+ *    is only **Remote** or **Hybrid** are omitted — no geographic signal.
  *
  * Outputs under scripts/output/: `{slug}-location-quality.json`, `.summary.txt`,
  * `.codebase-proposals.md`
@@ -165,6 +166,9 @@ SELECT
   "isRemote"
 FROM jobs`;
 
+/** Work-mode-only raw strings: no geographic facet expectations — omit from facet scan. */
+const SKIP_LOCATION_RAW_SQL = `LOWER(TRIM(COALESCE("locationRaw", ''))) NOT IN ('remote', 'hybrid')`;
+
 function sqlScanAll(provider: AuditProvider, limit: number | null): {
   text: string;
   values: unknown[];
@@ -172,12 +176,12 @@ function sqlScanAll(provider: AuditProvider, limit: number | null): {
   const limitClause = limit != null ? ` LIMIT ${limit}` : '';
   if (provider === 'all') {
     return {
-      text: `${JOB_SELECT.trim()} ORDER BY id${limitClause}`,
+      text: `${JOB_SELECT.trim()} WHERE ${SKIP_LOCATION_RAW_SQL} ORDER BY id${limitClause}`,
       values: [],
     };
   }
   return {
-    text: `${JOB_SELECT.trim()} WHERE provider = $1 ORDER BY id${limitClause}`,
+    text: `${JOB_SELECT.trim()} WHERE provider = $1 AND ${SKIP_LOCATION_RAW_SQL} ORDER BY id${limitClause}`,
     values: [provider],
   };
 }
@@ -190,10 +194,10 @@ function sqlEmptyCountryGeo(provider: AuditProvider): {
   COALESCE(array_length("locationCountries", 1), 0) = 0
   AND COALESCE(array_length("locationRegions", 1), 0) = 0
   AND LENGTH(TRIM(COALESCE("locationRaw", location, ''))) > 1
-  AND LOWER(TRIM(COALESCE("locationRaw", location, ''))) NOT IN ('remote', 'anywhere', 'unknown')
+  AND LOWER(TRIM(COALESCE("locationRaw", location, ''))) NOT IN ('remote', 'hybrid', 'anywhere', 'unknown')
   AND NOT (
     "isRemote" = true
-    AND TRIM(COALESCE("locationRaw", location, '')) ~* '^(remote|anywhere|distributed|unknown|worldwide|global)\\s*$'
+    AND TRIM(COALESCE("locationRaw", location, '')) ~* '^(remote|hybrid|anywhere|distributed|unknown|worldwide|global)\\s*$'
   )
   ORDER BY "locationRaw" NULLS LAST, id`;
 
@@ -322,7 +326,7 @@ function writeCodebaseProposals(params: {
   lines.push('## Method');
   lines.push('');
   lines.push(
-    `1. **\`SQL_EMPTY_COUNTRY_GEO\`**: Jobs${params.provider === 'all' ? '' : ` for provider **${params.provider}**`} with **no** \`locationCountries\` **and** **no** \`locationRegions\`, non-trivial \`locationRaw\` / \`location\`, excluding plain \`remote\` / \`anywhere\` / \`unknown\`, and excluding **\`isRemote\` + remote-only** raw (whole string matches remote/global variants only). **Region-only** or **fully remote-only** rows are intentionally omitted — empty countries there is acceptable.`,
+    `1. **\`SQL_EMPTY_COUNTRY_GEO\`**: Jobs${params.provider === 'all' ? '' : ` for provider **${params.provider}**`} with **no** \`locationCountries\` **and** **no** \`locationRegions\`, non-trivial \`locationRaw\` / \`location\`, excluding plain \`remote\` / \`hybrid\` / \`anywhere\` / \`unknown\`, and excluding **\`isRemote\` + remote-only** raw (whole string matches remote/global/work-mode variants only). **Region-only** or **fully remote-only** rows are intentionally omitted — empty countries there is acceptable.`,
   );
   lines.push(
     `2. **Facet recompute**: For each scanned job, recompute facets from \`formatRawLocation(locationRaw ?? location)\` via \`resolveNormalizedLocation\` + \`extractLocationFacets\`, matching [\`job-process.processor.ts\`](../src/jobs/processors/job-process.processor.ts) **minus** provider-only ingest fields **not** stored on \`jobs\` (e.g. Ashby **\`locationCountryHints\`** from postal data).`,
