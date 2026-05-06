@@ -37,6 +37,8 @@ const stackOptions = [
   'next.js',
   'nuxt',
   'svelte',
+  'typescript',
+  'javascript',
   'react native',
   'swift',
   'kotlin',

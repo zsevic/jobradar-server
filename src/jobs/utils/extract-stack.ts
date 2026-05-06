@@ -15,6 +15,8 @@ const STACK_ALIASES: Record<string, string[]> = {
   java: ['java', 'spring', 'spring boot'],
   '.net': ['.net', 'dotnet', 'asp.net', 'c#', 'csharp'],
   php: ['php', 'laravel', 'symfony'],
+  typescript: ['typescript', 'type script', 'ts'],
+  javascript: ['javascript', 'java script', 'js'],
   react: ['react', 'reactjs', 'react.js'],
   angular: ['angular', 'angularjs'],
   vue: ['vue', 'vuejs', 'vue.js'],
@@ -36,6 +38,8 @@ const FRONTEND_STACK = new Set([
   'next.js',
   'nuxt',
   'svelte',
+  'typescript',
+  'javascript',
 ]);
 const MOBILE_STACK = new Set([
   'react native',
