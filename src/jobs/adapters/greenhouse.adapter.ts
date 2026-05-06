@@ -74,41 +74,57 @@ function extractJobPostingLocationFromMetadata(
   return null;
 }
 
+const GREENHOUSE_WORK_MODE_ONLY = new Set([
+  'remote',
+  'hybrid',
+  'onsite',
+  'distributed',
+  'worldwide',
+  'global',
+  'anywhere',
+  'unknown',
+  'tbd',
+  'multiple locations',
+  'multi-location',
+  'various',
+  'flexible',
+]);
+
+function isWorkModeOnlySegment(segment: string): boolean {
+  const s = segment.trim().toLowerCase();
+  if (!s) {
+    return true;
+  }
+  if (GREENHOUSE_WORK_MODE_ONLY.has(s)) {
+    return true;
+  }
+  const t = segment.trim();
+  return /^in[\s-]?office$/i.test(t) || /^on[\s-]?site$/i.test(t);
+}
+
 /**
  * True when `location.name` carries no place tokens (work arrangement / placeholder only).
- * Primary geographic strings like "San Francisco, CA" stay false so we keep using `location`.
+ * Compound labels like `Hybrid; In-Office` or `Hybrid or Remote` count as non-geographic so metadata can supply city/country.
+ * Strings with a comma are treated as geographic (city/state/country style).
  */
 function isNonGeographicGreenhouseLocation(name: string): boolean {
-  const n = name.trim().toLowerCase();
-  if (n.length === 0) {
+  const n = name.trim();
+  if (!n) {
     return true;
   }
-  if (/,/.test(name)) {
+  if (/,/.test(n)) {
     return false;
   }
-  const workOnly = new Set([
-    'remote',
-    'hybrid',
-    'in-office',
-    'in office',
-    'onsite',
-    'on-site',
-    'on site',
-    'distributed',
-    'worldwide',
-    'global',
-    'anywhere',
-    'unknown',
-    'tbd',
-    'multiple locations',
-    'multi-location',
-    'various',
-    'flexible',
-  ]);
-  if (workOnly.has(n)) {
+  const segments = n
+    .split(
+      /\s*;\s*|\s*\|\s*|\s*\/\s*|\s+-\s+|\s+or\s+|\s+and\s+/i,
+    )
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  if (segments.length === 0) {
     return true;
   }
-  return /^in[\s-]?office$/i.test(name.trim());
+  return segments.every((seg) => isWorkModeOnlySegment(seg));
 }
 
 /**

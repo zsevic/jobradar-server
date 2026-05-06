@@ -29,28 +29,59 @@ function stripEmptyParentheses(value: string): string {
   return t;
 }
 
+/**
+ * Temporarily replaces hyphenated office/site labels so comma normalization does not
+ * split `In-Office` into `In`, `Office` or break `On-Site`.
+ */
+function shieldHyphenatedWorkLabels(input: string): {
+  shielded: string;
+  restore: (s: string) => string;
+} {
+  const originals: string[] = [];
+  const shielded = input.replace(
+    /\b(in-office|in office|on-site|on site)\b/gi,
+    (m) => {
+      const idx = originals.length;
+      originals.push(m);
+      return `@@HYPHLABEL${idx}@@`;
+    },
+  );
+  const restore = (s: string): string => {
+    let out = s;
+    for (let i = 0; i < originals.length; i += 1) {
+      out = out.split(`@@HYPHLABEL${i}@@`).join(originals[i]);
+    }
+    return out;
+  };
+  return { shielded, restore };
+}
+
 export function cleanLocationAfterRemoteDetection(location: string): string {
   const trimmed = stripEmptyParentheses(location);
   if (!trimmed) {
     return 'Unknown';
   }
 
-  const cleaned = trimmed
+  const afterRemote = trimmed
     // remove standalone remote/anywhere tokens
     .replace(/\b(remote|anywhere)\b/gi, '')
     // Drop dangling connectors left over after remote/anywhere removal (e.g. "Boston or Remote").
     .replace(/^\s*(?:or|and|&)\s+/i, '')
     .replace(/\s+(?:or|and|&)\s*$/i, '')
-    .replace(/(?:^|,)\s*(?:or|and|&)\s*,/gi, ',')
-    // collapse separators that may be left after token removal
-    .replace(/\s*[-/|,]+\s*/g, ', ')
-    // collapse repeated commas
-    .replace(/,\s*,+/g, ', ')
-    // trim leading/trailing commas and spaces
-    .replace(/^[,\s]+|[,\s]+$/g, '')
-    // normalize spacing
-    .replace(/\s{2,}/g, ' ')
-    .trim();
+    .replace(/(?:^|,)\s*(?:or|and|&)\s*,/gi, ',');
+  const { shielded, restore } = shieldHyphenatedWorkLabels(afterRemote);
+  const cleaned = restore(
+    shielded
+      // collapse separators that may be left after token removal
+      .replace(/\s*[-/|,]+\s*/g, ', ')
+      // collapse repeated commas
+      .replace(/,\s*,+/g, ', ')
+      // trim leading/trailing commas and spaces
+      .replace(/^[,\s]+|[,\s]+$/g, '')
+      // normalize spacing
+      .replace(/\s{2,}/g, ' ')
+      .trim(),
+  );
 
   if (!cleaned) {
     return 'Unknown';
