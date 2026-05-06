@@ -93,7 +93,8 @@ export class WorkableAdapter implements JobProviderAdapter {
         const title = stripLocationFromTitle(rawTitle, location);
         const fromExp = this.resolveSeniorityFromExperience(job.experience);
         const fromTitle = extractSeniorityFromTitle(title);
-        const seniorities = fromExp.length > 0 ? fromExp : fromTitle;
+        // Title is the primary signal; provider experience is a fallback only.
+        const seniorities = fromTitle.length > 0 ? fromTitle : fromExp;
         const descriptionText = `${job.description ?? ''} ${job.full_description ?? ''}`;
         const role = classifyRoleFromTitle(title);
         const stack = extractStackFromJobText(title, descriptionText, role);
