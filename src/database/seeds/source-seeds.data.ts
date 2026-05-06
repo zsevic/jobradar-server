@@ -2270,5 +2270,30 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'rollingarrays-tech',
     name: 'Rolling Arrays',
   },
+  { provider: SourceProvider.WORKABLE, externalId: 'calabrio', name: 'Calabrio' },
+  { provider: SourceProvider.WORKABLE, externalId: 'digifycareers', name: 'Digify' },
+  { provider: SourceProvider.WORKABLE, externalId: 'walaris', name: 'Walaris' },
+  { provider: SourceProvider.WORKABLE, externalId: 'via-science', name: 'Via Science' },
+  { provider: SourceProvider.WORKABLE, externalId: 'adree', name: 'Adree' },
+  { provider: SourceProvider.WORKABLE, externalId: 'futureplc', name: 'Future plc' },
+  { provider: SourceProvider.WORKABLE, externalId: 'ikh', name: 'IKH' },
+  { provider: SourceProvider.WORKABLE, externalId: 'sweep360', name: 'Sweep360' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'intracom-telecom-2',
+    name: 'Intracom Telecom',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'boundless-networks-inc-1',
+    name: 'Boundless Networks',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'dodge-construction-network',
+    name: 'Dodge Construction Network',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'prophix', name: 'Prophix' },
+  { provider: SourceProvider.WORKABLE, externalId: 'stellar-cyber', name: 'Stellar Cyber' },
 ];
 
