@@ -7,6 +7,8 @@ import { Source, SourceProvider } from '../../database/entities/source.entity';
 import { GreenhouseAdapter } from '../adapters/greenhouse.adapter';
 import { GREENHOUSE_FETCH_QUEUE } from '../jobs.constants';
 import { JobsService } from '../jobs.service';
+import { isAxiosTimeoutError } from '../utils/is-axios-timeout';
+import { ProviderCircuitBreaker } from '../utils/provider-circuit-breaker';
 
 interface FetchSourceJobPayload {
   sourceId: string;
@@ -24,6 +26,7 @@ export class GreenhouseFetchProcessor extends WorkerHost {
     private readonly sourceRepository: Repository<Source>,
     private readonly greenhouseAdapter: GreenhouseAdapter,
     private readonly jobsService: JobsService,
+    private readonly providerCircuitBreaker: ProviderCircuitBreaker,
   ) {
     super();
   }
@@ -61,6 +64,9 @@ export class GreenhouseFetchProcessor extends WorkerHost {
         `Queued ${normalizedJobs.length} jobs from source ${source.externalId}`,
       );
     } catch (error) {
+      if (isAxiosTimeoutError(error)) {
+        this.providerCircuitBreaker.recordTimeout(SourceProvider.GREENHOUSE);
+      }
       source.syncStatus = 'error';
       await this.sourceRepository.save(source);
       this.logger.error(

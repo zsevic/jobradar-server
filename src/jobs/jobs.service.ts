@@ -21,6 +21,7 @@ import {
   matchesJobLocationPreset,
   normalizeCountryToken,
 } from './utils/match-location-preset';
+import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
 
 @Injectable()
 export class JobsService {
@@ -46,6 +47,7 @@ export class JobsService {
     private readonly jobMatchQueue: Queue,
     @InjectQueue(EMAIL_SEND_QUEUE)
     private readonly emailSendQueue: Queue,
+    private readonly providerCircuitBreaker: ProviderCircuitBreaker,
   ) {}
 
   @Cron(CronExpression.EVERY_30_MINUTES)
@@ -56,6 +58,10 @@ export class JobsService {
   }
 
   async enqueueAshbySources(): Promise<void> {
+    if (this.providerCircuitBreaker.isOpen(SourceProvider.ASHBY)) {
+      this.logger.warn('Skip ashby polling: circuit open');
+      return;
+    }
     const ashbySources = await this.sourceRepository.find({
       where: {
         provider: SourceProvider.ASHBY,
@@ -84,6 +90,10 @@ export class JobsService {
   }
 
   async enqueueGreenhouseSources(): Promise<void> {
+    if (this.providerCircuitBreaker.isOpen(SourceProvider.GREENHOUSE)) {
+      this.logger.warn('Skip greenhouse polling: circuit open');
+      return;
+    }
     const greenhouseSources = await this.sourceRepository.find({
       where: {
         provider: SourceProvider.GREENHOUSE,
@@ -112,6 +122,10 @@ export class JobsService {
   }
 
   async enqueueWorkableSources(): Promise<void> {
+    if (this.providerCircuitBreaker.isOpen(SourceProvider.WORKABLE)) {
+      this.logger.warn('Skip workable polling: circuit open');
+      return;
+    }
     const workableSources = await this.sourceRepository.find({
       where: {
         provider: SourceProvider.WORKABLE,
@@ -162,6 +176,13 @@ export class JobsService {
       .getOne();
 
     if (!source) {
+      return null;
+    }
+
+    if (this.providerCircuitBreaker.isOpen(source.provider)) {
+      this.logger.warn(
+        `Skip manual fetch: circuit open for ${source.provider}:${source.externalId}`,
+      );
       return null;
     }
 

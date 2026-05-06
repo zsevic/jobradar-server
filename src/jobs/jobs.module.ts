@@ -27,6 +27,7 @@ import { GreenhouseFetchProcessor } from './processors/greenhouse-fetch.processo
 import { JobMatchProcessor } from './processors/job-match.processor';
 import { JobProcessProcessor } from './processors/job-process.processor';
 import { WorkableFetchProcessor } from './processors/workable-fetch.processor';
+import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { WorkableFetchProcessor } from './processors/workable-fetch.processor';
   ],
   controllers: [JobsController],
   providers: [
+    ProviderCircuitBreaker,
     JobsService,
     AshbyAdapter,
     GreenhouseAdapter,
@@ -61,5 +63,6 @@ import { WorkableFetchProcessor } from './processors/workable-fetch.processor';
     JobMatchProcessor,
     EmailSendProcessor,
   ],
+  exports: [ProviderCircuitBreaker],
 })
 export class JobsModule {}
