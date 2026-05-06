@@ -596,11 +596,6 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'realchemistry',
     name: 'Real Chemistry',
   },
-  {
-    provider: SourceProvider.GREENHOUSE,
-    externalId: 'misfitsmarket',
-    name: 'Misfits Market',
-  },
   { provider: SourceProvider.GREENHOUSE, externalId: 'overstory', name: 'Overstory' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'entersekt', name: 'Entersekt' },
   {

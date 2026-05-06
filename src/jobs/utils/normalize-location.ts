@@ -431,6 +431,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   gurugram: 'india',
   pune: 'india',
   shenzhen: 'china',
+  hangzhou: 'china',
   beijing: 'china',
   lisbon: 'portugal',
   yerevan: 'armenia',
@@ -916,6 +917,9 @@ function normalizeKnownLocationPhrases(raw: string): string {
       /\bgreater\s+toronto\s+area(?:\s*[-–—]\s*remote)?\b/gi,
       'Toronto, Canada',
     )
+    /** Hangzhou spelling variants (ATS / romanization noise). */
+    .replace(/\bhang\s+zhou\b/gi, 'Hangzhou')
+    .replace(/\bhangzhou\b/gi, 'Hangzhou')
     /** `EMEA- EU` → spaced hyphen so hyphen-split sees separate facets. */
     .replace(/([A-Za-z]{2,})-\s+/g, '$1 - ')
     /** GIFT City (Gujarat, India) — comma-separate so APAC and India both resolve. */
