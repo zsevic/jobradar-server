@@ -38,6 +38,10 @@ export function cleanLocationAfterRemoteDetection(location: string): string {
   const cleaned = trimmed
     // remove standalone remote/anywhere tokens
     .replace(/\b(remote|anywhere)\b/gi, '')
+    // Drop dangling connectors left over after remote/anywhere removal (e.g. "Boston or Remote").
+    .replace(/^\s*(?:or|and|&)\s+/i, '')
+    .replace(/\s+(?:or|and|&)\s*$/i, '')
+    .replace(/(?:^|,)\s*(?:or|and|&)\s*,/gi, ',')
     // collapse separators that may be left after token removal
     .replace(/\s*[-/|,]+\s*/g, ', ')
     // collapse repeated commas
