@@ -28,6 +28,9 @@ const REGION_ALIASES: Record<string, string> = {
   global: 'global',
   worldwide: 'worldwide',
   'middle east': 'middle east',
+  'central asia': 'central asia',
+  'southeast asia': 'southeast asia',
+  'central us': 'central us',
 };
 
 /** Lowercase; matches `Intl.DisplayNames(['en'], { type: 'region' }).of('CI').toLowerCase()` (d’Ivoire uses U+2019). */
@@ -59,6 +62,9 @@ const COUNTRY_ALIASES: Record<string, string> = {
   "cote d'ivoire": COTE_DIVOIRE,
   "côte d'ivoire": COTE_DIVOIRE,
   'congo brazzaville': 'congo - brazzaville',
+  'democratic republic of congo': 'congo - kinshasa',
+  deutschland: 'germany',
+  'costa rice': 'costa rica',
 };
 
 const KNOWN_COUNTRIES = new Set<string>([
@@ -179,6 +185,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'mali',
   'benin',
   'congo - brazzaville',
+  'congo - kinshasa',
 ]);
 
 /**
@@ -317,6 +324,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   brooklyn: 'united states',
   'mountain view': 'united states',
   'new york': 'united states',
+  concord: 'united states',
+  indiana: 'united states',
   'new jersey': 'united states',
   nj: 'united states',
   secaucas: 'united states',
@@ -400,6 +409,10 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   curitiba: 'brazil',
   helsinki: 'finland',
   'cape town': 'south africa',
+  cardiff: 'united kingdom',
+  chennai: 'india',
+  'tamil nadu': 'india',
+  clark: 'philippines',
   gurugram: 'india',
   pune: 'india',
   shenzhen: 'china',
@@ -435,6 +448,9 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   heidelberg: 'germany',
   'menlo park': 'united states',
   nairobi: 'kenya',
+  connacht: 'ireland',
+  corby: 'united kingdom',
+  darmstadt: 'germany',
   'buenos aires': 'argentina',
   birmingham: 'united kingdom',
   bochum: 'germany',
@@ -581,6 +597,14 @@ function shouldSkipSuffixPeel(prefix: string, suffix: string): boolean {
     return true;
   }
   if (s === 'mexico' && /\bnew\b/.test(p)) {
+    return true;
+  }
+  if (
+    s === 'asia' &&
+    /\b(north|south|east|west|central|southeast|southwest|northeast|northwest)\b/.test(
+      p,
+    )
+  ) {
     return true;
   }
   return false;
@@ -882,6 +906,12 @@ function normalizeKnownLocationPhrases(raw: string): string {
       'Europe, United States',
     );
   return stripEmployerBrandFromLocation(preStripped)
+    .replace(/\bcentral\s*\/\s*western\s+us\b/gi, 'United States')
+    .replace(/\bcentral\s+us\b/gi, 'Central US, United States')
+    .replace(/\bchantilly\s+va\b/gi, 'Chantilly, VA')
+    .replace(/\bconcord\s+ca\b/gi, 'Concord, CA')
+    .replace(/\bdetroit\s+mi\b/gi, 'Detroit, MI')
+    .replace(/\bclark\s+phl\b/gi, 'Clark, Philippines')
     .replace(/\bcanada\s*&\s*usa\b/gi, 'Canada, United States')
     .replace(/\busa\s*&\s*canada\b/gi, 'United States, Canada')
     .replace(/\bbelgium\s*[-–—]\s*brussels?\s+office\b/gi, 'Brussels, Belgium')
