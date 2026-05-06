@@ -8,6 +8,14 @@ const REGION_ALIASES: Record<string, string> = {
   apac: 'apac',
   emea: 'emea',
   latam: 'latam',
+  /** Corporate / ATS listing for Latin America. */
+  'latin america': 'latam',
+  /** North America (corporate tag). */
+  noram: 'north america',
+  nordics: 'nordics',
+  iberia: 'iberia',
+  /** Germany–Austria–Switzerland corporate cluster. */
+  dach: 'dach',
   /** Middle East & North Africa (corporate region tag). */
   mena: 'mena',
   americas: 'americas',
@@ -69,6 +77,8 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'democratic republic of congo': 'congo - kinshasa',
   deutschland: 'germany',
   'costa rice': 'costa rica',
+  /** ISO 3166-1 alpha-2 in ATS strings (e.g. `Zürich, CH`). */
+  ch: 'switzerland',
 };
 
 const KNOWN_COUNTRIES = new Set<string>([
@@ -191,6 +201,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'congo - brazzaville',
   'congo - kinshasa',
   'haiti',
+  'qatar',
 ]);
 
 /**
@@ -317,6 +328,11 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   'annapolis junction': ['maryland'],
   lehi: ['utah'],
   hillsboro: ['oregon'],
+  omaha: ['nebraska'],
+  'san antonio': ['texas'],
+  northlake: ['illinois'],
+  walnut: ['california'],
+  'glen cove': ['new york'],
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -338,6 +354,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   secaucas: 'united states',
   bloomington: 'united states',
   zurich: 'switzerland',
+  zürich: 'switzerland',
   frankfurt: 'germany',
   dortmund: 'germany',
   duisburg: 'germany',
@@ -359,6 +376,9 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   bogotá: 'colombia',
   'santo domingo': 'dominican republic',
   bengaluru: 'india',
+  hyderabad: 'india',
+  mumbai: 'india',
+  thiruvananthapuram: 'india',
   jaipur: 'india',
   praha: 'czechia',
   prague: 'czechia',
@@ -411,6 +431,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   vilnius: 'lithuania',
   kaunas: 'lithuania',
   marseille: 'france',
+  nantes: 'france',
   montreal: 'canada',
   montréal: 'canada',
   detroit: 'united states',
@@ -418,6 +439,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   borlänge: 'sweden',
   'foster city': 'united states',
   stockholm: 'sweden',
+  malmö: 'sweden',
+  malmo: 'sweden',
   budapest: 'hungary',
   barcelona: 'spain',
   lausanne: 'switzerland',
@@ -425,6 +448,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   curitiba: 'brazil',
   helsinki: 'finland',
   'cape town': 'south africa',
+  johannesburg: 'south africa',
   durban: 'south africa',
   dundee: 'united kingdom',
   cardiff: 'united kingdom',
@@ -471,7 +495,10 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   connacht: 'ireland',
   corby: 'united kingdom',
   darmstadt: 'germany',
+  stuttgart: 'germany',
   'buenos aires': 'argentina',
+  'rio de janeiro': 'brazil',
+  montevideo: 'uruguay',
   birmingham: 'united kingdom',
   bochum: 'germany',
   bonn: 'germany',
@@ -491,7 +518,14 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   augusta: 'united states',
   'san luis obispo': 'united states',
   phoenix: 'united states',
+  omaha: 'united states',
+  'san antonio': 'united states',
+  northlake: 'united states',
+  walnut: 'united states',
+  'glen cove': 'united states',
   reading: 'united kingdom',
+  oxfordshire: 'united kingdom',
+  wallingford: 'united kingdom',
   ottawa: 'canada',
   philadelphia: 'united states',
   'salt lake city': 'united states',
@@ -501,6 +535,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   dumaguete: 'philippines',
   tampico: 'mexico',
   lima: 'peru',
+  riyadh: 'saudi arabia',
   dublin: 'ireland',
   tallinn: 'estonia',
   sofia: 'bulgaria',
@@ -940,11 +975,43 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(
       /\bremote\s+first\s*[-–—]\s*western\s+european\s*\+\s*eastern\s+time\s+zones\b/gi,
       'Europe, United States',
-    );
+    )
+    /** Greenhouse / ATS sandbox rows — not a place. */
+    .replace(/\bz-test\s*&\s*templates\s*only\b/gi, '')
+    .replace(/\blatin\s+america\s*[-–—]\s*remote\b/gi, 'Latin America')
+    /** Spanish “remote”. */
+    .replace(/\bremoto\b/gi, 'Remote')
+    .replace(/\brepublic\s+of\s+ireland\s*\(\s*remote\s*\)/gi, 'Ireland')
+    /** Portuguese “Hybrid,” prefix before city. */
+    .replace(/\bhíbrido\s*,\s*/gi, '')
+    .replace(/\bhibrido\s*,\s*/gi, '')
+    /** ISO country suffix (e.g. Greenhouse). */
+    .replace(/\bzürich\s*,\s*ch\b/gi, 'Zürich, Switzerland')
+    .replace(/\bzurich\s*,\s*ch\b/gi, 'Zürich, Switzerland')
+    /** Remote zone shorthand → geography tokens. */
+    .replace(/\bremote\s+us\s+east\b/gi, 'East Coast, United States')
+    .replace(/\bremote\s+position\b/gi, 'Remote')
+    .replace(/\bremote-uk&i\b/gi, 'United Kingdom, Ireland')
+    .replace(/\bremote-iberia\b/gi, 'Iberia')
+    .replace(/\bremote-noram\b/gi, 'North America')
+    .replace(/\bremote-nordics\b/gi, 'Nordics')
+    .replace(/\bremote-dach\b/gi, 'Germany, Austria, Switzerland')
+    .replace(/\bremote\s*-\s*ind\b/gi, 'India')
+    .replace(/\bremote\s*-\s*u\.s\.a\.?\b/gi, 'United States')
+    .replace(/\bremote\s+us\s+central\b/gi, 'Central US, United States')
+    .replace(/\bremote\s*-\s*ga\b/gi, 'Georgia, United States')
+    /** Drop trailing timezone hiring blurbs after “Remote |”. */
+    .replace(/\bremote\s*\|\s*utc\b[^|]*$/gi, 'Remote')
+    /** ATS noise — not a geography (whole string only). */
+    .replace(/^\s*field\s*$/gi, '')
+    .replace(/^\s*permanent\s*$/gi, '')
+    /** City + “Office” before comma clutter. */
+    .replace(/\bthiruvananthapuram\s+office\b/gi, 'Thiruvananthapuram');
   return stripEmployerBrandFromLocation(preStripped)
     /** Cape Town / Durban datacenter site codes — not US District of Columbia. */
     .replace(/\bcape\s+town\s+dc\d*\b/gi, 'Cape Town')
     .replace(/\bdurban\s+dc\d*\b/gi, 'Durban')
+    .replace(/\bjohannesburg\s+dc\d*\b/gi, 'Johannesburg')
     .replace(/\bfort\s+worth\s+tx\b/gi, 'Fort Worth, TX')
     .replace(/\bfrankfurt\s+am\s+main\b/gi, 'Frankfurt')
     .replace(/\bft\.?\s*meade\b/gi, 'Fort Meade, MD')
@@ -1023,7 +1090,20 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bus\s*[-–—]\s*illinois\b/gi, 'Illinois, United States')
     .replace(/\bwashington\s+dc\b/gi, 'Washington, DC')
     .replace(/\breading\s*\(\s*london\s*\)/gi, 'Reading, United Kingdom')
-    .replace(/\b([a-z0-9]+)\s*\(\s*can\s*\)/gi, '$1, Canada');
+    .replace(/\b([a-z0-9]+)\s*\(\s*can\s*\)/gi, '$1, Canada')
+    .replace(/\bnorthlake\s+il\b/gi, 'Northlake, IL')
+    .replace(/\bwalnut\s+ca\b/gi, 'Walnut, CA')
+    .replace(/\bsan\s+antonio\s+tx\b/gi, 'San Antonio, TX')
+    .replace(/\bwallingford\s*,\s*oxfordshire\b/gi, 'Wallingford, United Kingdom')
+    .replace(/\bsan\s+francisco-hq\b/gi, 'San Francisco')
+    .replace(/\bpalo\s+alto\s+office\b/gi, 'Palo Alto')
+    .replace(/\bnew\s+york-office\s*\([^)]*\)/gi, 'New York')
+    .replace(
+      /\bfoster\s+city\s*,\s*ca\s*\([^)]*\)/gi,
+      'Foster City, CA',
+    )
+    /** Omaha campus-style suffix (Nebraska). */
+    .replace(/\bomaha\s+riverfront\b/gi, 'Omaha, NE');
 }
 
 /** Split on ; | /, spaced hyphens, and " or " so alternatives become separate segments. */
