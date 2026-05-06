@@ -29,6 +29,7 @@ const REGION_ALIASES: Record<string, string> = {
   worldwide: 'worldwide',
   'middle east': 'middle east',
   'central asia': 'central asia',
+  'east asia': 'east asia',
   'southeast asia': 'southeast asia',
   'central us': 'central us',
 };
@@ -41,6 +42,9 @@ const COUNTRY_ALIASES: Record<string, string> = {
   us: 'united states',
   'united states of america': 'united states',
   uk: 'united kingdom',
+  england: 'united kingdom',
+  scotland: 'united kingdom',
+  'great britain': 'united kingdom',
   uae: 'united arab emirates',
   'czech republic': 'czechia',
   'south korea': 'south korea',
@@ -186,6 +190,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'benin',
   'congo - brazzaville',
   'congo - kinshasa',
+  'haiti',
 ]);
 
 /**
@@ -302,6 +307,7 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   denver: ['colorado'],
   woburn: ['massachusetts'],
   bastrop: ['texas'],
+  'fort worth': ['texas'],
   mcgregor: ['texas'],
   starbase: ['texas'],
   'cape canaveral': ['florida'],
@@ -332,6 +338,12 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   bloomington: 'united states',
   zurich: 'switzerland',
   frankfurt: 'germany',
+  dortmund: 'germany',
+  duisburg: 'germany',
+  dusseldorf: 'germany',
+  düsseldorf: 'germany',
+  essen: 'germany',
+  bavaria: 'germany',
   hamburg: 'germany',
   munich: 'germany',
   münchen: 'germany',
@@ -363,6 +375,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   málaga: 'spain',
   milan: 'italy',
   dallas: 'united states',
+  'fort worth': 'united states',
   texas: 'united states',
   utah: 'united states',
   chicago: 'united states',
@@ -409,6 +422,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   curitiba: 'brazil',
   helsinki: 'finland',
   'cape town': 'south africa',
+  durban: 'south africa',
+  dundee: 'united kingdom',
   cardiff: 'united kingdom',
   chennai: 'india',
   'tamil nadu': 'india',
@@ -435,6 +450,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   oslo: 'norway',
   shanghai: 'china',
   tokyo: 'japan',
+  fukuoka: 'japan',
   hanoi: 'vietnam',
   'ho chi minh': 'vietnam',
   'ho chi minh city': 'vietnam',
@@ -887,6 +903,19 @@ function expandParentheticalLists(raw: string): string {
 
 function normalizeKnownLocationPhrases(raw: string): string {
   const preStripped = raw
+    /** `Fully Remote, France` — strip prefix so comma survives token normalization. */
+    .replace(/\bfully\s+remote\s*,\s*/gi, '')
+    /**
+     * `Germany-Remote, Netherlands` — hyphen glues remote to country; unwrap before comma split.
+     */
+    .replace(/\b([a-z]{2,})-remote(\s*,\s*)/gi, '$1$2')
+    /** Corporate US zone tag. */
+    .replace(/\beast\s*,\s*us\s+region\b/gi, 'United States')
+    /** GTA — normalize before hyphen employer heuristic drops the city half. */
+    .replace(
+      /\bgreater\s+toronto\s+area(?:\s*[-–—]\s*remote)?\b/gi,
+      'Toronto, Canada',
+    )
     /** `EMEA- EU` → spaced hyphen so hyphen-split sees separate facets. */
     .replace(/([A-Za-z]{2,})-\s+/g, '$1 - ')
     /** GIFT City (Gujarat, India) — comma-separate so APAC and India both resolve. */
@@ -906,6 +935,12 @@ function normalizeKnownLocationPhrases(raw: string): string {
       'Europe, United States',
     );
   return stripEmployerBrandFromLocation(preStripped)
+    /** Cape Town / Durban datacenter site codes — not US District of Columbia. */
+    .replace(/\bcape\s+town\s+dc\d*\b/gi, 'Cape Town')
+    .replace(/\bdurban\s+dc\d*\b/gi, 'Durban')
+    .replace(/\bfort\s+worth\s+tx\b/gi, 'Fort Worth, TX')
+    .replace(/\bfrankfurt\s+am\s+main\b/gi, 'Frankfurt')
+    .replace(/\bft\.?\s*meade\b/gi, 'Fort Meade, MD')
     .replace(/\bcentral\s*\/\s*western\s+us\b/gi, 'United States')
     .replace(/\bcentral\s+us\b/gi, 'Central US, United States')
     .replace(/\bchantilly\s+va\b/gi, 'Chantilly, VA')
