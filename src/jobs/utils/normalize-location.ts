@@ -53,6 +53,7 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'lao pdr': 'laos',
   'u s': 'united states',
   korea: 'south korea',
+  brasil: 'brazil',
   phillipines: 'philippines',
   'ivory coast': COTE_DIVOIRE,
   "cote d'ivoire": COTE_DIVOIRE,
@@ -192,7 +193,7 @@ const US_METRO_ABBREV_TO_TOKEN: Record<string, string> = {
 
 /**
  * Two-letter US postal codes → lowercase state/region name for tokens (omit codes that
- * collide with English words or country names: ga, in, me, ok, or).
+ * collide with English words or country names: in, me, ok, or).
  */
 const US_STATE_POSTAL_TO_TOKEN: Record<string, string> = {
   al: 'alabama',
@@ -204,6 +205,7 @@ const US_STATE_POSTAL_TO_TOKEN: Record<string, string> = {
   ct: 'connecticut',
   de: 'delaware',
   fl: 'florida',
+  ga: 'georgia',
   hi: 'hawaii',
   id: 'idaho',
   il: 'illinois',
@@ -434,6 +436,13 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'menlo park': 'united states',
   nairobi: 'kenya',
   'buenos aires': 'argentina',
+  ahmedabad: 'india',
+  aichi: 'japan',
+  annecy: 'france',
+  athens: 'greece',
+  bangkok: 'thailand',
+  bayreuth: 'germany',
+  augusta: 'united states',
   'san luis obispo': 'united states',
   phoenix: 'united states',
   reading: 'united kingdom',
@@ -663,6 +672,23 @@ function isLikelyEmployerPrefix(prefix: string): boolean {
 }
 
 function applyHyphenEmployerBrandSplit(t: string): string {
+  const firstDelimiter = /\s+[-–—]\s+/.exec(t);
+  if (firstDelimiter) {
+    let depth = 0;
+    for (let i = 0; i < firstDelimiter.index; i += 1) {
+      const ch = t[i];
+      if (ch === '(') {
+        depth += 1;
+      } else if (ch === ')') {
+        depth = Math.max(0, depth - 1);
+      }
+    }
+    // Do not treat parenthesized "city - workmode" fragments as employer split points.
+    if (depth > 0) {
+      return t;
+    }
+  }
+
   const parts = t.split(/\s+[-–—]\s+/);
   if (parts.length < 2) {
     return t;
@@ -972,6 +998,10 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       if (!trimmedBit) {
         continue;
       }
+      const fromUsStatePostal = Object.prototype.hasOwnProperty.call(
+        US_STATE_POSTAL_TO_TOKEN,
+        trimmedBit,
+      );
 
       const facetKey =
         US_METRO_ABBREV_TO_TOKEN[trimmedBit] ??
@@ -995,7 +1025,7 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       }
 
       const mappedCountry = COUNTRY_ALIASES[facetKey] ?? facetKey;
-      if (KNOWN_COUNTRIES.has(mappedCountry)) {
+      if (!fromUsStatePostal && KNOWN_COUNTRIES.has(mappedCountry)) {
         countries.add(mappedCountry);
         tokens.add(mappedCountry);
       }
