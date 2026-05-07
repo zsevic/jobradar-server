@@ -93,6 +93,8 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'u s': 'united states',
   korea: 'south korea',
   brasil: 'brazil',
+  ind: 'india',
+  irl: 'ireland',
   phillipines: 'philippines',
   'ivory coast': COTE_DIVOIRE,
   "cote d'ivoire": COTE_DIVOIRE,
@@ -343,6 +345,7 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   bellevue: ['washington'],
   redmond: ['washington'],
   woodinville: ['washington'],
+  'orange county': ['california'],
   'huntington beach': ['california'],
   'las vegas': ['nevada'],
   gilbert: ['arizona'],
@@ -503,6 +506,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   montreal: 'canada',
   montréal: 'canada',
   detroit: 'united states',
+  'orange county': 'united states',
   borlange: 'sweden',
   borlänge: 'sweden',
   'foster city': 'united states',
@@ -523,6 +527,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   durban: 'south africa',
   dundee: 'united kingdom',
   cardiff: 'united kingdom',
+  taranaki: 'new zealand',
   chennai: 'india',
   'tamil nadu': 'india',
   clark: 'philippines',
@@ -855,6 +860,16 @@ function isLikelyEmployerPrefix(prefix: string): boolean {
     .replace(/\s+/g, ' ')
     .trim();
   if (!pk) {
+    return false;
+  }
+  // If connector-stripped text still looks geographic (e.g. "US &"), do not
+  // treat this as an employer prefix for suffix peeling.
+  const pkWithoutConnectors = pk
+    .replace(/\b(and|or)\b/gi, ' ')
+    .replace(/[&+]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (pkWithoutConnectors && geoHintWordsInSegment(pkWithoutConnectors)) {
     return false;
   }
   const shortCountry =
@@ -1376,6 +1391,8 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bclark\s+phl\b/gi, 'Clark, Philippines')
     .replace(/\bcanada\s*&\s*usa\b/gi, 'Canada, United States')
     .replace(/\busa\s*&\s*canada\b/gi, 'United States, Canada')
+    .replace(/\bcanada\s*&\s*us\b/gi, 'Canada, United States')
+    .replace(/\bus\s*&\s*canada\b/gi, 'United States, Canada')
     .replace(/\bbelgium\s*[-–—]\s*brussels?\s+office\b/gi, 'Brussels, Belgium')
     .replace(/\bcdmx\d+\b/gi, 'Mexico City, Mexico')
     .replace(/,\s*([a-z]{2})\s+united\s+states\b/gi, ', $1, United States')

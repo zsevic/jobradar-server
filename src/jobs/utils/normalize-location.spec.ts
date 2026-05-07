@@ -45,6 +45,30 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).not.toContain('cze');
   });
 
+  it('canonicalizes IND, IRL, and CZE prefixes to country names', () => {
+    const facets = extractLocationFacets(
+      'CZE - Prague | IND - Chennai | IRL - Dublin | CZE - Brno',
+    );
+
+    expect(facets.tokens).toEqual(
+      expect.arrayContaining([
+        'czechia',
+        'india',
+        'ireland',
+        'prague',
+        'chennai',
+        'dublin',
+        'brno',
+      ]),
+    );
+    expect(facets.tokens).not.toEqual(
+      expect.arrayContaining(['cze', 'ind', 'irl']),
+    );
+    expect(facets.countries).toEqual(
+      expect.arrayContaining(['czechia', 'india', 'ireland']),
+    );
+  });
+
   it('canonicalizes bosnia aliases to bosnia & herzegovina', () => {
     const facets = extractLocationFacets(
       'Bosnia and Herzegovina | Bosnia & Herzegovina',
@@ -123,6 +147,17 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).not.toContain('us full-time');
   });
 
+  it('keeps both countries for remote us and canada strings', () => {
+    const facets = extractLocationFacets('Remote - US & Canada');
+
+    expect(facets.countries).toEqual(
+      expect.arrayContaining(['united states', 'canada']),
+    );
+    expect(facets.tokens).toEqual(
+      expect.arrayContaining(['united states', 'canada']),
+    );
+  });
+
   it('maps aarhus to denmark', () => {
     const facets = extractLocationFacets('Aarhus');
 
@@ -131,12 +166,29 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('denmark');
   });
 
+  it('maps orange county to california and united states', () => {
+    const facets = extractLocationFacets('Orange County');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toEqual(
+      expect.arrayContaining(['orange county', 'california', 'united states']),
+    );
+  });
+
   it('maps recklinghausen to germany', () => {
     const facets = extractLocationFacets('Recklinghausen');
 
     expect(facets.countries).toContain('germany');
     expect(facets.tokens).toContain('recklinghausen');
     expect(facets.tokens).toContain('germany');
+  });
+
+  it('maps taranaki to new zealand', () => {
+    const facets = extractLocationFacets('Taranaki');
+
+    expect(facets.countries).toContain('new zealand');
+    expect(facets.tokens).toContain('taranaki');
+    expect(facets.tokens).toContain('new zealand');
   });
 
   it('maps doha to qatar', () => {
