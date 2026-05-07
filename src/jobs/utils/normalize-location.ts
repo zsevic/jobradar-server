@@ -44,6 +44,8 @@ const REGION_ALIASES: Record<string, string> = {
   'southeast us': 'east coast',
   /** ATS phrasing variant of `southeast us`. */
   'southeastern us': 'east coast',
+  /** Job-board “Eastern US” remote zones. */
+  'eastern us': 'east coast',
   /** Corporate listings (e.g. `West, US Region`). */
   'west us region': 'west coast',
   'central america': 'latam',
@@ -673,6 +675,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   valencia: 'spain',
   skopje: 'north macedonia',
   wiesbaden: 'germany',
+  wroclaw: 'poland',
+  wrocław: 'poland',
 };
 
 /** Single generic English tokens that can precede geography but are not employer names. */
@@ -1143,6 +1147,20 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bwest\s*,\s*us\s+region\b/gi, 'West Coast, United States')
     .replace(/\bst\.\s*francis\s+wi\b/gi, 'St. Francis, WI')
     .replace(/\bsoutheastern\s+us\b/gi, 'Southeast US, United States')
+    .replace(
+      /\bwoburn\s+ma\s*&\s*arlington\s+va\b/gi,
+      'Woburn, MA; Arlington, VA',
+    )
+    .replace(
+      /\bwork\s+from\s+home\s*[-–]\s*eastern\s+us\b/gi,
+      'East Coast, United States',
+    )
+    .replace(/\bwroclaw\s*,\s*remote\b/gi, 'Wroclaw, Poland')
+    .replace(/\bwrocław\s*,\s*remote\b/gi, 'Wroclaw, Poland')
+    /** Louisiana census place used as ATS site label. */
+    .replace(/\bverda\s+park\b/gi, 'Louisiana, United States')
+    /** Corporate Latin America tag (`LatAm`). */
+    .replace(/\blatam\b/gi, 'Latin America')
     .replace(/\bremote-uk&i\b/gi, 'United Kingdom, Ireland')
     .replace(/\bremote-iberia\b/gi, 'Iberia')
     .replace(/\bremote-noram\b/gi, 'North America')
@@ -1285,6 +1303,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/^\s*add\s+all\s+locations\s+here\s*$/gi, '')
     .replace(/^\s*btc\s*$/gi, '')
     .replace(/^\s*hq\s*$/gi, '')
+    .replace(/^\s*labs\s*$/gi, '')
     .replace(/^\s*passive\s+posting\s*$/gi, '')
     .replace(/^\s*other\s+locations\s*$/gi, '')
     .replace(/^\s*on-site\s+at\s+project\s+location\s*$/gi, '')
@@ -1386,7 +1405,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bnew\s+york-office\s*\([^)]*\)/gi, 'New York')
     /** Foster City + ATS hybrid / schedule noise (specific before generic `[^,|]*`). */
     .replace(
-      /\bfoster\s+city\s*,\s*ca\s*\(\s*hybrid\s*\)\s*in\s+office\s*m\s*,?\s*w\s*,?\s*f\b/gi,
+      /\bfoster\s+city\s*,\s*ca\s*\(\s*hybrid\s*\)\s*in[- ]office\s*m\s*,\s*w\s*,\s*f\b/gi,
       'Foster City, CA',
     )
     .replace(/\bfoster\s+city\s*,\s*ca\s*\([^)]*\)[^,|]*/gi, 'Foster City, CA')
