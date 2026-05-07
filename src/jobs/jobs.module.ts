@@ -15,12 +15,14 @@ import { AshbyAdapter } from './adapters/ashby.adapter';
 import { GreenhouseAdapter } from './adapters/greenhouse.adapter';
 import { WorkableAdapter } from './adapters/workable.adapter';
 import { EmailDigestBootstrap } from './email-digest.bootstrap';
+import { SourcePollingBootstrap } from './source-polling.bootstrap';
 import {
   ASHBY_FETCH_QUEUE,
   EMAIL_DIGEST_QUEUE,
   GREENHOUSE_FETCH_QUEUE,
   JOB_MATCH_QUEUE,
   JOB_PROCESS_QUEUE,
+  SOURCE_POLLING_QUEUE,
   WORKABLE_FETCH_QUEUE,
 } from './jobs.constants';
 import { JobsController } from './jobs.controller';
@@ -31,6 +33,7 @@ import { EmailDigestProcessor } from './processors/email-digest.processor';
 import { GreenhouseFetchProcessor } from './processors/greenhouse-fetch.processor';
 import { JobMatchProcessor } from './processors/job-match.processor';
 import { JobProcessProcessor } from './processors/job-process.processor';
+import { SourcePollingProcessor } from './processors/source-polling.processor';
 import { WorkableFetchProcessor } from './processors/workable-fetch.processor';
 import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
 
@@ -71,6 +74,8 @@ import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
     JobMatchProcessor,
     EmailDigestProcessor,
     EmailDigestBootstrap,
+    SourcePollingProcessor,
+    SourcePollingBootstrap,
   ],
   exports: [ProviderCircuitBreaker],
 })

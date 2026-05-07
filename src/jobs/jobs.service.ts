@@ -1,6 +1,5 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import { Brackets, Repository } from 'typeorm';
@@ -46,13 +45,6 @@ export class JobsService {
     private readonly jobMatchQueue: Queue,
     private readonly providerCircuitBreaker: ProviderCircuitBreaker,
   ) {}
-
-  @Cron(CronExpression.EVERY_30_MINUTES)
-  async scheduleSourcePolling(): Promise<void> {
-    await this.enqueueAshbySources();
-    await this.enqueueGreenhouseSources();
-    await this.enqueueWorkableSources();
-  }
 
   async enqueueAshbySources(): Promise<void> {
     if (this.providerCircuitBreaker.isOpen(SourceProvider.ASHBY)) {

@@ -4,3 +4,4 @@ export const WORKABLE_FETCH_QUEUE = 'workable-fetch';
 export const JOB_PROCESS_QUEUE = 'job-process';
 export const JOB_MATCH_QUEUE = 'job-match';
 export const EMAIL_DIGEST_QUEUE = 'email-digest';
+export const SOURCE_POLLING_QUEUE = 'source-polling';
