@@ -387,6 +387,7 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
+  copenhagen: 'denmark',
   belgrade: 'serbia',
   berlin: 'germany',
   paris: 'france',
@@ -1122,6 +1123,23 @@ function normalizeKnownLocationPhrases(raw: string): string {
     /** Remote zone shorthand → geography tokens. */
     .replace(/\bremote\s+us\s+east\b/gi, 'East Coast, United States')
     .replace(/\bremote\s+position\b/gi, 'Remote')
+    .replace(/\bremote-+united-+states\b/gi, 'United States')
+    .replace(/\bremote-+united-+kingdom\b/gi, 'United Kingdom')
+    .replace(/\bremote\s*-\s*aus\b/gi, 'Australia')
+    .replace(/\bremote\s*-\s*north\s+tx\b/gi, 'Texas, United States')
+    .replace(
+      /\bremote\s*-\s*va\s*&\s*ky\b/gi,
+      'Virginia, United States; Kentucky, United States',
+    )
+    .replace(
+      /\bsouthern\s+california\s*-\s*remote\b/gi,
+      'California, United States',
+    )
+    .replace(
+      /\bunited\s+states\s*-\s*remote\s*\|\s*st\.\s*louis\s*-\s*hybrid\b/gi,
+      'United States; St. Louis, Missouri',
+    )
+    .replace(/\bhouston\s*-\s*hybrid\b/gi, 'Houston, TX')
     .replace(
       /\bremote\s*\|\s*must\s+be\s+located\s+and\s+willing\s+to\s+travel\s+in\s+the\s+middle\s+east\b/gi,
       'Middle East',
@@ -1300,6 +1318,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\*?\s*job\s+posting\s+only\s*:\s*usa\d*\b/gi, 'United States')
     /** ATS placeholder strings — whole-line only (no geography). */
     .replace(/^\s*talent\s+pool\s*$/gi, '')
+    .replace(/^\s*all\s+hubs\s*$/gi, '')
     .replace(/^\s*add\s+all\s+locations\s+here\s*$/gi, '')
     .replace(/^\s*btc\s*$/gi, '')
     .replace(/^\s*hq\s*$/gi, '')
