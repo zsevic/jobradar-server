@@ -679,6 +679,18 @@ export const sourceSeeds: SourceSeedItem[] = [
     name: 'Blockchain.com',
   },
   {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'renaissancelearning-nam',
+    name: 'Renaissance Learning',
+  },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'clenera', name: 'Clenera' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'physicsx', name: 'PhysicsX' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'logicgate', name: 'LogicGate' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'smarterdx', name: 'SmarterDx' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'appian', name: 'Appian' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'acquia', name: 'Acquia' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'sbigrowth', name: 'SBI Growth' },
+  {
     provider: SourceProvider.WORKABLE,
     externalId: 'headquarters',
     name: 'HeadQuarters',
