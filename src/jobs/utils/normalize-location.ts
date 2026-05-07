@@ -79,6 +79,8 @@ const COUNTRY_ALIASES: Record<string, string> = {
   cze: 'czechia',
   'south korea': 'south korea',
   'republic of korea': 'south korea',
+  "people's republic of china": 'china',
+  'people’s republic of china': 'china',
   'russian federation': 'russia',
   'syrian arab republic': 'syria',
   türkiye: 'turkey',
@@ -397,6 +399,7 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
+  cambridge: 'united kingdom',
   copenhagen: 'denmark',
   belgrade: 'serbia',
   berlin: 'germany',
@@ -519,6 +522,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   manila: 'philippines',
   curitiba: 'brazil',
   helsinki: 'finland',
+  tampere: 'finland',
   turku: 'finland',
   oulu: 'finland',
   hobart: 'australia',
@@ -546,6 +550,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   london: 'united kingdom',
   belfast: 'united kingdom',
   manchester: 'united kingdom',
+  glasgow: 'united kingdom',
   basingstoke: 'united kingdom',
   liverpool: 'united kingdom',
   auckland: 'new zealand',
@@ -572,6 +577,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   krakow: 'poland',
   kraków: 'poland',
   heidelberg: 'germany',
+  erding: 'germany',
   'menlo park': 'united states',
   nairobi: 'kenya',
   connacht: 'ireland',
@@ -599,6 +605,11 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   caen: 'france',
   cairo: 'egypt',
   canberra: 'australia',
+  'new south wales': 'australia',
+  queensland: 'australia',
+  manawatu: 'new zealand',
+  'bay of plenty': 'new zealand',
+  waikato: 'new zealand',
   brussels: 'belgium',
   brussel: 'belgium',
   boise: 'united states',
@@ -1145,6 +1156,11 @@ function normalizeKnownLocationPhrases(raw: string): string {
       /\bremote\s+first\s*[-–—]\s*western\s+european\s*\+\s*eastern\s+time\s+zones\b/gi,
       'Europe, United States',
     )
+    /** Timezone-only region qualifiers should not become geo tokens. */
+    .replace(/\bcet\s*\/\s*cest\b/gi, '')
+    .replace(/\bcet\b/gi, '')
+    .replace(/\bcest\b/gi, '')
+    .replace(/\butc\b/gi, '')
     /** Greenhouse / ATS sandbox rows — not a place. */
     .replace(/\bz-test\s*&\s*templates\s*only\b/gi, '')
     .replace(/\blatin\s+america\s*[-–—]\s*remote\b/gi, 'Latin America')
@@ -1764,4 +1780,14 @@ export function splitAndCanonicalizeCountryHints(
     expanded.push(...parts);
   }
   return expanded;
+}
+
+const CANONICAL_REGION_TOKENS = new Set<string>(Object.values(REGION_ALIASES));
+
+export function isCanonicalRegionToken(token: string): boolean {
+  const normalized = token.trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  return CANONICAL_REGION_TOKENS.has(normalized);
 }

@@ -15,6 +15,7 @@ import {
 import {
   extractCountryMentionsFromText,
   extractLocationFacets,
+  isCanonicalRegionToken,
   splitAndCanonicalizeCountryHints,
 } from '../utils/normalize-location';
 import { transliterateLocationDisplay } from '../utils/transliterate-location';
@@ -120,7 +121,7 @@ export class JobProcessProcessor extends WorkerHost {
       );
       const countryHints = splitAndCanonicalizeCountryHints(
         hintedCountries.filter((hint) => !this.REGION_HINTS.has(hint)),
-      );
+      ).filter((hint) => !isCanonicalRegionToken(hint));
 
       const mergedCountries = new Set<string>([
         ...locationFacets.countries,

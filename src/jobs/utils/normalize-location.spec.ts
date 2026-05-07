@@ -1,6 +1,7 @@
 import {
   canonicalizeCountryHint,
   extractLocationFacets,
+  isCanonicalRegionToken,
   splitAndCanonicalizeCountryHints,
 } from './normalize-location';
 
@@ -131,12 +132,39 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('united kingdom');
   });
 
+  it('maps glasgow to united kingdom', () => {
+    const facets = extractLocationFacets('Glasgow');
+
+    expect(facets.countries).toContain('united kingdom');
+    expect(facets.tokens).toContain('glasgow');
+    expect(facets.tokens).toContain('united kingdom');
+  });
+
   it('maps turku to finland', () => {
     const facets = extractLocationFacets('Turku');
 
     expect(facets.countries).toContain('finland');
     expect(facets.tokens).toContain('turku');
     expect(facets.tokens).toContain('finland');
+  });
+
+  it('maps tampere to finland', () => {
+    const facets = extractLocationFacets('Tampere');
+
+    expect(facets.countries).toContain('finland');
+    expect(facets.tokens).toContain('tampere');
+    expect(facets.tokens).toContain('finland');
+  });
+
+  it('ignores CET timezone qualifiers in Europe remote strings', () => {
+    const facets = extractLocationFacets('Remote, Europe (CET +/- 1h)');
+
+    expect(facets.tokens).toContain('europe');
+    expect(facets.regions).toContain('europe');
+    expect(facets.tokens).not.toEqual(
+      expect.arrayContaining(['cet', 'cest', '1h']),
+    );
+    expect(facets.countries).toEqual([]);
   });
 
   it('maps us full-time to united states only', () => {
@@ -183,11 +211,59 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('germany');
   });
 
+  it('maps erding to germany', () => {
+    const facets = extractLocationFacets('Erding');
+
+    expect(facets.countries).toContain('germany');
+    expect(facets.tokens).toContain('erding');
+    expect(facets.tokens).toContain('germany');
+  });
+
   it('maps taranaki to new zealand', () => {
     const facets = extractLocationFacets('Taranaki');
 
     expect(facets.countries).toContain('new zealand');
     expect(facets.tokens).toContain('taranaki');
+    expect(facets.tokens).toContain('new zealand');
+  });
+
+  it('maps new south wales to australia', () => {
+    const facets = extractLocationFacets('New South Wales');
+
+    expect(facets.countries).toContain('australia');
+    expect(facets.tokens).toContain('new south wales');
+    expect(facets.tokens).toContain('australia');
+  });
+
+  it('maps queensland to australia', () => {
+    const facets = extractLocationFacets('Queensland');
+
+    expect(facets.countries).toContain('australia');
+    expect(facets.tokens).toContain('queensland');
+    expect(facets.tokens).toContain('australia');
+  });
+
+  it('maps manawatu to new zealand', () => {
+    const facets = extractLocationFacets('Manawatu');
+
+    expect(facets.countries).toContain('new zealand');
+    expect(facets.tokens).toContain('manawatu');
+    expect(facets.tokens).toContain('new zealand');
+  });
+
+  it('maps bay of plenty to new zealand', () => {
+    const facets = extractLocationFacets('Bay of Plenty');
+
+    expect(facets.countries).toContain('new zealand');
+    expect(facets.tokens).toContain('bay of plenty');
+    expect(facets.tokens).toContain('new zealand');
+  });
+
+  it('maps waikato to new zealand', () => {
+    const facets = extractLocationFacets('Waikato');
+
+    expect(facets.countries).toContain('new zealand');
+    expect(facets.tokens).toContain('waikato');
     expect(facets.tokens).toContain('new zealand');
   });
 
@@ -199,6 +275,16 @@ describe('extractLocationFacets', () => {
     );
     expect(facets.tokens).toContain('doha');
     expect(facets.tokens).toContain('qatar');
+  });
+
+  it('keeps nordics and emea as regions, not countries', () => {
+    const facets = extractLocationFacets('Norway | Nordics | EMEA');
+
+    expect(facets.countries).toEqual(['norway']);
+    expect(facets.regions).toEqual(
+      expect.arrayContaining(['nordics', 'emea']),
+    );
+    expect(facets.countries).not.toContain('nordics');
   });
 
   it('maps cayman alias to cayman islands country', () => {
@@ -230,6 +316,11 @@ describe('canonicalizeCountryHint', () => {
     );
     expect(canonicalizeCountryHint('Bosnia')).toBe('bosnia & herzegovina');
   });
+
+  it('canonicalizes people republic of china to china', () => {
+    expect(canonicalizeCountryHint("People's Republic of China")).toBe('china');
+    expect(canonicalizeCountryHint('People’s Republic of China')).toBe('china');
+  });
 });
 
 describe('splitAndCanonicalizeCountryHints', () => {
@@ -237,5 +328,13 @@ describe('splitAndCanonicalizeCountryHints', () => {
     expect(splitAndCanonicalizeCountryHints(['US | EU', 'U.S.A, Canada'])).toEqual(
       ['united states', 'european union', 'united states', 'canada'],
     );
+  });
+});
+
+describe('isCanonicalRegionToken', () => {
+  it('recognizes canonical region labels', () => {
+    expect(isCanonicalRegionToken('nordics')).toBe(true);
+    expect(isCanonicalRegionToken('emea')).toBe(true);
+    expect(isCanonicalRegionToken('norway')).toBe(false);
   });
 });
