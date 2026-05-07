@@ -14,6 +14,9 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL is required to run TypeORM migrations');
 }
 
+/** `.ts` when loaded via ts-node (CLI); `.js` when compiled to `dist/` (prod app + prod CLI). */
+const migrationExtension = __filename.endsWith('.ts') ? 'ts' : 'js';
+
 export default new DataSource({
   type: 'postgres',
   url: databaseUrl,
@@ -26,6 +29,6 @@ export default new DataSource({
     PendingMatchEmail,
     NotificationClick,
   ],
-  migrations: ['src/database/migrations/*.ts'],
+  migrations: [`${__dirname}/migrations/*.${migrationExtension}`],
   synchronize: false,
 });
