@@ -209,6 +209,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'qatar',
   'iceland',
   'kuwait',
+  'kosovo',
 ]);
 
 /**
@@ -354,6 +355,9 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   'old greenwich': ['connecticut'],
   tysons: ['virginia'],
   mojave: ['california'],
+  marietta: ['georgia'],
+  metairie: ['louisiana'],
+  frisco: ['texas'],
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -456,6 +460,9 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   marseille: 'france',
   nantes: 'france',
   nancy: 'france',
+  lille: 'france',
+  lyon: 'france',
+  metz: 'france',
   strasbourg: 'france',
   orléans: 'france',
   orleans: 'france',
@@ -475,6 +482,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   curitiba: 'brazil',
   helsinki: 'finland',
   oulu: 'finland',
+  hobart: 'australia',
   'cape town': 'south africa',
   johannesburg: 'south africa',
   durban: 'south africa',
@@ -507,6 +515,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   reykjavik: 'iceland',
   reykjavík: 'iceland',
   shanghai: 'china',
+  macau: 'china',
   tokyo: 'japan',
   fukuoka: 'japan',
   hanoi: 'vietnam',
@@ -538,6 +547,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'são josé dos campos': 'brazil',
   'sao jose dos campos': 'brazil',
   montevideo: 'uruguay',
+  lubumbashi: 'congo - kinshasa',
   birmingham: 'united kingdom',
   bochum: 'germany',
   bonn: 'germany',
@@ -572,6 +582,9 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'old greenwich': 'united states',
   tysons: 'united states',
   mojave: 'united states',
+  marietta: 'united states',
+  metairie: 'united states',
+  frisco: 'united states',
   omaha: 'united states',
   'san antonio': 'united states',
   northlake: 'united states',
@@ -580,6 +593,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   reading: 'united kingdom',
   oxfordshire: 'united kingdom',
   wallingford: 'united kingdom',
+  longbridge: 'united kingdom',
   ottawa: 'canada',
   philadelphia: 'united states',
   'salt lake city': 'united states',
@@ -1024,7 +1038,9 @@ function normalizeKnownLocationPhrases(raw: string): string {
     /** Timezone qualifiers in parentheses, not geography. */
     .replace(/\([^)]*\bhours\b[^)]*\)/gi, '')
     .replace(/\bglobal\s*,\s*remote\b/gi, 'Worldwide')
+    .replace(/\bglobal\s+remote\b/gi, 'Worldwide')
     .replace(/\bindia[-–—]bangalore\b/gi, 'Bangalore, India')
+    .replace(/\bindia\s+bangalore\b/gi, 'Bangalore, India')
     .replace(/^\s*all locations\s*$/gi, '')
     .replace(/^\s*no location\s*$/gi, '')
     .replace(
@@ -1126,11 +1142,51 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bremote\s*-\s*ok\b/gi, 'Oklahoma, United States')
     .replace(/\bremote\s+anywhere\s+in\s+the\s+world\b/gi, 'Worldwide')
     .replace(/\bremote\s*:\s*west\s+coast\s+us\b/gi, 'West Coast, United States')
+    .replace(/\busa\s*[-–—]\s*remote\b/gi, 'United States')
+    /** GCC / US shorthand. */
+    .replace(/\buae\s+abu\s+dhabi\b/gi, 'Abu Dhabi, United Arab Emirates')
+    .replace(/\bukd\s+remote\b/gi, 'United Kingdom')
+    .replace(/\busca\b/gi, 'United States, California')
+    .replace(/\bwest\s+us\s+region\b/gi, 'West Coast, United States')
+    /** `Remote - Washington D.C.` (spelled-out D.C. after a space). */
+    .replace(/\bremote\s*-\s*washington\s+d\.c\.\b/gi, 'Washington, DC')
+    /** South Africa province label. */
+    .replace(/\bkwazulu\s+natal\b/gi, 'South Africa')
+    /** China remote qualifiers. */
+    .replace(/\bmainland\s+china\s*\(\s*remote\s*\)/gi, 'China')
+    .replace(
+      /\blubumbashi\s*,\s*democratic\s+republic\s+of\s+the\s+congo\b/gi,
+      'Lubumbashi, Congo - Kinshasa',
+    )
+    /** Hybrid + glued “SanFrancisco” ATS text. */
+    .replace(
+      /\bhybrid\s+sanfrancisco\s*,\s*or\s+remote\b[^|]*/gi,
+      'San Francisco, California',
+    )
+    /** US “City ST” without comma (ATS). */
+    .replace(/\bkansas\s+city\s+mo\b/gi, 'Kansas City, MO')
+    .replace(/\blouisville\s+ky\b/gi, 'Louisville, KY')
+    .replace(/\blehi\s+ut\b/gi, 'Lehi, UT')
+    /** UK postcode line → city + country. */
+    .replace(/\blongbridge\s*,\s*b\d{1,2}\s*\d[a-z]{2}\b/gi, 'Longbridge, United Kingdom')
+    /** Multi-site “ST-City” corporate templates (split on `. ST-`). */
+    .replace(/\bNY-New\s+York\b/gi, 'New York, NY')
+    .replace(/\bSF-San\s+Francisco\b/gi, 'San Francisco, CA')
+    /** `. TX-` → `; TX-` so comma-split does not glue `CA` to `Frisco`. */
+    .replace(/\.\s*(?=[A-Z]{2}-)/g, '; ')
+    .replace(/\bTX-Frisco\b/gi, 'Frisco, TX')
+    .replace(/\bFL-Jacksonville\b/gi, 'Jacksonville, FL')
+    .replace(/\bDE-Greenville\b/gi, 'Greenville, DE')
+    .replace(/\bUT-Cottonwood\s+Heights\b/gi, 'Cottonwood Heights, UT')
+    .replace(/\bNC-Charlotte\b/gi, 'Charlotte, NC')
+    /** Sandbox / template tokens. */
+    .replace(/\*?\s*job\s+posting\s+only\s*:\s*usa\d*\b/gi, 'United States')
     /** ATS placeholder strings — whole-line only (no geography). */
     .replace(/^\s*talent\s+pool\s*$/gi, '')
     .replace(/^\s*add\s+all\s+locations\s+here\s*$/gi, '')
     .replace(/^\s*btc\s*$/gi, '')
     .replace(/^\s*hq\s*$/gi, '')
+    .replace(/^\s*fully\s+remote\s*$/gi, '')
     /** Non-geographic ATS filler. */
     .replace(/\bflexible\s*-\s*any\s+site\b/gi, '');
   return stripEmployerBrandFromLocation(preStripped)
