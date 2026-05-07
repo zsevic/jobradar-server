@@ -77,6 +77,7 @@ const COUNTRY_ALIASES: Record<string, string> = {
   uae: 'united arab emirates',
   'czech republic': 'czechia',
   cze: 'czechia',
+  'viet nam': 'vietnam',
   'south korea': 'south korea',
   'republic of korea': 'south korea',
   "people's republic of china": 'china',
@@ -95,6 +96,7 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'u s': 'united states',
   korea: 'south korea',
   brasil: 'brazil',
+  méxico: 'mexico',
   ind: 'india',
   irl: 'ireland',
   phillipines: 'philippines',
@@ -453,6 +455,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   vancouver: 'canada',
   atlanta: 'united states',
   'mexico city': 'mexico',
+  monterrey: 'mexico',
   seattle: 'united states',
   washington: 'united states',
   california: 'united states',
@@ -484,6 +487,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'new albany': 'united states',
   pittsburgh: 'united states',
   denver: 'united states',
+  nashville: 'united states',
   hillsboro: 'united states',
   boston: 'united states',
   austin: 'united states',
@@ -532,6 +536,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   durban: 'south africa',
   dundee: 'united kingdom',
   cardiff: 'united kingdom',
+  guildford: 'united kingdom',
   taranaki: 'new zealand',
   chennai: 'india',
   'tamil nadu': 'india',
@@ -571,10 +576,12 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'ho chi minh': 'vietnam',
   'ho chi minh city': 'vietnam',
   kyiv: 'ukraine',
+  dnipro: 'ukraine',
   minsk: 'belarus',
   seoul: 'south korea',
   'kuala lumpur': 'malaysia',
   bucharest: 'romania',
+  cluj: 'romania',
   krakow: 'poland',
   kraków: 'poland',
   heidelberg: 'germany',
@@ -1067,6 +1074,7 @@ function normalizeToken(value: string): string {
     .replace(/[.;]/g, ' ')
     .replace(/\bselect\s+locations\b/gi, '')
     .replace(/\ball\s+locations\b/gi, '')
+    .replace(/\bany\s+location\b/gi, '')
     .replace(/\s+/g, ' ')
     .replace(/^[\s\-–—]+|[\s\-–—]+$/g, '')
     .replace(/\s+\bin\s*$/g, '')
@@ -1375,6 +1383,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     /** ATS placeholder strings — whole-line only (no geography). */
     .replace(/^\s*talent\s+pool\s*$/gi, '')
     .replace(/^\s*all\s+hubs\s*$/gi, '')
+    .replace(/^\s*any\s+location\s*$/gi, '')
     .replace(/^\s*add\s+all\s+locations\s+here\s*$/gi, '')
     .replace(/^\s*btc\s*$/gi, '')
     .replace(/^\s*hq\s*$/gi, '')
@@ -1410,6 +1419,11 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\busa\s*&\s*canada\b/gi, 'United States, Canada')
     .replace(/\bcanada\s*&\s*us\b/gi, 'Canada, United States')
     .replace(/\bus\s*&\s*canada\b/gi, 'United States, Canada')
+    .replace(
+      /\bunited\s+states\s*&\s*emea\b/gi,
+      'United States, EMEA',
+    )
+    .replace(/\bemea\s*&\s*united\s+states\b/gi, 'EMEA, United States')
     .replace(/\bbelgium\s*[-–—]\s*brussels?\s+office\b/gi, 'Brussels, Belgium')
     .replace(/\bcdmx\d+\b/gi, 'Mexico City, Mexico')
     .replace(/,\s*([a-z]{2})\s+united\s+states\b/gi, ', $1, United States')
@@ -1424,6 +1438,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bsg\s*[-–—]\s*singapore\b/gi, 'Singapore')
     .replace(/\bhk\s*[-–—]\s*hong\s+kong(?:\s+SAR)?\b/gi, 'Hong Kong')
     .replace(/\bhong\s+kong\s+SAR\b/gi, 'Hong Kong')
+    .replace(/\bvietnam2\b/gi, 'Vietnam')
     .replace(/\buk\s*[-–—]\s*london\b/gi, 'London, United Kingdom')
     .replace(/\bus\s*[-–—]\s*san\s+francisco\b/gi, 'San Francisco, California')
     .replace(/\bus\s*[-–—]\s*san\s+jose\b/gi, 'San Jose, California')

@@ -140,6 +140,14 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('united kingdom');
   });
 
+  it('maps guildford to united kingdom', () => {
+    const facets = extractLocationFacets('Guildford');
+
+    expect(facets.countries).toContain('united kingdom');
+    expect(facets.tokens).toContain('guildford');
+    expect(facets.tokens).toContain('united kingdom');
+  });
+
   it('maps seattle metro to united states', () => {
     const facets = extractLocationFacets('Seattle Metro');
 
@@ -147,6 +155,14 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('seattle');
     expect(facets.tokens).toContain('united states');
     expect(facets.tokens).not.toContain('seattle metro');
+  });
+
+  it('maps nashville to united states', () => {
+    const facets = extractLocationFacets('Nashville');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toContain('nashville');
+    expect(facets.tokens).toContain('united states');
   });
 
   it('maps turku to finland', () => {
@@ -163,6 +179,48 @@ describe('extractLocationFacets', () => {
     expect(facets.countries).toContain('finland');
     expect(facets.tokens).toContain('tampere');
     expect(facets.tokens).toContain('finland');
+  });
+
+  it('maps cluj to romania', () => {
+    const facets = extractLocationFacets('Cluj');
+
+    expect(facets.countries).toContain('romania');
+    expect(facets.tokens).toContain('cluj');
+    expect(facets.tokens).toContain('romania');
+  });
+
+  it('maps monterrey to mexico', () => {
+    const facets = extractLocationFacets('Monterrey');
+
+    expect(facets.countries).toContain('mexico');
+    expect(facets.tokens).toContain('monterrey');
+    expect(facets.tokens).toContain('mexico');
+  });
+
+  it('canonicalizes méxico to mexico', () => {
+    const facets = extractLocationFacets('México');
+
+    expect(facets.countries).toContain('mexico');
+    expect(facets.tokens).toContain('mexico');
+    expect(facets.tokens).not.toContain('méxico');
+  });
+
+  it('canonicalizes viet nam and vietnam2 to vietnam', () => {
+    const facets = extractLocationFacets('Vietnam | Viet Nam | Vietnam2');
+
+    expect(facets.countries).toContain('vietnam');
+    expect(facets.tokens).toContain('vietnam');
+    expect(facets.tokens).not.toEqual(
+      expect.arrayContaining(['viet nam', 'vietnam2']),
+    );
+  });
+
+  it('maps dnipro to ukraine', () => {
+    const facets = extractLocationFacets('Dnipro');
+
+    expect(facets.countries).toContain('ukraine');
+    expect(facets.tokens).toContain('dnipro');
+    expect(facets.tokens).toContain('ukraine');
   });
 
   it('ignores CET timezone qualifiers in Europe remote strings', () => {
@@ -209,6 +267,29 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toEqual(
       expect.arrayContaining(['united states', 'canada']),
     );
+  });
+
+  it('drops any location placeholders from tokens and countries', () => {
+    const facets = extractLocationFacets(
+      'Any Location | Vietnam | Turkey | Malaysia',
+    );
+
+    expect(facets.tokens).not.toContain('any location');
+    expect(facets.countries).not.toContain('any location');
+    expect(facets.countries).toEqual(
+      expect.arrayContaining(['vietnam', 'turkey', 'malaysia']),
+    );
+  });
+
+  it('splits united states and emea mixed connector into country and region', () => {
+    const facets = extractLocationFacets('United States & EMEA');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.regions).toContain('emea');
+    expect(facets.tokens).toEqual(
+      expect.arrayContaining(['united states', 'emea']),
+    );
+    expect(facets.tokens).not.toContain('united states & emea');
   });
 
   it('maps aarhus to denmark', () => {
@@ -308,6 +389,14 @@ describe('extractLocationFacets', () => {
     );
     expect(facets.tokens).toContain('doha');
     expect(facets.tokens).toContain('qatar');
+  });
+
+  it('maps johannesburg to south africa', () => {
+    const facets = extractLocationFacets('Johannesburg');
+
+    expect(facets.countries).toContain('south africa');
+    expect(facets.tokens).toContain('johannesburg');
+    expect(facets.tokens).toContain('south africa');
   });
 
   it('keeps nordics and emea as regions, not countries', () => {

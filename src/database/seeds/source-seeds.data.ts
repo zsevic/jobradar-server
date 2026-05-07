@@ -690,6 +690,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.GREENHOUSE, externalId: 'appian', name: 'Appian' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'acquia', name: 'Acquia' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'sbigrowth', name: 'SBI Growth' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'tenstorrentuniversity', name: 'Tenstorrent University' },
   {
     provider: SourceProvider.WORKABLE,
     externalId: 'headquarters',
