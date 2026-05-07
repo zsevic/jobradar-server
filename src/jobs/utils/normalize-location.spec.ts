@@ -533,6 +533,21 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('south africa');
   });
 
+  it('maps johannesburg warehouse to south africa', () => {
+    const facets = extractLocationFacets('Johannesburg Warehouse');
+
+    expect(facets.countries).toContain('south africa');
+    expect(facets.tokens).toContain('johannesburg');
+    expect(facets.tokens).not.toContain('johannesburg warehouse');
+  });
+
+  it('maps virtual us to united states', () => {
+    const facets = extractLocationFacets('VIRTUAL US');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toContain('united states');
+  });
+
   it('keeps nordics and emea as regions, not countries', () => {
     const facets = extractLocationFacets('Norway | Nordics | EMEA');
 

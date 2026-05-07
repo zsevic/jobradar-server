@@ -1213,6 +1213,8 @@ function normalizeKnownLocationPhrases(raw: string): string {
     /** Remote zone shorthand → geography tokens. */
     .replace(/\bremote\s+us\s+east\b/gi, 'East Coast, United States')
     .replace(/\bremote\s+position\b/gi, 'Remote')
+    .replace(/\bvirtual\s+us\b/gi, 'United States')
+    .replace(/\bjohannesburg\s+warehouse\b/gi, 'Johannesburg')
     .replace(/\bremote-+united-+states\b/gi, 'United States')
     .replace(/\bremote-+united-+kingdom\b/gi, 'United Kingdom')
     .replace(/\bremote\s*-\s*aus\b/gi, 'Australia')
