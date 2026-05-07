@@ -19,21 +19,16 @@ export class EmailDigestBootstrap implements OnApplicationBootstrap {
       this.configService.get<number>('EMAIL_DIGEST_INTERVAL_MINUTES') ?? 15;
     const everyMs = minutes * 60 * 1000;
 
-    const repeatables = await this.digestQueue.getRepeatableJobs();
-    for (const r of repeatables) {
-      if (r.id === 'email-digest-repeatable') {
-        await this.digestQueue.removeRepeatableByKey(r.key);
-      }
-    }
-
-    await this.digestQueue.add(
-      'run-digest',
-      {},
+    await this.digestQueue.upsertJobScheduler(
+      'email-digest-repeatable',
+      { every: everyMs },
       {
-        repeat: { every: everyMs },
-        jobId: 'email-digest-repeatable',
-        removeOnComplete: true,
-        removeOnFail: 50,
+        name: 'run-digest',
+        data: {},
+        opts: {
+          removeOnComplete: true,
+          removeOnFail: 50,
+        },
       },
     );
 
