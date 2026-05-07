@@ -59,6 +59,7 @@ const BACKEND_STACK = new Set([
   '.net',
   'php',
 ]);
+const BACKEND_COMPATIBLE_FRONTEND_STACK = new Set(['javascript', 'typescript']);
 
 export type JobRoleKind =
   | 'frontend'
@@ -193,7 +194,11 @@ export function extractStackFromJobText(
   }
 
   if (role === 'backend') {
-    return extracted.filter((stack) => BACKEND_STACK.has(stack));
+    return extracted.filter(
+      (stack) =>
+        BACKEND_STACK.has(stack) ||
+        BACKEND_COMPATIBLE_FRONTEND_STACK.has(stack),
+    );
   }
 
   return extracted;
