@@ -51,39 +51,103 @@ export class MailService {
       this.configService.get<string>('EMAIL_FROM') ??
       'JobRadar <noreply@jobradar.local>';
     const n = params.jobs.length;
-    const subject = `${n} new match${n === 1 ? '' : 'es'} for your JobRadar filter`;
+    const subject = `${n} new job${n === 1 ? '' : 's'} for your JobRadar filter`;
 
     const textLines = params.jobs.map(
       (j, i) =>
         `${i + 1}. ${j.title} @ ${j.company}\n   Location: ${j.location}\n   Score: ${j.score}\n   Posted: ${j.postedAt.toISOString()}\n   ${j.url}`,
     );
     const text = [
-      `You have ${n} new job match${n === 1 ? '' : 'es'}:`,
+      `You have ${n} new job${n === 1 ? '' : 's'}:`,
       '',
       ...textLines,
       '',
       `Unsubscribe from alert emails: ${params.unsubscribeUrl}`,
     ].join('\n');
 
-    const htmlRows = params.jobs
+    const htmlCards = params.jobs
       .map(
         (j, i) => `<tr>
-<td style="padding:8px;border-bottom:1px solid #eee;vertical-align:top">${i + 1}</td>
-<td style="padding:8px;border-bottom:1px solid #eee">
-  <strong>${escapeHtml(j.title)}</strong> — ${escapeHtml(j.company)}<br/>
-  <span style="color:#555">${escapeHtml(j.location)}</span> · score ${j.score}<br/>
-  <small>${escapeHtml(j.postedAt.toISOString())}</small><br/>
-  <a href="${escapeAttr(j.url)}">Open listing</a>
-</td>
+  <td style="padding:0 24px 12px 24px">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border:1px solid #e5e7eb;border-radius:12px;background:#ffffff">
+      <tr>
+        <td style="padding:16px 16px 10px 16px;font-family:Arial,sans-serif;font-size:12px;color:#6b7280;line-height:1.4">
+          Job ${i + 1} · Score ${j.score}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 16px 8px 16px;font-family:Arial,sans-serif;font-size:18px;color:#111827;line-height:1.35;font-weight:700">
+          ${escapeHtml(j.title)}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 16px 12px 16px;font-family:Arial,sans-serif;font-size:14px;color:#4b5563;line-height:1.5">
+          ${escapeHtml(j.company)} · ${escapeHtml(j.location)}<br/>
+          Posted: ${escapeHtml(j.postedAt.toISOString())}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 16px 16px 16px">
+          <a href="${escapeAttr(j.url)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:14px;font-weight:600;padding:10px 14px;border-radius:8px">
+            View Job
+          </a>
+        </td>
+      </tr>
+    </table>
+  </td>
 </tr>`,
       )
       .join('');
 
-    const html = `<!DOCTYPE html><html><body style="font-family:sans-serif">
-<p>You have <strong>${n}</strong> new job match${n === 1 ? '' : 'es'}:</p>
-<table style="border-collapse:collapse;width:100%;max-width:720px">${htmlRows}</table>
-<p style="margin-top:24px"><a href="${escapeAttr(params.unsubscribeUrl)}">Unsubscribe from alert emails</a></p>
-</body></html>`;
+    const html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${subject}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f3f4f6">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">
+      You have ${n} new job${n === 1 ? '' : 's'} waiting in JobRadar.
+    </div>
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f3f4f6;padding:24px 12px">
+      <tr>
+        <td align="center">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:680px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden">
+            <tr>
+              <td style="padding:24px 24px 8px 24px;font-family:Arial,sans-serif;font-size:13px;color:#6b7280;line-height:1.4">
+                JobRadar Digest
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 24px 12px 24px;font-family:Arial,sans-serif;font-size:24px;color:#111827;line-height:1.25;font-weight:700">
+                ${n} new job${n === 1 ? '' : 's'} for you
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 24px 20px 24px;font-family:Arial,sans-serif;font-size:14px;color:#4b5563;line-height:1.6">
+                We found jobs that align with your filter settings.
+              </td>
+            </tr>
+            ${htmlCards}
+            <tr>
+              <td style="padding:8px 24px 8px 24px;font-family:Arial,sans-serif;font-size:12px;color:#6b7280;line-height:1.5">
+                You are receiving this email because alerts are enabled on your JobRadar account.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 24px 24px 24px;font-family:Arial,sans-serif;font-size:12px;color:#6b7280;line-height:1.5">
+                <a href="${escapeAttr(params.unsubscribeUrl)}" style="color:#2563eb;text-decoration:none">
+                  Unsubscribe from alert emails
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
 
     const info = await this.getTransporter().sendMail({
       from,
