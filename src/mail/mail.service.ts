@@ -52,10 +52,11 @@ export class MailService {
       'JobRadar <noreply@jobradar.local>';
     const n = params.jobs.length;
     const subject = `${n} new job${n === 1 ? '' : 's'} for your JobRadar filter`;
+    const now = new Date();
 
     const textLines = params.jobs.map(
       (j, i) =>
-        `${i + 1}. ${j.title} @ ${j.company}\n   Location: ${j.location}\n   Score: ${j.score}\n   Posted: ${j.postedAt.toISOString()}\n   ${j.url}`,
+        `${i + 1}. ${j.title} @ ${j.company}\n   Location: ${j.location}\n   Score: ${j.score}\n   Posted: ${formatRelativeTime(j.postedAt, now)}\n   ${j.url}`,
     );
     const text = [
       `You have ${n} new job${n === 1 ? '' : 's'}:`,
@@ -83,7 +84,7 @@ export class MailService {
       <tr>
         <td style="padding:0 16px 12px 16px;font-family:Arial,sans-serif;font-size:14px;color:#4b5563;line-height:1.5">
           ${escapeHtml(j.company)} · ${escapeHtml(j.location)}<br/>
-          Posted: ${escapeHtml(j.postedAt.toISOString())}
+          Posted: ${escapeHtml(formatRelativeTime(j.postedAt, now))}
         </td>
       </tr>
       <tr>
@@ -173,4 +174,25 @@ function escapeHtml(s: string): string {
 
 function escapeAttr(s: string): string {
   return escapeHtml(s).replace(/'/g, '&#39;');
+}
+
+function formatRelativeTime(date: Date, now: Date): string {
+  const diffMs = Math.max(0, now.getTime() - date.getTime());
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (diffMs < minute) {
+    return 'just now';
+  }
+  if (diffMs < hour) {
+    const minutes = Math.floor(diffMs / minute);
+    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  }
+  if (diffMs < day) {
+    const hours = Math.floor(diffMs / hour);
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  }
+  const days = Math.floor(diffMs / day);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
 }

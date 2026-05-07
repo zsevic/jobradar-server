@@ -27,6 +27,14 @@ async function main() {
   }
 
   const user = userResult.rows[0];
+  // Ensure simulation produces a send by removing the per-user digest cutoff.
+  await db.query(
+    `update users
+     set "lastDigestSentAt" = null
+     where id = $1`,
+    [user.userId],
+  );
+
   const jobResult = await db.query(
     `select j.id
      from jobs j
