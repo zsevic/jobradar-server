@@ -140,6 +140,14 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('united kingdom');
   });
 
+  it('maps edinburgh to united kingdom', () => {
+    const facets = extractLocationFacets('Edinburgh');
+
+    expect(facets.countries).toContain('united kingdom');
+    expect(facets.tokens).toContain('edinburgh');
+    expect(facets.tokens).toContain('united kingdom');
+  });
+
   it('maps guildford to united kingdom', () => {
     const facets = extractLocationFacets('Guildford');
 
@@ -167,11 +175,80 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).not.toContain('austin tx');
   });
 
+  it('maps oklahoma to united states', () => {
+    const facets = extractLocationFacets('Oklahoma');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toContain('oklahoma');
+    expect(facets.tokens).toContain('united states');
+  });
+
   it('maps nashville to united states', () => {
     const facets = extractLocationFacets('Nashville');
 
     expect(facets.countries).toContain('united states');
     expect(facets.tokens).toContain('nashville');
+    expect(facets.tokens).toContain('united states');
+  });
+
+  it('maps houston to united states', () => {
+    const facets = extractLocationFacets('Houston');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toContain('houston');
+    expect(facets.tokens).toContain('united states');
+  });
+
+  it('maps pittsburgh area to united states', () => {
+    const facets = extractLocationFacets('Pittsburgh Area');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toContain('pittsburgh');
+    expect(facets.tokens).toContain('united states');
+    expect(facets.tokens).not.toContain('pittsburgh area');
+  });
+
+  it('maps miami area to united states', () => {
+    const facets = extractLocationFacets('Miami Area');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toContain('miami');
+    expect(facets.tokens).toContain('united states');
+    expect(facets.tokens).not.toContain('miami area');
+  });
+
+  it('maps washington d.c. to united states', () => {
+    const facets = extractLocationFacets('Washington D.C.');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toEqual(
+      expect.arrayContaining(['washington', 'district of columbia', 'united states']),
+    );
+  });
+
+  it('maps us east coast to east coast region', () => {
+    const facets = extractLocationFacets('US East Coast');
+
+    expect(facets.regions).toContain('east coast');
+    expect(facets.tokens).toContain('east coast');
+    expect(facets.tokens).not.toContain('us east coast');
+  });
+
+  it('normalizes amsterdam l remote to amsterdam and netherlands', () => {
+    const facets = extractLocationFacets(
+      'Paris | Remote | Amsterdam l Remote | Barcelona | Berlin | Dublin | Lisbon | London | Relocation to Europe | Rome',
+    );
+
+    expect(facets.tokens).toContain('amsterdam');
+    expect(facets.tokens).not.toContain('amsterdam l');
+    expect(facets.countries).toContain('netherlands');
+  });
+
+  it('maps new kensington to united states', () => {
+    const facets = extractLocationFacets('New Kensington');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toContain('new kensington');
     expect(facets.tokens).toContain('united states');
   });
 
@@ -191,12 +268,28 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('finland');
   });
 
+  it('maps noida to india', () => {
+    const facets = extractLocationFacets('Noida');
+
+    expect(facets.countries).toContain('india');
+    expect(facets.tokens).toContain('noida');
+    expect(facets.tokens).toContain('india');
+  });
+
   it('maps cluj to romania', () => {
     const facets = extractLocationFacets('Cluj');
 
     expect(facets.countries).toContain('romania');
     expect(facets.tokens).toContain('cluj');
     expect(facets.tokens).toContain('romania');
+  });
+
+  it('maps nice to france', () => {
+    const facets = extractLocationFacets('Nice');
+
+    expect(facets.countries).toContain('france');
+    expect(facets.tokens).toContain('nice');
+    expect(facets.tokens).toContain('france');
   });
 
   it('maps monterrey to mexico', () => {
@@ -231,6 +324,21 @@ describe('extractLocationFacets', () => {
     expect(facets.countries).toContain('ukraine');
     expect(facets.tokens).toContain('dnipro');
     expect(facets.tokens).toContain('ukraine');
+  });
+
+  it('maps kiev to ukraine', () => {
+    const facets = extractLocationFacets('Kiev');
+
+    expect(facets.countries).toContain('ukraine');
+    expect(facets.tokens).toContain('kiev');
+    expect(facets.tokens).toContain('ukraine');
+  });
+
+  it('recognizes algeria as a country token', () => {
+    const facets = extractLocationFacets('Algeria');
+
+    expect(facets.countries).toContain('algeria');
+    expect(facets.tokens).toContain('algeria');
   });
 
   it('ignores CET timezone qualifiers in Europe remote strings', () => {
@@ -367,6 +475,14 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('australia');
   });
 
+  it('maps south australia to australia', () => {
+    const facets = extractLocationFacets('South Australia');
+
+    expect(facets.countries).toContain('australia');
+    expect(facets.tokens).toContain('south australia');
+    expect(facets.tokens).toContain('australia');
+  });
+
   it('maps manawatu to new zealand', () => {
     const facets = extractLocationFacets('Manawatu');
 
@@ -401,6 +517,14 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('qatar');
   });
 
+  it('maps dar es salam typo to tanzania', () => {
+    const facets = extractLocationFacets('Dar Es Salam');
+
+    expect(facets.countries).toContain('tanzania');
+    expect(facets.tokens).toContain('dar es salam');
+    expect(facets.tokens).toContain('tanzania');
+  });
+
   it('maps johannesburg to south africa', () => {
     const facets = extractLocationFacets('Johannesburg');
 
@@ -417,6 +541,44 @@ describe('extractLocationFacets', () => {
       expect.arrayContaining(['nordics', 'emea']),
     );
     expect(facets.countries).not.toContain('nordics');
+  });
+
+  it('maps missing country aliases from audit block without congo', () => {
+    const facets = extractLocationFacets(
+      'San Marino | Mauritius | Brunei | Oman | Mongolia | Madagascar | Tunis | Singapoor | Algiers | Constantine | Oran | Anaba',
+    );
+
+    expect(facets.countries).toEqual(
+      expect.arrayContaining([
+        'san marino',
+        'mauritius',
+        'brunei',
+        'oman',
+        'mongolia',
+        'madagascar',
+        'tunisia',
+        'singapore',
+        'algeria',
+      ]),
+    );
+  });
+
+  it('maps congo brazzaville variants to congo - brazzaville', () => {
+    const facetsFromRaw = extractLocationFacets('Congo Brazzaville');
+    const facetsFromAlias = extractLocationFacets('Republic of the Congo');
+
+    expect(facetsFromRaw.countries).toContain('congo - brazzaville');
+    expect(facetsFromRaw.tokens).toContain('congo - brazzaville');
+    expect(facetsFromAlias.countries).toContain('congo - brazzaville');
+    expect(facetsFromAlias.tokens).toContain('congo - brazzaville');
+  });
+
+  it('maps remote philipines typo to philippines', () => {
+    const facets = extractLocationFacets('Remote - Philipines');
+
+    expect(facets.countries).toContain('philippines');
+    expect(facets.tokens).toContain('philippines');
+    expect(facets.tokens).not.toContain('philipines');
   });
 
   it('maps cayman alias to cayman islands country', () => {
@@ -440,6 +602,10 @@ describe('canonicalizeCountryHint', () => {
   it('canonicalizes punctuated US aliases to united states', () => {
     expect(canonicalizeCountryHint('U.S.A')).toBe('united states');
     expect(canonicalizeCountryHint('U.S')).toBe('united states');
+  });
+
+  it('canonicalizes CAN to canada', () => {
+    expect(canonicalizeCountryHint('CAN')).toBe('canada');
   });
 
   it('canonicalizes bosnia variants to ampersand form', () => {

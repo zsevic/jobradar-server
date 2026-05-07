@@ -46,6 +46,8 @@ const REGION_ALIASES: Record<string, string> = {
   'southeastern us': 'east coast',
   /** Job-board “Eastern US” remote zones. */
   'eastern us': 'east coast',
+  /** ATS phrasing variant (e.g. `US East Coast`). */
+  'us east coast': 'east coast',
   /** Corporate listings (e.g. `West, US Region`). */
   'west us region': 'west coast',
   'central america': 'central america',
@@ -67,6 +69,7 @@ const COTE_DIVOIRE = 'côte d\u2019ivoire';
 const COUNTRY_ALIASES: Record<string, string> = {
   usa: 'united states',
   us: 'united states',
+  can: 'canada',
   'u.s.a': 'united states',
   'u.s': 'united states',
   'united states of america': 'united states',
@@ -99,12 +102,15 @@ const COUNTRY_ALIASES: Record<string, string> = {
   méxico: 'mexico',
   ind: 'india',
   irl: 'ireland',
+  singapoor: 'singapore',
+  philipines: 'philippines',
   phillipines: 'philippines',
   'ivory coast': COTE_DIVOIRE,
   "cote d'ivoire": COTE_DIVOIRE,
   "côte d'ivoire": COTE_DIVOIRE,
   cayman: 'cayman islands',
   'congo brazzaville': 'congo - brazzaville',
+  'republic of the congo': 'congo - brazzaville',
   'democratic republic of congo': 'congo - kinshasa',
   deutschland: 'germany',
   'costa rice': 'costa rica',
@@ -234,6 +240,13 @@ const KNOWN_COUNTRIES = new Set<string>([
   'benin',
   'congo - brazzaville',
   'congo - kinshasa',
+  'algeria',
+  'mauritius',
+  'brunei',
+  'oman',
+  'mongolia',
+  'madagascar',
+  'san marino',
   'haiti',
   'qatar',
   'iceland',
@@ -443,6 +456,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   bogotá: 'colombia',
   'santo domingo': 'dominican republic',
   bengaluru: 'india',
+  noida: 'india',
   hyderabad: 'india',
   mumbai: 'india',
   thiruvananthapuram: 'india',
@@ -468,6 +482,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   pisa: 'italy',
   rome: 'italy',
   dallas: 'united states',
+  houston: 'united states',
   'fort worth': 'united states',
   texas: 'united states',
   utah: 'united states',
@@ -486,6 +501,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   gilbert: 'united states',
   'new albany': 'united states',
   pittsburgh: 'united states',
+  'new kensington': 'united states',
   denver: 'united states',
   nashville: 'united states',
   hillsboro: 'united states',
@@ -507,6 +523,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   nancy: 'france',
   lille: 'france',
   lyon: 'france',
+  nice: 'france',
   metz: 'france',
   strasbourg: 'france',
   orléans: 'france',
@@ -514,6 +531,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   montreal: 'canada',
   montréal: 'canada',
   detroit: 'united states',
+  oklahoma: 'united states',
   'orange county': 'united states',
   borlange: 'sweden',
   borlänge: 'sweden',
@@ -556,6 +574,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   london: 'united kingdom',
   belfast: 'united kingdom',
   manchester: 'united kingdom',
+  edinburgh: 'united kingdom',
   glasgow: 'united kingdom',
   basingstoke: 'united kingdom',
   liverpool: 'united kingdom',
@@ -576,6 +595,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'ho chi minh': 'vietnam',
   'ho chi minh city': 'vietnam',
   kyiv: 'ukraine',
+  kiev: 'ukraine',
   dnipro: 'ukraine',
   minsk: 'belarus',
   seoul: 'south korea',
@@ -605,6 +625,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'são josé dos campos': 'brazil',
   'sao jose dos campos': 'brazil',
   montevideo: 'uruguay',
+  brazzaville: 'congo - brazzaville',
   lubumbashi: 'congo - kinshasa',
   birmingham: 'united kingdom',
   bochum: 'germany',
@@ -615,6 +636,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   canberra: 'australia',
   'new south wales': 'australia',
   queensland: 'australia',
+  'south australia': 'australia',
   manawatu: 'new zealand',
   'bay of plenty': 'new zealand',
   waikato: 'new zealand',
@@ -676,6 +698,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   dumaguete: 'philippines',
   tampico: 'mexico',
   lima: 'peru',
+  oran: 'algeria',
+  tunis: 'tunisia',
   riyadh: 'saudi arabia',
   dublin: 'ireland',
   tallinn: 'estonia',
@@ -697,6 +721,10 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   dakar: 'senegal',
   douala: 'cameroon',
   bamako: 'mali',
+  anaba: 'algeria',
+  algiers: 'algeria',
+  constantine: 'algeria',
+  'dar es salam': 'tanzania',
   split: 'croatia',
   almaty: 'kazakhstan',
   cebu: 'philippines',
@@ -1449,6 +1477,9 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bsan\s+francisco\s+bay\s+area\b/gi, 'Bay Area')
     .replace(/\bcongo\s*,?\s*brazzaville\b/gi, 'Congo - Brazzaville')
     .replace(/\bnew\s+york\s+city\s+area\b/gi, 'New York')
+    .replace(/\bpittsburgh\s+area\b/gi, 'Pittsburgh')
+    .replace(/\bmiami\s+area\b/gi, 'Miami')
+    .replace(/\bamsterdam\s+l\s+remote\b/gi, 'Amsterdam')
     .replace(/\bnew\s+york\s+city\b/gi, 'New York')
     .replace(/\bseattle\s+metro\b/gi, 'Seattle')
     .replace(/,\s*ca\s+united\s+states\b/gi, ', CA, United States')
@@ -1490,6 +1521,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bus\s*[-–—]\s*based\b/gi, 'United States')
     .replace(/\bus\s+full[-\s]?time\b/gi, 'United States')
     .replace(/\bindia\s+team\b/gi, 'India')
+    .replace(/\bwashington\s+d\.c\.?\b/gi, 'Washington, DC')
     .replace(/\bwashington\s+dc\b/gi, 'Washington, DC')
     .replace(/\breading\s*\(\s*london\s*\)/gi, 'Reading, United Kingdom')
     .replace(/\b([a-z0-9]+)\s*\(\s*can\s*\)/gi, '$1, Canada')
