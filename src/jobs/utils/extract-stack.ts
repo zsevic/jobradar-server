@@ -317,6 +317,9 @@ function mentionsAiOrMlIcRole(normalized: string): boolean {
   ) {
     return true;
   }
+  if (/\bai\s+programmers?\b/i.test(normalized)) {
+    return true;
+  }
   if (/\bmachine\s+learning\s+engineer\b/i.test(normalized)) {
     return true;
   }
@@ -364,6 +367,20 @@ function mentionsDataRole(normalized: string): boolean {
     ) ||
     mentionsAnalyticsFlavorScientist(normalized)
   );
+}
+
+/** Technical architect IC roles (non pre-sales/security specializations). */
+function mentionsTechnicalArchitectRole(normalized: string): boolean {
+  return (
+    /\b(?:systems?\s+)?software\s+architect\b/i.test(normalized) ||
+    /\bsystems?\s+architect\b/i.test(normalized) ||
+    /\bapplication\s+architect\b/i.test(normalized)
+  );
+}
+
+/** Gameplay programming titles should count as engineering IC roles. */
+function mentionsGameplayProgrammerRole(normalized: string): boolean {
+  return /\bgameplay\s+programmers?\b/i.test(normalized);
 }
 
 /**
@@ -499,9 +516,18 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
     return 'data';
   }
 
+  if (mentionsGameplayProgrammerRole(normalized)) {
+    return 'engineer';
+  }
+
+  if (mentionsTechnicalArchitectRole(normalized)) {
+    return 'engineer';
+  }
+
   if (
     /\bmember\s+of\s+technical\s+staff\b/i.test(normalized) ||
     /\bengineers?\b/i.test(normalized) ||
+    /\bdeveloppe?r\b/i.test(normalized) ||
     /\bengineering\b/i.test(normalized)
   ) {
     return 'engineer';
