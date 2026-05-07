@@ -1,4 +1,8 @@
-import { canonicalizeCountryHint, extractLocationFacets } from './normalize-location';
+import {
+  canonicalizeCountryHint,
+  extractLocationFacets,
+  splitAndCanonicalizeCountryHints,
+} from './normalize-location';
 
 describe('extractLocationFacets', () => {
   it('keeps both countries for remote pipe-plus-hyphen chains', () => {
@@ -42,6 +46,77 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('bosnia & herzegovina');
     expect(facets.tokens).not.toContain('bosnia and herzegovina');
   });
+
+  it('keeps only european union token for EU aliases', () => {
+    const facets = extractLocationFacets('European Union | EU');
+
+    expect(facets.tokens).toContain('european union');
+    expect(facets.tokens).not.toContain('eu');
+    expect(facets.regions).toContain('european union');
+  });
+
+  it('keeps only latin america token for LATAM aliases', () => {
+    const facets = extractLocationFacets('Latin America | LATAM');
+
+    expect(facets.tokens).toContain('latin america');
+    expect(facets.tokens).not.toContain('latam');
+    expect(facets.regions).toContain('latin america');
+  });
+
+  it('keeps central america as its own region token', () => {
+    const facets = extractLocationFacets('Central America');
+
+    expect(facets.tokens).toContain('central america');
+    expect(facets.regions).toContain('central america');
+    expect(facets.tokens).not.toContain('latin america');
+  });
+
+  it('keeps only north america token for NAMER alias', () => {
+    const facets = extractLocationFacets('NAMER');
+
+    expect(facets.tokens).toContain('north america');
+    expect(facets.tokens).not.toContain('namer');
+    expect(facets.regions).toContain('north america');
+  });
+
+  it('maps istanbul and lisboa city aliases to countries', () => {
+    const facets = extractLocationFacets('Istanbul | Warsaw | Lisboa');
+
+    expect(facets.countries).toEqual(
+      expect.arrayContaining(['turkey', 'poland', 'portugal']),
+    );
+    expect(facets.tokens).toEqual(
+      expect.arrayContaining(['istanbul', 'warsaw', 'lisboa']),
+    );
+  });
+
+  it('maps liverpool to united kingdom', () => {
+    const facets = extractLocationFacets('Liverpool');
+
+    expect(facets.countries).toContain('united kingdom');
+    expect(facets.tokens).toContain('liverpool');
+    expect(facets.tokens).toContain('united kingdom');
+  });
+
+  it('maps turku to finland', () => {
+    const facets = extractLocationFacets('Turku');
+
+    expect(facets.countries).toContain('finland');
+    expect(facets.tokens).toContain('turku');
+    expect(facets.tokens).toContain('finland');
+  });
+
+  it('maps cayman alias to cayman islands country', () => {
+    const facets = extractLocationFacets(
+      'New York | Denver, Colorado | Cayman',
+    );
+
+    expect(facets.countries).toEqual(
+      expect.arrayContaining(['united states', 'cayman islands']),
+    );
+    expect(facets.tokens).toContain('cayman islands');
+    expect(facets.tokens).not.toContain('cayman');
+  });
 });
 
 describe('canonicalizeCountryHint', () => {
@@ -59,5 +134,13 @@ describe('canonicalizeCountryHint', () => {
       'bosnia & herzegovina',
     );
     expect(canonicalizeCountryHint('Bosnia')).toBe('bosnia & herzegovina');
+  });
+});
+
+describe('splitAndCanonicalizeCountryHints', () => {
+  it('splits and canonicalizes mixed delimiter hints', () => {
+    expect(splitAndCanonicalizeCountryHints(['US | EU', 'U.S.A, Canada'])).toEqual(
+      ['united states', 'european union', 'united states', 'canada'],
+    );
   });
 });

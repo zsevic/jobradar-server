@@ -7,9 +7,9 @@ interface LocationFacets {
 const REGION_ALIASES: Record<string, string> = {
   apac: 'apac',
   emea: 'emea',
-  latam: 'latam',
+  latam: 'latin america',
   /** Corporate / ATS listing for Latin America. */
-  'latin america': 'latam',
+  'latin america': 'latin america',
   /** North America (corporate tag). */
   noram: 'north america',
   nordics: 'nordics',
@@ -26,9 +26,9 @@ const REGION_ALIASES: Record<string, string> = {
   'south america': 'south america',
   asia: 'asia',
   europe: 'europe',
-  /** Political/economic bloc — distinct from the geographic `europe` region. */
-  'european union': 'eu',
-  eu: 'eu',
+  /** Political/economic bloc — keep long-form canonical token. */
+  'european union': 'european union',
+  eu: 'european union',
   'east coast': 'east coast',
   'west coast': 'west coast',
   africa: 'africa',
@@ -48,7 +48,7 @@ const REGION_ALIASES: Record<string, string> = {
   'eastern us': 'east coast',
   /** Corporate listings (e.g. `West, US Region`). */
   'west us region': 'west coast',
-  'central america': 'latam',
+  'central america': 'central america',
   'middle east': 'middle east',
   'central asia': 'central asia',
   'east asia': 'east asia',
@@ -96,6 +96,7 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'ivory coast': COTE_DIVOIRE,
   "cote d'ivoire": COTE_DIVOIRE,
   "côte d'ivoire": COTE_DIVOIRE,
+  cayman: 'cayman islands',
   'congo brazzaville': 'congo - brazzaville',
   'democratic republic of congo': 'congo - kinshasa',
   deutschland: 'germany',
@@ -232,6 +233,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'kuwait',
   'kosovo',
   'seychelles',
+  'cayman islands',
 ]);
 
 /**
@@ -512,6 +514,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   manila: 'philippines',
   curitiba: 'brazil',
   helsinki: 'finland',
+  turku: 'finland',
   oulu: 'finland',
   hobart: 'australia',
   'cape town': 'south africa',
@@ -528,6 +531,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   hangzhou: 'china',
   beijing: 'china',
   lisbon: 'portugal',
+  lisboa: 'portugal',
+  istanbul: 'turkey',
   yerevan: 'armenia',
   limassol: 'cyprus',
   nicosia: 'cyprus',
@@ -536,6 +541,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   belfast: 'united kingdom',
   manchester: 'united kingdom',
   basingstoke: 'united kingdom',
+  liverpool: 'united kingdom',
   auckland: 'new zealand',
   sydney: 'australia',
   'hong kong': 'hong kong',
@@ -1191,6 +1197,8 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bverda\s+park\b/gi, 'Louisiana, United States')
     /** Corporate Latin America tag (`LatAm`). */
     .replace(/\blatam\b/gi, 'Latin America')
+    /** Corporate North America shorthand. */
+    .replace(/\bnamer\b/gi, 'North America')
     .replace(/\bremote-uk&i\b/gi, 'United Kingdom, Ireland')
     .replace(/\bremote-iberia\b/gi, 'Iberia')
     .replace(/\bremote-noram\b/gi, 'North America')
@@ -1555,8 +1563,13 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
         CANADA_PROVINCE_POSTAL_TO_TOKEN[trimmedBit] ??
         trimmedBit;
       const mappedCountry = COUNTRY_ALIASES[facetKey] ?? facetKey;
+      const mappedRegion = REGION_ALIASES[facetKey];
       // Keep canonical country tokens (e.g. "czech republic" -> "czechia").
-      tokens.add(KNOWN_COUNTRIES.has(mappedCountry) ? mappedCountry : facetKey);
+      if (mappedRegion) {
+        tokens.add(mappedRegion);
+      } else {
+        tokens.add(KNOWN_COUNTRIES.has(mappedCountry) ? mappedCountry : facetKey);
+      }
 
       /** `Georgia` is both US state and country; explicit `United States` / `USA` in the same segment picks the state. */
       const georgiaAsUsState =
@@ -1576,7 +1589,6 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
         tokens.add('canada');
       }
 
-      const mappedRegion = REGION_ALIASES[facetKey];
       if (mappedRegion) {
         regions.add(mappedRegion);
       }
@@ -1704,5 +1716,30 @@ export function canonicalizeCountryHint(countryHint: string): string {
   if (!normalized) {
     return normalized;
   }
-  return COUNTRY_ALIASES[normalized] ?? normalized;
+  const mappedCountry = COUNTRY_ALIASES[normalized];
+  if (mappedCountry) {
+    return mappedCountry;
+  }
+  const mappedRegion = REGION_ALIASES[normalized];
+  if (mappedRegion) {
+    return mappedRegion;
+  }
+  return normalized;
+}
+
+/**
+ * Splits provider hint strings like `US | EU` or `US, CA` and canonicalizes each part.
+ */
+export function splitAndCanonicalizeCountryHints(
+  countryHints: string[],
+): string[] {
+  const expanded: string[] = [];
+  for (const hint of countryHints) {
+    const parts = hint
+      .split(/[|,;/]/g)
+      .map((part) => canonicalizeCountryHint(part))
+      .filter((part) => part.length > 0);
+    expanded.push(...parts);
+  }
+  return expanded;
 }
