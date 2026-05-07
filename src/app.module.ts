@@ -11,7 +11,9 @@ import redisConfig from './config/redis.config';
 import { envValidationSchema } from './config/env.validation';
 import { FilterPreset } from './database/entities/filter-preset.entity';
 import { Job } from './database/entities/job.entity';
+import { NotificationClick } from './database/entities/notification-click.entity';
 import { NotificationSent } from './database/entities/notification-sent.entity';
+import { PendingMatchEmail } from './database/entities/pending-match-email.entity';
 import { Source } from './database/entities/source.entity';
 import { User } from './database/entities/user.entity';
 import { JobsModule } from './jobs/jobs.module';
@@ -29,7 +31,15 @@ import { OnboardingModule } from './onboarding/onboarding.module';
       useFactory: (config: ConfigType<typeof databaseConfig>) => ({
         type: 'postgres',
         url: config.url,
-        entities: [User, Source, Job, FilterPreset, NotificationSent],
+        entities: [
+          User,
+          Source,
+          Job,
+          FilterPreset,
+          NotificationSent,
+          PendingMatchEmail,
+          NotificationClick,
+        ],
         synchronize: false,
       }),
       inject: [databaseConfig.KEY],

@@ -5,15 +5,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { FilterPreset } from '../database/entities/filter-preset.entity';
 import { Job } from '../database/entities/job.entity';
+import { NotificationClick } from '../database/entities/notification-click.entity';
 import { NotificationSent } from '../database/entities/notification-sent.entity';
+import { PendingMatchEmail } from '../database/entities/pending-match-email.entity';
 import { Source } from '../database/entities/source.entity';
 import { User } from '../database/entities/user.entity';
+import { MailModule } from '../mail/mail.module';
 import { AshbyAdapter } from './adapters/ashby.adapter';
 import { GreenhouseAdapter } from './adapters/greenhouse.adapter';
 import { WorkableAdapter } from './adapters/workable.adapter';
+import { EmailDigestBootstrap } from './email-digest.bootstrap';
 import {
   ASHBY_FETCH_QUEUE,
-  EMAIL_SEND_QUEUE,
+  EMAIL_DIGEST_QUEUE,
   GREENHOUSE_FETCH_QUEUE,
   JOB_MATCH_QUEUE,
   JOB_PROCESS_QUEUE,
@@ -21,8 +25,9 @@ import {
 } from './jobs.constants';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
+import { NotificationsController } from './notifications.controller';
 import { AshbyFetchProcessor } from './processors/ashby-fetch.processor';
-import { EmailSendProcessor } from './processors/email-send.processor';
+import { EmailDigestProcessor } from './processors/email-digest.processor';
 import { GreenhouseFetchProcessor } from './processors/greenhouse-fetch.processor';
 import { JobMatchProcessor } from './processors/job-match.processor';
 import { JobProcessProcessor } from './processors/job-process.processor';
@@ -33,12 +38,15 @@ import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
   imports: [
     HttpModule,
     AuthModule,
+    MailModule,
     TypeOrmModule.forFeature([
       Source,
       Job,
       User,
       FilterPreset,
       NotificationSent,
+      PendingMatchEmail,
+      NotificationClick,
     ]),
     BullModule.registerQueue(
       { name: ASHBY_FETCH_QUEUE },
@@ -46,10 +54,10 @@ import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
       { name: WORKABLE_FETCH_QUEUE },
       { name: JOB_PROCESS_QUEUE },
       { name: JOB_MATCH_QUEUE },
-      { name: EMAIL_SEND_QUEUE },
+      { name: EMAIL_DIGEST_QUEUE },
     ),
   ],
-  controllers: [JobsController],
+  controllers: [JobsController, NotificationsController],
   providers: [
     ProviderCircuitBreaker,
     JobsService,
@@ -61,7 +69,8 @@ import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
     WorkableFetchProcessor,
     JobProcessProcessor,
     JobMatchProcessor,
-    EmailSendProcessor,
+    EmailDigestProcessor,
+    EmailDigestBootstrap,
   ],
   exports: [ProviderCircuitBreaker],
 })

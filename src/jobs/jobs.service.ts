@@ -9,7 +9,6 @@ import { Job } from '../database/entities/job.entity';
 import { Source, SourceProvider } from '../database/entities/source.entity';
 import {
   ASHBY_FETCH_QUEUE,
-  EMAIL_SEND_QUEUE,
   GREENHOUSE_FETCH_QUEUE,
   JOB_MATCH_QUEUE,
   JOB_PROCESS_QUEUE,
@@ -45,8 +44,6 @@ export class JobsService {
     private readonly jobProcessQueue: Queue,
     @InjectQueue(JOB_MATCH_QUEUE)
     private readonly jobMatchQueue: Queue,
-    @InjectQueue(EMAIL_SEND_QUEUE)
-    private readonly emailSendQueue: Queue,
     private readonly providerCircuitBreaker: ProviderCircuitBreaker,
   ) {}
 
@@ -231,18 +228,6 @@ export class JobsService {
         removeOnFail: 200,
       },
     );
-  }
-
-  async enqueueEmailSend(payload: {
-    userId: string;
-    jobId: string;
-    email: string;
-    score: number;
-  }): Promise<void> {
-    await this.emailSendQueue.add('send-email', payload, {
-      removeOnComplete: true,
-      removeOnFail: 200,
-    });
   }
 
   private getRoleTitleKeywords(role: string): string[] {

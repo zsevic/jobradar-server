@@ -29,6 +29,6 @@ import { GumroadService } from './gumroad.service';
   ],
   controllers: [AuthController],
   providers: [AuthService, GumroadService, JwtAuthGuard],
-  exports: [AuthService, JwtAuthGuard, JwtModule, TypeOrmModule],
+  exports: [AuthService, JwtAuthGuard, JwtModule, TypeOrmModule, GumroadService],
 })
 export class AuthModule {}

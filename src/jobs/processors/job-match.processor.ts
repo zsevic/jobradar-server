@@ -6,9 +6,9 @@ import { Repository } from 'typeorm';
 import { FilterPreset } from '../../database/entities/filter-preset.entity';
 import { Job } from '../../database/entities/job.entity';
 import { NotificationSent } from '../../database/entities/notification-sent.entity';
+import { PendingMatchEmail } from '../../database/entities/pending-match-email.entity';
 import { User } from '../../database/entities/user.entity';
 import { JOB_MATCH_QUEUE } from '../jobs.constants';
-import { JobsService } from '../jobs.service';
 import { matchesJobLocationPreset } from '../utils/match-location-preset';
 
 interface MatchJobPayload {
@@ -32,7 +32,8 @@ export class JobMatchProcessor extends WorkerHost {
     private readonly userRepository: Repository<User>,
     @InjectRepository(NotificationSent)
     private readonly notificationSentRepository: Repository<NotificationSent>,
-    private readonly jobsService: JobsService,
+    @InjectRepository(PendingMatchEmail)
+    private readonly pendingMatchEmailRepository: Repository<PendingMatchEmail>,
   ) {
     super();
   }
@@ -82,12 +83,18 @@ export class JobMatchProcessor extends WorkerHost {
         continue;
       }
 
-      await this.jobsService.enqueueEmailSend({
-        userId: user.id,
-        jobId: dbJob.id,
-        email: user.email,
-        score,
-      });
+      await this.pendingMatchEmailRepository
+        .createQueryBuilder()
+        .insert()
+        .into(PendingMatchEmail)
+        .values({
+          userId: user.id,
+          jobId: dbJob.id,
+          score,
+          presetId: preset.id,
+        })
+        .orIgnore()
+        .execute();
       enqueuedEmails += 1;
       this.logger.log(
         `Enqueued email candidate user=${user.id} job=${dbJob.id} score=${score}`,
