@@ -58,6 +58,7 @@ import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
       { name: JOB_PROCESS_QUEUE },
       { name: JOB_MATCH_QUEUE },
       { name: EMAIL_DIGEST_QUEUE },
+      { name: SOURCE_POLLING_QUEUE },
     ),
   ],
   controllers: [JobsController, NotificationsController],
