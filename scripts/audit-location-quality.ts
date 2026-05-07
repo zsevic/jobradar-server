@@ -326,7 +326,7 @@ function writeCodebaseProposals(params: {
   lines.push('## Method');
   lines.push('');
   lines.push(
-    `1. **\`SQL_EMPTY_COUNTRY_GEO\`**: Jobs${params.provider === 'all' ? '' : ` for provider **${params.provider}**`} with **no** \`locationCountries\` **and** **no** \`locationRegions\`, non-trivial \`locationRaw\` / \`location\`, excluding plain \`remote\` / \`hybrid\` / \`anywhere\` / \`unknown\`, and excluding **\`isRemote\` + remote-only** raw (whole string matches remote/global/work-mode variants only). **Region-only** or **fully remote-only** rows are intentionally omitted — empty countries there is acceptable.`,
+    `1. **\`SQL_EMPTY_COUNTRY_GEO\`**: Same SQL as below, then **post-filter**: keep only rows where text-only recompute still has **no** countries **and** **no** regions (drops stale rows where the parser now resolves geography). Base SQL: jobs${params.provider === 'all' ? '' : ` for provider **${params.provider}**`} with **no** stored \`locationCountries\` **and** **no** \`locationRegions\`, non-trivial \`locationRaw\` / \`location\`, excluding plain \`remote\` / \`hybrid\` / \`anywhere\` / \`unknown\`, and excluding **\`isRemote\` + remote-only** raw (whole string matches remote/global/work-mode variants only).`,
   );
   lines.push(
     `2. **Facet recompute**: For each scanned job, recompute facets from \`formatRawLocation(locationRaw ?? location)\` via \`resolveNormalizedLocation\` + \`extractLocationFacets\`, matching [\`job-process.processor.ts\`](../src/jobs/processors/job-process.processor.ts) **minus** provider-only ingest fields **not** stored on \`jobs\` (e.g. Ashby **\`locationCountryHints\`** from postal data).`,
@@ -451,6 +451,13 @@ async function main(): Promise<void> {
     ]);
     allRows = rAll.rows as DbJobRow[];
     emptyGeoRows = rEmpty.rows as DbJobRow[];
+    /** Drop rows where current parser already yields countries or regions (stale DB facets). */
+    emptyGeoRows = emptyGeoRows.filter((row) => {
+      const expected = computeFacetsFromJob(row);
+      return (
+        expected.countries.length === 0 && expected.regions.length === 0
+      );
+    });
   } finally {
     await client.end();
   }

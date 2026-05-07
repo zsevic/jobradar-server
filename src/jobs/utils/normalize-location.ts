@@ -35,6 +35,13 @@ const REGION_ALIASES: Record<string, string> = {
   /** Corporate catch-all (e.g. `Global Remote` after token cleanup). */
   global: 'global',
   worldwide: 'worldwide',
+  /** US federal / military macro (DMV). */
+  'national capital region': 'east coast',
+  /** US zone tags. */
+  'northeastern us': 'east coast',
+  'ohio valley': 'central us',
+  'mountain west': 'mountain west',
+  'southeast us': 'east coast',
   'middle east': 'middle east',
   'central asia': 'central asia',
   'east asia': 'east asia',
@@ -341,6 +348,12 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   northlake: ['illinois'],
   walnut: ['california'],
   'glen cove': ['new york'],
+  orlando: ['florida'],
+  oxnard: ['california'],
+  plano: ['texas'],
+  calgary: ['alberta'],
+  'oklahoma city': ['oklahoma'],
+  'offenbach am main': ['hessen'],
   memphis: ['tennessee'],
   portland: ['oregon'],
   jacksonville: ['florida'],
@@ -598,6 +611,15 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   philadelphia: 'united states',
   'salt lake city': 'united states',
   charlotte: 'united states',
+  orlando: 'united states',
+  oxnard: 'united states',
+  plano: 'united states',
+  calgary: 'canada',
+  'oklahoma city': 'united states',
+  'offenbach am main': 'germany',
+  oregon: 'united states',
+  'quebec city': 'canada',
+  'québec city': 'canada',
   melbourne: 'australia',
   casablanca: 'morocco',
   dumaguete: 'philippines',
@@ -1041,6 +1063,11 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bglobal\s+remote\b/gi, 'Worldwide')
     .replace(/\bindia[-–—]bangalore\b/gi, 'Bangalore, India')
     .replace(/\bindia\s+bangalore\b/gi, 'Bangalore, India')
+    .replace(
+      /\bquébec\s+city\s*,\s*québec\b/gi,
+      'Quebec City, QC, Canada',
+    )
+    .replace(/\bquebec\s+city\s*,\s*quebec\b/gi, 'Quebec City, QC, Canada')
     .replace(/^\s*all locations\s*$/gi, '')
     .replace(/^\s*no location\s*$/gi, '')
     .replace(
@@ -1094,10 +1121,23 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bindianapolis\s*,\s*in\b/gi, 'Indianapolis, Indiana')
     .replace(/\bremote\s*-\s*in\b/gi, 'Indiana, United States')
     .replace(/\bremote\s*-\s*or\b/gi, 'Oregon, United States')
+    .replace(/\bremote\s*-\s*washington\s+d\.c\./gi, 'Washington, DC')
+    .replace(/\bremote\s*-\s*washington\s+dc\b/gi, 'Washington, DC')
+    .replace(/\bremote\s*-\s*boston\s+metro\b/gi, 'Boston, MA')
+    .replace(/\bremote\s*-\s*calgary\b/gi, 'Calgary, Canada')
     .replace(
-      /\bremote\s*-\s*washington\s*(?:d\.c\.|dc)\b/gi,
-      'Washington, DC',
+      /\bremote\s*-\s*eastern\s+or\s+central\s+time\s+zone\b/gi,
+      'United States',
     )
+    .replace(/\bremote\s*-\s*new\s+england\b/gi, 'East Coast, United States')
+    .replace(/\bremote\s*\(\s*northeast\s*\)/gi, 'East Coast, United States')
+    .replace(/\bremote\s*\(\s*southeast\s*\)/gi, 'Southeast US, United States')
+    .replace(
+      /\bremote\s*\(\s*mountain\s+west\s*\)/gi,
+      'Mountain West, United States',
+    )
+    .replace(/\bphl\s+remote\b/gi, 'Philadelphia, PA')
+    .replace(/\boregon\s*[-–]\s*remote\b/gi, 'Oregon, United States')
     .replace(/\bind\s+remote\b/gi, 'India')
     /** Regional remote macros. */
     .replace(/\bremote-northeast\s+asia\b/gi, 'Northeast Asia')
@@ -1126,7 +1166,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bportland\s+or\b/gi, 'Portland, Oregon')
     .replace(/\bglen\s+cove\s*,\s*ny\b/gi, 'Glen Cove, NY')
     .replace(/\bpasig\s*,\s*phl\b/gi, 'Pasig, Philippines')
-    .replace(/\bremote\s*-\s*washington\s*,\s*d\.c\.\b/gi, 'Washington, DC')
+    .replace(/\bremote\s*-\s*washington\s*,\s*d\.c\./gi, 'Washington, DC')
     .replace(/\bremote\s*-\s*jacksonville\b/gi, 'Jacksonville, FL')
     .replace(/\bremote\s*-\s*kansas\s+city\b/gi, 'Kansas City, MO')
     .replace(/\bremote\s*-\s*louisville\b/gi, 'Louisville, KY')
@@ -1135,12 +1175,22 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bremote\s*-\s*new\s+orleans\b/gi, 'New Orleans, LA')
     .replace(/\bremote\s*-\s*newark\b/gi, 'Newark, NJ')
     .replace(/\bremote\s*-\s*oklahoma\s+city\b/gi, 'Oklahoma City, OK')
+    .replace(
+      /\bnational\s+capital\s+region\b/gi,
+      'Washington, DC, United States',
+    )
+    .replace(/\bnortheastern\s+us\b/gi, 'East Coast, United States')
+    .replace(/\bohio\s+valley\s*,\s*us\s+region\b/gi, 'United States')
+    .replace(/\braleigh\s*[-–]\s*durham\b/gi, 'Raleigh, NC')
+    .replace(/\boxnard\s+ca\b/gi, 'Oxnard, CA')
+    .replace(/\bplano\s*\.\s*tx\b/gi, 'Plano, TX')
     .replace(/\bremote\s*-\s*vancouver\b/gi, 'Vancouver, Canada')
     .replace(/\bremote\s*-\s*virginia\s+beach\b/gi, 'Virginia Beach, VA')
     .replace(/\bremote\s*-\s*wichita\b/gi, 'Wichita, KS')
     /** After specific cities — “Remote - OK” = Oklahoma (state), not “OK” word sense. */
     .replace(/\bremote\s*-\s*ok\b/gi, 'Oklahoma, United States')
     .replace(/\bremote\s+anywhere\s+in\s+the\s+world\b/gi, 'Worldwide')
+    .replace(/\bremote\s*-\s*anywhere\b/gi, 'Worldwide')
     .replace(/\bremote\s*:\s*west\s+coast\s+us\b/gi, 'West Coast, United States')
     .replace(/\busa\s*[-–—]\s*remote\b/gi, 'United States')
     /** GCC / US shorthand. */
@@ -1148,8 +1198,6 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bukd\s+remote\b/gi, 'United Kingdom')
     .replace(/\busca\b/gi, 'United States, California')
     .replace(/\bwest\s+us\s+region\b/gi, 'West Coast, United States')
-    /** `Remote - Washington D.C.` (spelled-out D.C. after a space). */
-    .replace(/\bremote\s*-\s*washington\s+d\.c\.\b/gi, 'Washington, DC')
     /** South Africa province label. */
     .replace(/\bkwazulu\s+natal\b/gi, 'South Africa')
     /** China remote qualifiers. */
@@ -1179,6 +1227,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bDE-Greenville\b/gi, 'Greenville, DE')
     .replace(/\bUT-Cottonwood\s+Heights\b/gi, 'Cottonwood Heights, UT')
     .replace(/\bNC-Charlotte\b/gi, 'Charlotte, NC')
+    .replace(/\bnorth\s+carolina\s*[-–]\s*charlotte\b/gi, 'Charlotte, NC')
     /** Sandbox / template tokens. */
     .replace(/\*?\s*job\s+posting\s+only\s*:\s*usa\d*\b/gi, 'United States')
     /** ATS placeholder strings — whole-line only (no geography). */
@@ -1186,9 +1235,13 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/^\s*add\s+all\s+locations\s+here\s*$/gi, '')
     .replace(/^\s*btc\s*$/gi, '')
     .replace(/^\s*hq\s*$/gi, '')
-    .replace(/^\s*fully\s+remote\s*$/gi, '')
-    /** Non-geographic ATS filler. */
-    .replace(/\bflexible\s*-\s*any\s+site\b/gi, '');
+    .replace(/^\s*passive\s+posting\s*$/gi, '')
+    .replace(/^\s*other\s+locations\s*$/gi, '')
+    .replace(/^\s*on-site\s+at\s+project\s+location\s*$/gi, '')
+    /** Whole-line remote-ish macros → worldwide region for facets. */
+    .replace(/^\s*fully\s+remote\s*$/gi, 'Worldwide')
+    /** SpaceX-style multi-site listing — approximate US-wide for geography facets. */
+    .replace(/\bflexible\s*-\s*any\s+site\b/gi, 'United States');
   return stripEmployerBrandFromLocation(preStripped)
     /** Cape Town / Durban datacenter site codes — not US District of Columbia. */
     .replace(/\bcape\s+town\s+dc\d*\b/gi, 'Cape Town')
