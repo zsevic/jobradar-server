@@ -12,7 +12,10 @@ import {
   resolveNormalizedLocation,
   stripCompanyNameFromLocation,
 } from '../utils/clean-location';
-import { extractLocationFacets } from '../utils/normalize-location';
+import {
+  extractCountryMentionsFromText,
+  extractLocationFacets,
+} from '../utils/normalize-location';
 import { transliterateLocationDisplay } from '../utils/transliterate-location';
 import { JobsService } from '../jobs.service';
 
@@ -136,6 +139,17 @@ export class JobProcessProcessor extends WorkerHost {
         ]),
       );
     }
+
+    if (locationFacets.countries.length === 0) {
+      const countriesFromTitle = extractCountryMentionsFromText(input.title);
+      if (countriesFromTitle.length > 0) {
+        locationFacets.countries = countriesFromTitle;
+        locationFacets.tokens = Array.from(
+          new Set<string>([...locationFacets.tokens, ...countriesFromTitle]),
+        );
+      }
+    }
+
     const saved = await this.jobRepository.save({
       id: jobId,
       provider: input.provider,

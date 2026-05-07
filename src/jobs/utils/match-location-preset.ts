@@ -1,6 +1,9 @@
 import { Job } from '../../database/entities/job.entity';
 import { formatRawLocation, stripCompanyNameFromLocation } from './clean-location';
-import { extractLocationFacets } from './normalize-location';
+import {
+  extractCountryMentionsFromText,
+  extractLocationFacets,
+} from './normalize-location';
 
 /** Preset token for remote-friendly roles (aligned with frontend `REMOTE_LOCATION`). */
 export const REMOTE_LOCATION = 'remote';
@@ -31,9 +34,16 @@ function matchesSelectedCountries(job: Job, selectedCountries: string[]): boolea
     ),
   );
 
+  const hasCountriesFromLocation =
+    job.locationCountries.length > 0 || facets.countries.length > 0;
+  const countriesFromTitle = hasCountriesFromLocation
+    ? []
+    : extractCountryMentionsFromText(job.title);
+
   const countrySet = new Set<string>([
     ...job.locationCountries.map((c) => c.toLowerCase()),
     ...facets.countries,
+    ...countriesFromTitle,
   ]);
 
   const tokenSet = new Set<string>([
@@ -63,7 +73,9 @@ function matchesSelectedCountries(job: Job, selectedCountries: string[]): boolea
  *
  * - **Remote only** (preset is just `remote`): any job with `isRemote` matches.
  * - **One or more countries**: job must match a selected country via parsed facets,
- *   stored location columns, or location text. Being remote is **not** enough by itself,
+ *   stored location columns, location text, or (if both are empty) country mentions in the
+ *   job title. Being
+ *   remote is **not** enough by itself,
  *   otherwise every `isRemote` listing worldwide would appear when users also tick Remote
  *   alongside countries.
  */

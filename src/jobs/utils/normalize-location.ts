@@ -1559,3 +1559,87 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
     regions: Array.from(regions),
   };
 }
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Short country/region codes allowed in job titles (excludes e.g. `us` / `in` to avoid
+ * English-word false positives like “tell us” / “checking in”).
+ */
+const TITLE_COUNTRY_ALIAS_ALLOW_SHORT = new Set([
+  'usa',
+  'uae',
+  'uk',
+  'eu',
+  /** ISO 3166-1 alpha-2 in parentheses after cities (e.g. `Zürich (CH)`). */
+  'ch',
+]);
+
+const TITLE_COUNTRY_ALIAS_MIN_LENGTH = 4;
+
+function buildTitleCountryPhraseEntries(): ReadonlyArray<{
+  phrase: string;
+  country: string;
+}> {
+  const byPhrase = new Map<string, string>();
+
+  for (const country of KNOWN_COUNTRIES) {
+    byPhrase.set(country.toLowerCase(), country);
+  }
+
+  for (const [alias, canon] of Object.entries(COUNTRY_ALIASES)) {
+    if (!KNOWN_COUNTRIES.has(canon)) {
+      continue;
+    }
+    const phrase = alias.trim().toLowerCase();
+    if (!phrase) {
+      continue;
+    }
+    const okLength =
+      phrase.length >= TITLE_COUNTRY_ALIAS_MIN_LENGTH ||
+      TITLE_COUNTRY_ALIAS_ALLOW_SHORT.has(phrase);
+    if (!okLength) {
+      continue;
+    }
+    if (!byPhrase.has(phrase)) {
+      byPhrase.set(phrase, canon);
+    }
+  }
+
+  return [...byPhrase.entries()]
+    .map(([phrase, country]) => ({ phrase, country }))
+    .sort((a, b) => b.phrase.length - a.phrase.length);
+}
+
+const TITLE_COUNTRY_PHRASE_ENTRIES = buildTitleCountryPhraseEntries();
+
+function phraseMatchesAsCountryMention(haystack: string, phrase: string): boolean {
+  const esc = escapeRegExp(phrase);
+  const re = new RegExp(
+    `(^|[^\\p{L}\\p{M}\\p{N}])${esc}([^\\p{L}\\p{M}\\p{N}]|$)`,
+    'u',
+  );
+  return re.test(haystack);
+}
+
+/**
+ * Detects canonical country names from `KNOWN_COUNTRIES` (and safe aliases) in free text.
+ * Callers should use this only when location-derived `locationCountries` / facets are empty,
+ * so titles do not override parsed geography.
+ */
+export function extractCountryMentionsFromText(text: string): string[] {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return [];
+  }
+  const haystack = trimmed.normalize('NFC').toLowerCase();
+  const found = new Set<string>();
+  for (const { phrase, country } of TITLE_COUNTRY_PHRASE_ENTRIES) {
+    if (phraseMatchesAsCountryMention(haystack, phrase)) {
+      found.add(country);
+    }
+  }
+  return Array.from(found);
+}

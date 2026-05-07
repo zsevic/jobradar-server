@@ -3,7 +3,8 @@
  * 1) Rows with geographic-looking raw but empty locationCountries (SQL).
  * 2) Facet drift: stored vs recomputed facets via the same pipeline as ingestion
  *    (formatRawLocation → stripCompanyNameFromLocation →
- *    resolveNormalizedLocation → extractLocationFacets), **without** provider-specific extras such as Ashby
+ *    resolveNormalizedLocation → extractLocationFacets → merge countries from job title), **without**
+ *    provider-specific extras such as Ashby
  *    API `locationCountryHints` (not stored on `jobs`). Jobs whose trimmed `locationRaw`
  *    is only **Remote** or **Hybrid** are omitted — no geographic signal.
  *
@@ -31,7 +32,10 @@ import {
   resolveNormalizedLocation,
   stripCompanyNameFromLocation,
 } from '../src/jobs/utils/clean-location';
-import { extractLocationFacets } from '../src/jobs/utils/normalize-location';
+import {
+  extractCountryMentionsFromText,
+  extractLocationFacets,
+} from '../src/jobs/utils/normalize-location';
 
 /** Single ATS provider or entire `jobs` table. */
 type AuditProvider = SourceProvider | 'all';
@@ -125,6 +129,21 @@ interface Facets {
   regions: string[];
 }
 
+function mergeTitleCountryFacets(facets: Facets, title: string): Facets {
+  if (facets.countries.length > 0) {
+    return facets;
+  }
+  const fromTitle = extractCountryMentionsFromText(title);
+  if (fromTitle.length === 0) {
+    return facets;
+  }
+  return {
+    countries: fromTitle,
+    regions: facets.regions,
+    tokens: Array.from(new Set([...facets.tokens, ...fromTitle])),
+  };
+}
+
 /** Mirrors job-process.processor facet logic minus provider-specific hints not on `Job`. */
 function computeFacetsFromJob(job: DbJobRow): Facets {
   const formattedRaw = formatRawLocation(job.locationRaw ?? job.location ?? '');
@@ -134,9 +153,15 @@ function computeFacetsFromJob(job: DbJobRow): Facets {
   });
   const rawForFacets = geoRaw.toLowerCase() === 'unknown' ? '' : geoRaw;
   if (normalizedLocation === 'Remote') {
-    return { tokens: ['remote'], countries: [], regions: [] };
+    return mergeTitleCountryFacets(
+      { tokens: ['remote'], countries: [], regions: [] },
+      job.title,
+    );
   }
-  return extractLocationFacets(rawForFacets);
+  return mergeTitleCountryFacets(
+    extractLocationFacets(rawForFacets),
+    job.title,
+  );
 }
 
 function sortKey(values: string[]): string {
