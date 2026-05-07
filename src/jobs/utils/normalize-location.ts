@@ -1312,6 +1312,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     )
     /** Common US city + remote hub phrases (ATS). */
     .replace(/\bnew\s+york\s+ny\b/gi, 'New York, NY')
+    .replace(/\baustin\s+tx\b/gi, 'Austin, TX')
     .replace(/\bportland\s*,\s*or\b/gi, 'Portland, Oregon')
     .replace(/\bportland\s+or\b/gi, 'Portland, Oregon')
     .replace(/\bglen\s+cove\s*,\s*ny\b/gi, 'Glen Cove, NY')

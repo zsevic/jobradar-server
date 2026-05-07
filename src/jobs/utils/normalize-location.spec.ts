@@ -157,6 +157,16 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).not.toContain('seattle metro');
   });
 
+  it('maps austin tx to united states', () => {
+    const facets = extractLocationFacets('Austin TX');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toEqual(
+      expect.arrayContaining(['austin', 'texas', 'united states']),
+    );
+    expect(facets.tokens).not.toContain('austin tx');
+  });
+
   it('maps nashville to united states', () => {
     const facets = extractLocationFacets('Nashville');
 
