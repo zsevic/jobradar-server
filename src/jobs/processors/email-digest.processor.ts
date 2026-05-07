@@ -79,21 +79,40 @@ export class EmailDigestProcessor extends WorkerHost {
       return;
     }
 
-    const pendings = await this.pendingRepository
+    const allPendings = await this.pendingRepository
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.job', 'job')
       .where('p.userId = :userId', { userId })
       .orderBy('p.score', 'DESC')
       .addOrderBy('p.createdAt', 'ASC')
-      .take(maxJobs)
       .getMany();
 
-    if (pendings.length === 0) {
+    if (allPendings.length === 0) {
+      return;
+    }
+
+    const cutoff = user.lastDigestSentAt ?? user.createdAt;
+    const cutoffMs = cutoff.getTime();
+    const postedMs = (p: PendingMatchEmail) => p.job.postedAt.getTime();
+    const isFresh = (p: PendingMatchEmail) =>
+      !Number.isNaN(postedMs(p)) && postedMs(p) > cutoffMs;
+    const orderedFresh = allPendings.filter((p) => isFresh(p));
+    const fresh = orderedFresh.slice(0, maxJobs);
+    const stale = allPendings.filter((p) => !isFresh(p));
+    const stalePruned = stale.length;
+
+    if (fresh.length === 0) {
+      if (stale.length > 0) {
+        await this.persistDigestPersistence(userId, stale, false);
+        this.logger.log(
+          `Digest skip: no fresh candidates after cutoff userId=${userId} stalePruned=${stalePruned} cutoff=${cutoff.toISOString()}`,
+        );
+      }
       return;
     }
 
     const jobs: DigestJobLine[] = await Promise.all(
-      pendings.map(async (p) => ({
+      fresh.map(async (p) => ({
         title: p.job.title,
         company: p.job.company,
         location: p.job.location,
@@ -110,8 +129,25 @@ export class EmailDigestProcessor extends WorkerHost {
       unsubscribeUrl,
     });
 
-    const pendingIds = pendings.map((p) => p.id);
-    const jobIds = pendings.map((p) => p.jobId);
+    const clearedRows = [...fresh, ...stale];
+    await this.persistDigestPersistence(userId, clearedRows, true);
+
+    this.logger.log(
+      `Digest completed userId=${userId} jobs=${fresh.length} stalePruned=${stalePruned} cutoff=${cutoff.toISOString()} message sent`,
+    );
+  }
+
+  /**
+   * Inserts notifications_sent for each (userId, jobId), deletes the given pending rows,
+   * and optionally sets users.lastDigestSentAt (only after a successful email send).
+   */
+  private async persistDigestPersistence(
+    userId: string,
+    rows: PendingMatchEmail[],
+    advanceLastDigestSentAt: boolean,
+  ): Promise<void> {
+    const jobIds = [...new Set(rows.map((r) => r.jobId))];
+    const pendingIds = rows.map((r) => r.id);
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -127,6 +163,13 @@ export class EmailDigestProcessor extends WorkerHost {
           .execute();
       }
       await queryRunner.manager.delete(PendingMatchEmail, { id: In(pendingIds) });
+      if (advanceLastDigestSentAt) {
+        await queryRunner.manager.update(
+          User,
+          { id: userId },
+          { lastDigestSentAt: () => 'NOW()' },
+        );
+      }
       await queryRunner.commitTransaction();
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -137,10 +180,6 @@ export class EmailDigestProcessor extends WorkerHost {
     } finally {
       await queryRunner.release();
     }
-
-    this.logger.log(
-      `Digest completed userId=${userId} jobs=${pendings.length} message sent`,
-    );
   }
 
   private async buildUnsubscribeUrl(userId: string): Promise<string> {

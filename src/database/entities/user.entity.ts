@@ -19,4 +19,8 @@ export class User {
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
+
+  /** Set after each successful digest email; used with createdAt to filter jobs by postedAt. */
+  @Column({ type: 'timestamptz', nullable: true })
+  lastDigestSentAt!: Date | null;
 }
