@@ -42,6 +42,11 @@ const REGION_ALIASES: Record<string, string> = {
   'ohio valley': 'central us',
   'mountain west': 'mountain west',
   'southeast us': 'east coast',
+  /** ATS phrasing variant of `southeast us`. */
+  'southeastern us': 'east coast',
+  /** Corporate listings (e.g. `West, US Region`). */
+  'west us region': 'west coast',
+  'central america': 'latam',
   'middle east': 'middle east',
   'central asia': 'central asia',
   'east asia': 'east asia',
@@ -91,6 +96,9 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'costa rice': 'costa rica',
   /** ISO 3166-1 alpha-2 in ATS strings (e.g. `Zürich, CH`). */
   ch: 'switzerland',
+  /** Common ATS typos. */
+  'united state': 'united states',
+  'unites states': 'united states',
 };
 
 const KNOWN_COUNTRIES = new Set<string>([
@@ -217,6 +225,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'iceland',
   'kuwait',
   'kosovo',
+  'seychelles',
 ]);
 
 /**
@@ -371,6 +380,8 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   marietta: ['georgia'],
   metairie: ['louisiana'],
   frisco: ['texas'],
+  reston: ['virginia'],
+  sterling: ['virginia'],
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -651,6 +662,17 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   pasig: 'philippines',
   'bay area': 'united states',
   'gift city': 'india',
+  rochester: 'united states',
+  reston: 'united states',
+  sterling: 'united states',
+  slough: 'united kingdom',
+  toulouse: 'france',
+  tübingen: 'germany',
+  tubingen: 'germany',
+  utrecht: 'netherlands',
+  valencia: 'spain',
+  skopje: 'north macedonia',
+  wiesbaden: 'germany',
 };
 
 /** Single generic English tokens that can precede geography but are not employer names. */
@@ -1053,6 +1075,9 @@ function normalizeKnownLocationPhrases(raw: string): string {
     /** Hangzhou spelling variants (ATS / romanization noise). */
     .replace(/\bhang\s+zhou\b/gi, 'Hangzhou')
     .replace(/\bhangzhou\b/gi, 'Hangzhou')
+    /** ATS spelling mistakes (`United State`, `Unites States`). */
+    .replace(/\bunites\s+states\b/gi, 'United States')
+    .replace(/\bunited\s+state\b/gi, 'United States')
     /** `EMEA- EU` → spaced hyphen so hyphen-split sees separate facets. */
     .replace(/([A-Za-z]{2,})-\s+/g, '$1 - ')
     /** GIFT City (Gujarat, India) — comma-separate so APAC and India both resolve. */
@@ -1093,6 +1118,31 @@ function normalizeKnownLocationPhrases(raw: string): string {
     /** Remote zone shorthand → geography tokens. */
     .replace(/\bremote\s+us\s+east\b/gi, 'East Coast, United States')
     .replace(/\bremote\s+position\b/gi, 'Remote')
+    .replace(
+      /\bremote\s*\|\s*must\s+be\s+located\s+and\s+willing\s+to\s+travel\s+in\s+the\s+middle\s+east\b/gi,
+      'Middle East',
+    )
+    .replace(
+      /\bremote\s*,\s*springfield\s+il\s*,\s*plano\s+tx\b/gi,
+      'Springfield, IL; Plano, TX',
+    )
+    .replace(/\bremote-central\s+america\b/gi, 'Latin America')
+    .replace(/\bremote\/hybrid\s*\(\s*socal\s*\)/gi, 'California, United States')
+    .replace(/\bremote\s*:\s*boston\s+area\b/gi, 'Boston, MA')
+    .replace(/\bremote\s*:\s*northeast\s+us\b/gi, 'East Coast, United States')
+    .replace(/\breston\/dulles\s+virginia\b/gi, 'Reston, VA')
+    .replace(/\bsf\s+bay\s+area\s*\/\s*remote\b/gi, 'San Francisco Bay Area, California')
+    .replace(
+      /\bsf\s+bay\s+area\s+or\s+nyc\s+preferred\s*,\s*or\s+remote\b/gi,
+      'San Francisco, CA; New York, NY',
+    )
+    .replace(
+      /\bsan\s+francisco\s+and\/or\s+us\s+remote\b/gi,
+      'San Francisco, CA, United States',
+    )
+    .replace(/\bwest\s*,\s*us\s+region\b/gi, 'West Coast, United States')
+    .replace(/\bst\.\s*francis\s+wi\b/gi, 'St. Francis, WI')
+    .replace(/\bsoutheastern\s+us\b/gi, 'Southeast US, United States')
     .replace(/\bremote-uk&i\b/gi, 'United Kingdom, Ireland')
     .replace(/\bremote-iberia\b/gi, 'Iberia')
     .replace(/\bremote-noram\b/gi, 'North America')
@@ -1238,6 +1288,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/^\s*passive\s+posting\s*$/gi, '')
     .replace(/^\s*other\s+locations\s*$/gi, '')
     .replace(/^\s*on-site\s+at\s+project\s+location\s*$/gi, '')
+    .replace(/^\s*various\s+locations\s*$/gi, '')
     /** Whole-line remote-ish macros → worldwide region for facets. */
     .replace(/^\s*fully\s+remote\s*$/gi, 'Worldwide')
     /** SpaceX-style multi-site listing — approximate US-wide for geography facets. */
@@ -1389,6 +1440,24 @@ function splitLocation(raw: string): string[] {
   return segments;
 }
 
+/** True when this comma segment resolves to `united states` (explicit name or alias like `usa`). */
+function mapsToUnitedStates(trimmedBit: string): boolean {
+  const fk =
+    US_METRO_ABBREV_TO_TOKEN[trimmedBit] ??
+    US_STATE_POSTAL_TO_TOKEN[trimmedBit] ??
+    CANADA_PROVINCE_POSTAL_TO_TOKEN[trimmedBit] ??
+    trimmedBit;
+  if (fk === 'united states') {
+    return true;
+  }
+  const alias =
+    (COUNTRY_ALIASES[trimmedBit as keyof typeof COUNTRY_ALIASES] as
+      | string
+      | undefined) ??
+    (COUNTRY_ALIASES[fk as keyof typeof COUNTRY_ALIASES] as string | undefined);
+  return alias === 'united states';
+}
+
 export function extractLocationFacets(rawLocation: string): LocationFacets {
   const countries = new Set<string>();
   const regions = new Set<string>();
@@ -1406,7 +1475,19 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       .map((bit) => bit.trim())
       .filter((bit) => bit.length > 0);
 
-    for (const bit of commaBits.length > 0 ? commaBits : [normalizedPart]) {
+    const bitsSource =
+      commaBits.length > 0 ? commaBits : [normalizedPart];
+    const trimmedBits = bitsSource
+      .map((bit) =>
+        stripLeadingInSegment(
+          bit.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim(),
+        ),
+      )
+      .filter((b): b is string => b.length > 0);
+
+    const hasUnitedStatesSibling = trimmedBits.some(mapsToUnitedStates);
+
+    for (const bit of bitsSource) {
       const trimmedBit = stripLeadingInSegment(
         bit.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim(),
       );
@@ -1425,7 +1506,16 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
         trimmedBit;
       tokens.add(facetKey);
 
-      if (US_STATE_NAME_SET.has(facetKey) && !KNOWN_COUNTRIES.has(facetKey)) {
+      /** `Georgia` is both US state and country; explicit `United States` / `USA` in the same segment picks the state. */
+      const georgiaAsUsState =
+        facetKey === 'georgia' &&
+        US_STATE_NAME_SET.has('georgia') &&
+        hasUnitedStatesSibling;
+
+      if (
+        US_STATE_NAME_SET.has(facetKey) &&
+        (!KNOWN_COUNTRIES.has(facetKey) || georgiaAsUsState)
+      ) {
         countries.add('united states');
         tokens.add('united states');
       }
@@ -1440,7 +1530,11 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       }
 
       const mappedCountry = COUNTRY_ALIASES[facetKey] ?? facetKey;
-      if (!fromUsStatePostal && KNOWN_COUNTRIES.has(mappedCountry)) {
+      if (
+        !fromUsStatePostal &&
+        KNOWN_COUNTRIES.has(mappedCountry) &&
+        !(georgiaAsUsState && mappedCountry === 'georgia')
+      ) {
         countries.add(mappedCountry);
         tokens.add(mappedCountry);
       }
