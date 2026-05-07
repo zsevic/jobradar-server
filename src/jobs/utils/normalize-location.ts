@@ -43,6 +43,8 @@ const REGION_ALIASES: Record<string, string> = {
   /** Corporate remote macro-regions. */
   'northeast asia': 'northeast asia',
   cis: 'cis',
+  /** Macro-region (jobs boards). */
+  'south-central asia': 'south-central asia',
 };
 
 /** Lowercase; matches `Intl.DisplayNames(['en'], { type: 'region' }).of('CI').toLowerCase()` (d’Ivoire uses U+2019). */
@@ -206,6 +208,7 @@ const KNOWN_COUNTRIES = new Set<string>([
   'haiti',
   'qatar',
   'iceland',
+  'kuwait',
 ]);
 
 /**
@@ -338,6 +341,19 @@ const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
   walnut: ['california'],
   'glen cove': ['new york'],
   memphis: ['tennessee'],
+  portland: ['oregon'],
+  jacksonville: ['florida'],
+  'kansas city': ['missouri'],
+  louisville: ['kentucky'],
+  miami: ['florida'],
+  milwaukee: ['wisconsin'],
+  'new orleans': ['louisiana'],
+  newark: ['new jersey'],
+  'virginia beach': ['virginia'],
+  wichita: ['kansas'],
+  'old greenwich': ['connecticut'],
+  tysons: ['virginia'],
+  mojave: ['california'],
 };
 
 const CITY_COUNTRY_HINTS: Record<string, string> = {
@@ -390,6 +406,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   warszawa: 'poland',
   warsaw: 'poland',
   toronto: 'canada',
+  vancouver: 'canada',
   atlanta: 'united states',
   'mexico city': 'mexico',
   seattle: 'united states',
@@ -401,6 +418,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   malaga: 'spain',
   málaga: 'spain',
   milan: 'italy',
+  rome: 'italy',
   dallas: 'united states',
   'fort worth': 'united states',
   texas: 'united states',
@@ -437,6 +455,10 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   kaunas: 'lithuania',
   marseille: 'france',
   nantes: 'france',
+  nancy: 'france',
+  strasbourg: 'france',
+  orléans: 'france',
+  orleans: 'france',
   montreal: 'canada',
   montréal: 'canada',
   detroit: 'united states',
@@ -537,6 +559,19 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   phoenix: 'united states',
   indianapolis: 'united states',
   memphis: 'united states',
+  portland: 'united states',
+  jacksonville: 'united states',
+  'kansas city': 'united states',
+  louisville: 'united states',
+  miami: 'united states',
+  milwaukee: 'united states',
+  'new orleans': 'united states',
+  newark: 'united states',
+  'virginia beach': 'united states',
+  wichita: 'united states',
+  'old greenwich': 'united states',
+  tysons: 'united states',
+  mojave: 'united states',
   omaha: 'united states',
   'san antonio': 'united states',
   northlake: 'united states',
@@ -566,6 +601,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   dubai: 'united arab emirates',
   tbilisi: 'georgia',
   'tel aviv': 'israel',
+  /** Airport / job-board shorthand. */
+  tlv: 'israel',
   'ramat gan': 'israel',
   abuja: 'nigeria',
   abidjan: COTE_DIVOIRE,
@@ -575,6 +612,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   split: 'croatia',
   almaty: 'kazakhstan',
   cebu: 'philippines',
+  pasig: 'philippines',
   'bay area': 'united states',
   'gift city': 'india',
 };
@@ -1021,8 +1059,12 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bremote\s*-\s*u\.s\.a\.?\b/gi, 'United States')
     .replace(/\bremote\s+us\s+central\b/gi, 'Central US, United States')
     .replace(/\bremote\s*-\s*ga\b/gi, 'Georgia, United States')
-    /** Drop timezone blurbs after “Remote |” (not only end-of-string). */
+    /** Drop timezone blurbs after “Remote |” (`UTC-6 to UTC+2`, etc.). */
     .replace(/\bremote\s*\|\s*utc\b[^,;|]*/gi, 'Remote')
+    .replace(
+      /\bremote\s*\|\s*utc[\s\-+\d.]*(?:\s+to\s+utc[\s\-+\d.]*)?/gi,
+      'Remote',
+    )
     /** ATS noise — not a geography (whole string only). */
     .replace(/^\s*field\s*$/gi, '')
     .replace(/^\s*permanent\s*$/gi, '')
@@ -1062,6 +1104,33 @@ function normalizeKnownLocationPhrases(raw: string): string {
       /\b(?:hybrid|on-site)\s*-\s*oulu\s*,\s*north\s+ostrobothnia\b/gi,
       'Oulu, Finland',
     )
+    /** Common US city + remote hub phrases (ATS). */
+    .replace(/\bnew\s+york\s+ny\b/gi, 'New York, NY')
+    .replace(/\bportland\s*,\s*or\b/gi, 'Portland, Oregon')
+    .replace(/\bportland\s+or\b/gi, 'Portland, Oregon')
+    .replace(/\bglen\s+cove\s*,\s*ny\b/gi, 'Glen Cove, NY')
+    .replace(/\bpasig\s*,\s*phl\b/gi, 'Pasig, Philippines')
+    .replace(/\bremote\s*-\s*washington\s*,\s*d\.c\.\b/gi, 'Washington, DC')
+    .replace(/\bremote\s*-\s*jacksonville\b/gi, 'Jacksonville, FL')
+    .replace(/\bremote\s*-\s*kansas\s+city\b/gi, 'Kansas City, MO')
+    .replace(/\bremote\s*-\s*louisville\b/gi, 'Louisville, KY')
+    .replace(/\bremote\s*-\s*miami\b/gi, 'Miami, FL')
+    .replace(/\bremote\s*-\s*milwaukee\b/gi, 'Milwaukee, WI')
+    .replace(/\bremote\s*-\s*new\s+orleans\b/gi, 'New Orleans, LA')
+    .replace(/\bremote\s*-\s*newark\b/gi, 'Newark, NJ')
+    .replace(/\bremote\s*-\s*oklahoma\s+city\b/gi, 'Oklahoma City, OK')
+    .replace(/\bremote\s*-\s*vancouver\b/gi, 'Vancouver, Canada')
+    .replace(/\bremote\s*-\s*virginia\s+beach\b/gi, 'Virginia Beach, VA')
+    .replace(/\bremote\s*-\s*wichita\b/gi, 'Wichita, KS')
+    /** After specific cities — “Remote - OK” = Oklahoma (state), not “OK” word sense. */
+    .replace(/\bremote\s*-\s*ok\b/gi, 'Oklahoma, United States')
+    .replace(/\bremote\s+anywhere\s+in\s+the\s+world\b/gi, 'Worldwide')
+    .replace(/\bremote\s*:\s*west\s+coast\s+us\b/gi, 'West Coast, United States')
+    /** ATS placeholder strings — whole-line only (no geography). */
+    .replace(/^\s*talent\s+pool\s*$/gi, '')
+    .replace(/^\s*add\s+all\s+locations\s+here\s*$/gi, '')
+    .replace(/^\s*btc\s*$/gi, '')
+    .replace(/^\s*hq\s*$/gi, '')
     /** Non-geographic ATS filler. */
     .replace(/\bflexible\s*-\s*any\s+site\b/gi, '');
   return stripEmployerBrandFromLocation(preStripped)
