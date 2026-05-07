@@ -1741,7 +1741,6 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.GREENHOUSE, externalId: 'branch', name: 'Branch' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'sezzle', name: 'Sezzle' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'gympass', name: 'Gympass' },
-  { provider: SourceProvider.GREENHOUSE, externalId: 'stone', name: 'Stone' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'addepar1', name: 'Addepar' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'mixpanel', name: 'Mixpanel' },
   {
