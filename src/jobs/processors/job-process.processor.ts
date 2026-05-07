@@ -13,6 +13,7 @@ import {
   stripCompanyNameFromLocation,
 } from '../utils/clean-location';
 import {
+  canonicalizeCountryHint,
   extractCountryMentionsFromText,
   extractLocationFacets,
 } from '../utils/normalize-location';
@@ -117,9 +118,10 @@ export class JobProcessProcessor extends WorkerHost {
       const regionHints = hintedCountries.filter((hint) =>
         this.REGION_HINTS.has(hint),
       );
-      const countryHints = hintedCountries.filter(
-        (hint) => !this.REGION_HINTS.has(hint),
-      );
+      const countryHints = hintedCountries
+        .filter((hint) => !this.REGION_HINTS.has(hint))
+        .map((hint) => canonicalizeCountryHint(hint))
+        .filter((hint) => hint.length > 0);
 
       const mergedCountries = new Set<string>([
         ...locationFacets.countries,

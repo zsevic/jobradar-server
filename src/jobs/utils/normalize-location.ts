@@ -921,6 +921,9 @@ function applyHyphenEmployerBrandSplit(t: string): string {
     /\([^)]+\)/.test(right) ||
     /\b(remote|hybrid|distributed|worldwide)\b/i.test(right) ||
     geoHintWordsInSegment(right);
+  const leftHasMultiLocationSeparators = /[|;/]/.test(left);
+  const leftGeoLike = geoHintWordsInSegment(left);
+  const bothSidesGeoLike = leftGeoLike && rightGeo;
   const leftKey = left.toLowerCase().replace(/\s+/g, ' ').trim();
   const leftMapped =
     (COUNTRY_ALIASES[leftKey as keyof typeof COUNTRY_ALIASES] as
@@ -933,6 +936,11 @@ function applyHyphenEmployerBrandSplit(t: string): string {
     !!COUNTRY_ALIASES[leftKey as keyof typeof COUNTRY_ALIASES] ||
     !!CITY_COUNTRY_HINTS[leftKey];
   if (leftCorp || rightGeo) {
+    // Preserve multi-location or geo-rich chains like
+    // "Remote U.S. | Remote - Canada" — not an employer-brand prefix.
+    if (leftHasMultiLocationSeparators || bothSidesGeoLike) {
+      return t;
+    }
     if (leftIsGeoAnchor && isWorkModeOnlySegment(right)) {
       return t;
     }
@@ -1542,7 +1550,9 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
         US_STATE_POSTAL_TO_TOKEN[trimmedBit] ??
         CANADA_PROVINCE_POSTAL_TO_TOKEN[trimmedBit] ??
         trimmedBit;
-      tokens.add(facetKey);
+      const mappedCountry = COUNTRY_ALIASES[facetKey] ?? facetKey;
+      // Keep canonical country tokens (e.g. "czech republic" -> "czechia").
+      tokens.add(KNOWN_COUNTRIES.has(mappedCountry) ? mappedCountry : facetKey);
 
       /** `Georgia` is both US state and country; explicit `United States` / `USA` in the same segment picks the state. */
       const georgiaAsUsState =
@@ -1567,7 +1577,6 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
         regions.add(mappedRegion);
       }
 
-      const mappedCountry = COUNTRY_ALIASES[facetKey] ?? facetKey;
       if (
         !fromUsStatePostal &&
         KNOWN_COUNTRIES.has(mappedCountry) &&
@@ -1680,4 +1689,16 @@ export function extractCountryMentionsFromText(text: string): string[] {
     }
   }
   return Array.from(found);
+}
+
+/**
+ * Canonicalize provider-supplied country hints (e.g. `USA` -> `united states`)
+ * to match stored facet country vocabulary.
+ */
+export function canonicalizeCountryHint(countryHint: string): string {
+  const normalized = countryHint.trim().toLowerCase();
+  if (!normalized) {
+    return normalized;
+  }
+  return COUNTRY_ALIASES[normalized] ?? normalized;
 }
