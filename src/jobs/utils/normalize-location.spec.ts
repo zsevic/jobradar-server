@@ -36,6 +36,15 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('germany');
   });
 
+  it('canonicalizes CZE prefix to czechia without raw cze token', () => {
+    const facets = extractLocationFacets('CZE - Brno');
+
+    expect(facets.countries).toContain('czechia');
+    expect(facets.tokens).toContain('czechia');
+    expect(facets.tokens).toContain('brno');
+    expect(facets.tokens).not.toContain('cze');
+  });
+
   it('canonicalizes bosnia aliases to bosnia & herzegovina', () => {
     const facets = extractLocationFacets(
       'Bosnia and Herzegovina | Bosnia & Herzegovina',
@@ -104,6 +113,40 @@ describe('extractLocationFacets', () => {
     expect(facets.countries).toContain('finland');
     expect(facets.tokens).toContain('turku');
     expect(facets.tokens).toContain('finland');
+  });
+
+  it('maps us full-time to united states only', () => {
+    const facets = extractLocationFacets('US Full-time');
+
+    expect(facets.countries).toEqual(['united states']);
+    expect(facets.tokens).toContain('united states');
+    expect(facets.tokens).not.toContain('us full-time');
+  });
+
+  it('maps aarhus to denmark', () => {
+    const facets = extractLocationFacets('Aarhus');
+
+    expect(facets.countries).toContain('denmark');
+    expect(facets.tokens).toContain('aarhus');
+    expect(facets.tokens).toContain('denmark');
+  });
+
+  it('maps recklinghausen to germany', () => {
+    const facets = extractLocationFacets('Recklinghausen');
+
+    expect(facets.countries).toContain('germany');
+    expect(facets.tokens).toContain('recklinghausen');
+    expect(facets.tokens).toContain('germany');
+  });
+
+  it('maps doha to qatar', () => {
+    const facets = extractLocationFacets('Abu Dhabi | Doha');
+
+    expect(facets.countries).toEqual(
+      expect.arrayContaining(['united arab emirates', 'qatar']),
+    );
+    expect(facets.tokens).toContain('doha');
+    expect(facets.tokens).toContain('qatar');
   });
 
   it('maps cayman alias to cayman islands country', () => {

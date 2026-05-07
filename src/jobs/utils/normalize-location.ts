@@ -76,6 +76,7 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'great britain': 'united kingdom',
   uae: 'united arab emirates',
   'czech republic': 'czechia',
+  cze: 'czechia',
   'south korea': 'south korea',
   'republic of korea': 'south korea',
   'russian federation': 'russia',
@@ -571,6 +572,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   connacht: 'ireland',
   corby: 'united kingdom',
   darmstadt: 'germany',
+  recklinghausen: 'germany',
   stuttgart: 'germany',
   hannover: 'germany',
   kassel: 'germany',
@@ -632,6 +634,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   wallingford: 'united kingdom',
   longbridge: 'united kingdom',
   ottawa: 'canada',
+  aarhus: 'denmark',
   philadelphia: 'united states',
   'salt lake city': 'united states',
   charlotte: 'united states',
@@ -659,6 +662,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   lagos: 'nigeria',
   'abu dhabi': 'united arab emirates',
   dubai: 'united arab emirates',
+  doha: 'qatar',
   tbilisi: 'georgia',
   'tel aviv': 'israel',
   /** Airport / job-board shorthand. */
@@ -1432,6 +1436,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bremote\s+in\s+the\s+(usa|us)\b/gi, 'United States')
     .replace(/\bus\s*[-–—]\s*distributed\b/gi, 'United States')
     .replace(/\bus\s*[-–—]\s*illinois\b/gi, 'Illinois, United States')
+    .replace(/\bus\s+full[-\s]?time\b/gi, 'United States')
     .replace(/\bwashington\s+dc\b/gi, 'Washington, DC')
     .replace(/\breading\s*\(\s*london\s*\)/gi, 'Reading, United Kingdom')
     .replace(/\b([a-z0-9]+)\s*\(\s*can\s*\)/gi, '$1, Canada')
