@@ -51,6 +51,14 @@ interface AshbyApiResponse {
   jobs: AshbyApiJob[];
 }
 
+function resolveValidDate(value?: string | Date | null): Date | null {
+  if (value == null) {
+    return null;
+  }
+  const d = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 @Injectable()
 export class AshbyAdapter implements JobProviderAdapter {
   private readonly logger = new Logger(AshbyAdapter.name);
@@ -75,9 +83,7 @@ export class AshbyAdapter implements JobProviderAdapter {
     );
 
     return jobs
-      .filter(
-        (job) => (job.isListed ?? true) && !!job.title && !!job.publishedAt,
-      )
+      .filter((job) => (job.isListed ?? true) && !!job.title)
       .map((job) => {
         const { rawLocation, countryHints } = this.resolveRawLocation(job);
         const geoRaw = stripCompanyNameFromLocation(rawLocation, sourceName);
@@ -110,7 +116,8 @@ export class AshbyAdapter implements JobProviderAdapter {
           locationCountryHints: countryHints,
           remoteIndicatedByProvider,
           isRemote,
-          postedAt: new Date(job.publishedAt as string),
+          postedAt:
+            resolveValidDate(job.publishedAt) ?? new Date(),
           url,
           role: role === 'other' ? null : role,
           stack: extractStackFromJobText(title, job.descriptionPlain, role),

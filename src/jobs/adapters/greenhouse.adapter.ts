@@ -36,6 +36,7 @@ interface GreenhouseJob {
   /** Custom fields — some companies expose office/geo under "Job Posting Location". */
   metadata?: GreenhouseMetadataItem[];
   updated_at?: string;
+  first_published?: string;
   absolute_url?: string;
   content?: string;
 }
@@ -131,6 +132,14 @@ function isNonGeographicGreenhouseLocation(name: string): boolean {
  * Prefer `location.name`; when it is empty or non-geographic and metadata has
  * "Job Posting Location", use that for normalization / facets.
  */
+function resolveValidDate(value?: string | Date | null): Date | null {
+  if (value == null) {
+    return null;
+  }
+  const d = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 function resolveGreenhouseGeoRaw(
   locationName: string | undefined,
   metadata: GreenhouseMetadataItem[] | undefined,
@@ -201,7 +210,10 @@ export class GreenhouseAdapter implements JobProviderAdapter {
           location,
           locationRaw: geoRaw,
           isRemote,
-          postedAt: job.updated_at ? new Date(job.updated_at) : new Date(),
+          postedAt:
+            resolveValidDate(job.updated_at) ??
+            resolveValidDate(job.first_published) ??
+            new Date(),
           url: job.absolute_url as string,
           role: role === 'other' ? null : role,
           stack,

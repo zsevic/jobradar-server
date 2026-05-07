@@ -42,11 +42,20 @@ interface WorkableJob {
   location?: WorkableLocation;
   locations?: WorkableLocation[];
   created_at?: string;
+  published_on?: string;
   state?: string;
 }
 
 interface WorkableJobsResponse {
   jobs: WorkableJob[];
+}
+
+function resolveValidDate(value?: string | Date | null): Date | null {
+  if (value == null) {
+    return null;
+  }
+  const d = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 @Injectable()
@@ -108,7 +117,10 @@ export class WorkableAdapter implements JobProviderAdapter {
           locationRaw: geoRaw,
           remoteIndicatedByProvider,
           isRemote,
-          postedAt: job.created_at ? new Date(job.created_at) : new Date(),
+          postedAt:
+            resolveValidDate(job.created_at) ??
+            resolveValidDate(job.published_on) ??
+            new Date(),
           url: (job.url || job.shortlink) as string,
           role: role === 'other' ? null : role,
           stack,
