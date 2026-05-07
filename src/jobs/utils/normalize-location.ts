@@ -462,6 +462,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   malaga: 'spain',
   málaga: 'spain',
   milan: 'italy',
+  pisa: 'italy',
   rome: 'italy',
   dallas: 'united states',
   'fort worth': 'united states',
@@ -1433,6 +1434,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bcongo\s*,?\s*brazzaville\b/gi, 'Congo - Brazzaville')
     .replace(/\bnew\s+york\s+city\s+area\b/gi, 'New York')
     .replace(/\bnew\s+york\s+city\b/gi, 'New York')
+    .replace(/\bseattle\s+metro\b/gi, 'Seattle')
     .replace(/,\s*ca\s+united\s+states\b/gi, ', CA, United States')
     .replace(/\bhq\s*:\s*/gi, '')
     .replace(/\bremote\s+u\.s\.?\b/gi, 'United States')
@@ -1469,7 +1471,9 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bremote\s+in\s+the\s+(usa|us)\b/gi, 'United States')
     .replace(/\bus\s*[-–—]\s*distributed\b/gi, 'United States')
     .replace(/\bus\s*[-–—]\s*illinois\b/gi, 'Illinois, United States')
+    .replace(/\bus\s*[-–—]\s*based\b/gi, 'United States')
     .replace(/\bus\s+full[-\s]?time\b/gi, 'United States')
+    .replace(/\bindia\s+team\b/gi, 'India')
     .replace(/\bwashington\s+dc\b/gi, 'Washington, DC')
     .replace(/\breading\s*\(\s*london\s*\)/gi, 'Reading, United Kingdom')
     .replace(/\b([a-z0-9]+)\s*\(\s*can\s*\)/gi, '$1, Canada')

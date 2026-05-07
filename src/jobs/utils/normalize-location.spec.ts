@@ -140,6 +140,15 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('united kingdom');
   });
 
+  it('maps seattle metro to united states', () => {
+    const facets = extractLocationFacets('Seattle Metro');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toContain('seattle');
+    expect(facets.tokens).toContain('united states');
+    expect(facets.tokens).not.toContain('seattle metro');
+  });
+
   it('maps turku to finland', () => {
     const facets = extractLocationFacets('Turku');
 
@@ -173,6 +182,22 @@ describe('extractLocationFacets', () => {
     expect(facets.countries).toEqual(['united states']);
     expect(facets.tokens).toContain('united states');
     expect(facets.tokens).not.toContain('us full-time');
+  });
+
+  it('maps us-based to united states', () => {
+    const facets = extractLocationFacets('US-based');
+
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toContain('united states');
+    expect(facets.tokens).not.toContain('us-based');
+  });
+
+  it('maps india team to india', () => {
+    const facets = extractLocationFacets('India Team');
+
+    expect(facets.countries).toContain('india');
+    expect(facets.tokens).toContain('india');
+    expect(facets.tokens).not.toContain('india team');
   });
 
   it('keeps both countries for remote us and canada strings', () => {
@@ -209,6 +234,14 @@ describe('extractLocationFacets', () => {
     expect(facets.countries).toContain('germany');
     expect(facets.tokens).toContain('recklinghausen');
     expect(facets.tokens).toContain('germany');
+  });
+
+  it('maps pisa to italy', () => {
+    const facets = extractLocationFacets('Pisa');
+
+    expect(facets.countries).toContain('italy');
+    expect(facets.tokens).toContain('pisa');
+    expect(facets.tokens).toContain('italy');
   });
 
   it('maps erding to germany', () => {
