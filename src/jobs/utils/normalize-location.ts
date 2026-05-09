@@ -256,6 +256,11 @@ const KNOWN_COUNTRIES = new Set<string>([
   'cayman islands',
 ]);
 
+/** Longest first so e.g. `united kingdom` wins over `india` when matching suffixes. */
+const KNOWN_COUNTRY_PHRASES_SORTED = [...KNOWN_COUNTRIES].sort(
+  (a, b) => b.length - a.length,
+);
+
 /**
  * Common US city abbreviations → normalized city tokens (applied before state abbreviations).
  * `la` maps here so it means Los Angeles, not Louisiana’s postal code LA.
@@ -346,6 +351,28 @@ const CANADA_PROVINCE_POSTAL_TO_TOKEN: Record<string, string> = {
 const CANADA_PROVINCE_NAME_SET = new Set<string>(
   Object.values(CANADA_PROVINCE_POSTAL_TO_TOKEN),
 );
+
+const US_STATE_FULL_NAMES_SORTED = [...US_STATE_NAME_SET].sort(
+  (a, b) => b.length - a.length,
+);
+
+/** Two-letter {@link COUNTRY_ALIASES} keys that are not US / CA province postals (e.g. `uk`, `ch`). */
+const ISO2_COUNTRY_SUFFIX_KEYS = new Set(
+  Object.keys(COUNTRY_ALIASES).filter(
+    (k) =>
+      k.length === 2 &&
+      !Object.prototype.hasOwnProperty.call(US_STATE_POSTAL_TO_TOKEN, k) &&
+      !Object.prototype.hasOwnProperty.call(CANADA_PROVINCE_POSTAL_TO_TOKEN, k),
+  ),
+);
+
+/** Avoid splitting region names like `South Australia` into `south` + `australia`. */
+const AUSTRALIAN_STATE_LEADING_TOKEN_BLOCKLIST = new Set([
+  'south',
+  'western',
+  'northern',
+  'tasmanian',
+]);
 
 /** Extra geographic tokens to record when a city hint matches (e.g. known metro region). */
 const EXTRA_TOKENS_FOR_CITY_HINT: Record<string, string[]> = {
@@ -452,6 +479,10 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   amsterdam: 'netherlands',
   alkmaar: 'netherlands',
   hilversum: 'netherlands',
+  haarlem: 'netherlands',
+  rotterdam: 'netherlands',
+  randstad: 'netherlands',
+  'the randstad': 'netherlands',
   'são paulo': 'brazil',
   'sao paulo': 'brazil',
   bogota: 'colombia',
@@ -506,6 +537,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'new kensington': 'united states',
   denver: 'united states',
   nashville: 'united states',
+  shreveport: 'united states',
+  'san diego': 'united states',
   hillsboro: 'united states',
   boston: 'united states',
   austin: 'united states',
@@ -688,6 +721,13 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   longbridge: 'united kingdom',
   ottawa: 'canada',
   aarhus: 'denmark',
+  hillerød: 'denmark',
+  hillerod: 'denmark',
+  greve: 'denmark',
+  esbjerg: 'denmark',
+  roskilde: 'denmark',
+  silkeborg: 'denmark',
+  vejle: 'denmark',
   philadelphia: 'united states',
   'salt lake city': 'united states',
   charlotte: 'united states',
@@ -1635,6 +1675,96 @@ function mapsToUnitedStates(trimmedBit: string): boolean {
   return alias === 'united states';
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** `Denver CO` → city + US postal so both Colorado and United States resolve. */
+function splitTrailingUsStatePostal(segment: string): string[] {
+  const t = segment.trim().toLowerCase().replace(/\s+/g, ' ');
+  const m = t.match(/^(.+?)\s+([a-z]{2})$/);
+  if (!m) {
+    return [segment];
+  }
+  const st = m[2];
+  if (!Object.prototype.hasOwnProperty.call(US_STATE_POSTAL_TO_TOKEN, st)) {
+    return [segment];
+  }
+  return [m[1].trim(), st];
+}
+
+/** `Shreveport Louisiana` → city + US state name token. */
+function splitTrailingUsStateFullName(segment: string): string[] {
+  const t = segment.trim().toLowerCase().replace(/\s+/g, ' ');
+  for (const stateName of US_STATE_FULL_NAMES_SORTED) {
+    if (t === stateName) {
+      return [segment];
+    }
+    if (!t.endsWith(stateName)) {
+      continue;
+    }
+    const remainder = t.slice(0, t.length - stateName.length);
+    if (!remainder.endsWith(' ')) {
+      continue;
+    }
+    const cityPart = remainder.trimEnd();
+    if (cityPart.length === 0) {
+      continue;
+    }
+    return [cityPart, stateName];
+  }
+  return [segment];
+}
+
+/** `London UK` / `Geneva CH` → city + ISO-2 alias (not US/CA postal collisions). */
+function splitTrailingIsoCountrySuffix(segment: string): string[] {
+  const t = segment.trim().toLowerCase().replace(/\s+/g, ' ');
+  const m = t.match(/^(.+?)\s+([a-z]{2})$/);
+  if (!m) {
+    return [segment];
+  }
+  const suf = m[2];
+  if (!ISO2_COUNTRY_SUFFIX_KEYS.has(suf)) {
+    return [segment];
+  }
+  return [m[1].trim(), suf];
+}
+
+/** `Mumbai India` → city + trailing known country phrase. */
+function splitTrailingKnownCountryWord(segment: string): string[] {
+  const t = segment.trim().toLowerCase().replace(/\s+/g, ' ');
+  for (const country of KNOWN_COUNTRY_PHRASES_SORTED) {
+    const re = new RegExp(`^(.+?)\\s+${escapeRegExp(country)}$`, 'i');
+    const m = t.match(re);
+    if (!m || m[1].trim().length === 0) {
+      continue;
+    }
+    const left = m[1].trim();
+    if (
+      country === 'australia' &&
+      !left.includes(' ') &&
+      AUSTRALIAN_STATE_LEADING_TOKEN_BLOCKLIST.has(left)
+    ) {
+      continue;
+    }
+    return [left, country];
+  }
+  return [segment];
+}
+
+function expandCommaSegmentToFacetTokens(rawBit: string): string[] {
+  const trimmed = rawBit.trim();
+  if (!trimmed) {
+    return [];
+  }
+  let parts = [trimmed];
+  parts = parts.flatMap((p) => splitTrailingUsStatePostal(p));
+  parts = parts.flatMap((p) => splitTrailingUsStateFullName(p));
+  parts = parts.flatMap((p) => splitTrailingIsoCountrySuffix(p));
+  parts = parts.flatMap((p) => splitTrailingKnownCountryWord(p));
+  return parts.filter((p) => p.length > 0);
+}
+
 export function extractLocationFacets(rawLocation: string): LocationFacets {
   const countries = new Set<string>();
   const regions = new Set<string>();
@@ -1653,7 +1783,9 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       .filter((bit) => bit.length > 0);
 
     const bitsSource =
-      commaBits.length > 0 ? commaBits : [normalizedPart];
+      commaBits.length > 0
+        ? commaBits.flatMap((bit) => expandCommaSegmentToFacetTokens(bit))
+        : expandCommaSegmentToFacetTokens(normalizedPart);
     const trimmedBits = bitsSource
       .map((bit) =>
         stripLeadingInSegment(
@@ -1770,10 +1902,6 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
     countries: Array.from(countries),
     regions: Array.from(regions),
   };
-}
-
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**

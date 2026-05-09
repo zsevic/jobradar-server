@@ -296,6 +296,33 @@ describe('extractLocationFacets', () => {
     );
   });
 
+  it('adds countries for US state phrases, multi-city postal, India suffix, ISO UK/CH, NL/DK cities', () => {
+    expect(extractLocationFacets('Shreveport, Louisiana').countries).toContain(
+      'united states',
+    );
+    const multi = extractLocationFacets(
+      'Denver CO, Atlanta GA, Chicago IL, San Diego CA, Los Angeles CA, Salt Lake City UT',
+    );
+    expect(multi.countries).toContain('united states');
+
+    expect(extractLocationFacets('Mumbai India').countries).toContain('india');
+    expect(extractLocationFacets('Rotterdam').countries).toContain('netherlands');
+    expect(extractLocationFacets('Haarlem').countries).toContain('netherlands');
+    expect(extractLocationFacets('The Randstad').countries).toContain('netherlands');
+
+    expect(extractLocationFacets('Hillerød').countries).toContain('denmark');
+    expect(extractLocationFacets('Greve').countries).toContain('denmark');
+    expect(extractLocationFacets('Esbjerg').countries).toContain('denmark');
+    expect(extractLocationFacets('Roskilde').countries).toContain('denmark');
+    expect(extractLocationFacets('Silkeborg').countries).toContain('denmark');
+    expect(extractLocationFacets('Vejle').countries).toContain('denmark');
+
+    const lonCh = extractLocationFacets('London UK, Geneva CH');
+    expect(lonCh.countries).toEqual(
+      expect.arrayContaining(['united kingdom', 'switzerland']),
+    );
+  });
+
   it('maps us east coast to east coast region', () => {
     const facets = extractLocationFacets('US East Coast');
 
