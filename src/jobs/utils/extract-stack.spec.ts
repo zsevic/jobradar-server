@@ -1,6 +1,19 @@
 import { classifyRoleFromTitle } from './extract-stack';
 
 describe('classifyRoleFromTitle', () => {
+  it('classifies python expert as engineer', () => {
+    expect(classifyRoleFromTitle('Python Expert')).toBe('engineer');
+  });
+
+  it('classifies expert … python phrasing as engineer when no stack band matched', () => {
+    expect(classifyRoleFromTitle('Expert Backend — Python')).toBe('backend');
+    expect(classifyRoleFromTitle('Expert Backend - Python')).toBe('backend');
+    expect(classifyRoleFromTitle('Senior Expert, Python')).toBe('engineer');
+    expect(classifyRoleFromTitle('Lead Expert / Python Platform')).toBe(
+      'engineer',
+    );
+  });
+
   it('classifies software architect as engineer', () => {
     expect(classifyRoleFromTitle('Software Architect')).toBe('engineer');
   });

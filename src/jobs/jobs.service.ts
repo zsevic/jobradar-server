@@ -268,6 +268,7 @@ export class JobsService {
         'engineering',
         'software engineer',
         'member of technical staff',
+        'python expert',
       ],
       ai: [
         'ai engineer',

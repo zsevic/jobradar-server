@@ -384,6 +384,22 @@ function mentionsGameplayProgrammerRole(normalized: string): boolean {
 }
 
 /**
+ * ATS job-board shorthand: adjacent "Python Expert", or **Expert** and **Python**
+ * within the same title (bounded span). Evaluated only after stack bands (backend,
+ * frontend, devops, …) so e.g. "Expert Backend — Python" stays `backend`.
+ */
+function mentionsPythonExpertStyleRole(normalized: string): boolean {
+  if (/\bpython\s+expert\b/i.test(normalized)) {
+    return true;
+  }
+  const withinTitle = '[^\\n]{0,160}?';
+  return (
+    new RegExp(`\\bexpert\\b${withinTitle}\\bpython\\b`, 'i').test(normalized) ||
+    new RegExp(`\\bpython\\b${withinTitle}\\bexpert\\b`, 'i').test(normalized)
+  );
+}
+
+/**
  * HR / People function titles. When matched without explicit IC engineering nouns
  * (`engineer` / `developer` / `architect`), classify as `other` so bare `engineering`
  * in partner org names (e.g. "Product & Engineering") does not map to `engineer`.
@@ -495,6 +511,13 @@ export function classifyRoleFromTitle(title: string): JobRoleKind {
     /\bcloud\s+(?:software\s+)?engineer\b/i.test(normalized)
   ) {
     return 'devops';
+  }
+
+  /**
+   * "Expert … Python" when no stack band above matched (backend/frontend/devops…).
+   */
+  if (mentionsPythonExpertStyleRole(normalized)) {
+    return 'engineer';
   }
 
   // Domain-specific IC roles (backend/frontend/mobile/devops) take precedence over security.
