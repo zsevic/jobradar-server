@@ -102,7 +102,7 @@ export class JobProcessProcessor extends WorkerHost {
     });
 
     if (existing) {
-      this.logger.debug(`Skip duplicate job ${jobId}`);
+      // this.logger.debug(`Skip duplicate job ${jobId}`);
       return;
     }
 
