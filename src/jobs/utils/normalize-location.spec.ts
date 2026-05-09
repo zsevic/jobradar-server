@@ -305,6 +305,8 @@ describe('extractLocationFacets', () => {
     );
     expect(multi.countries).toContain('united states');
 
+    expect(extractLocationFacets('Bentonville').countries).toContain('united states');
+
     expect(extractLocationFacets('Mumbai India').countries).toContain('india');
     expect(extractLocationFacets('Rotterdam').countries).toContain('netherlands');
     expect(extractLocationFacets('Haarlem').countries).toContain('netherlands');

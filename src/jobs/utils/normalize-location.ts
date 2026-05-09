@@ -542,6 +542,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   hillsboro: 'united states',
   boston: 'united states',
   austin: 'united states',
+  bentonville: 'united states',
   woburn: 'united states',
   bastrop: 'united states',
   mcgregor: 'united states',
