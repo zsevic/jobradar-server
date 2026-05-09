@@ -2398,7 +2398,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.GREENHOUSE, externalId: 'canopytax', name: 'Canopy Tax' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'reltio', name: 'Reltio' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'akersystems', name: 'Aker Systems' },
-  { provider: SourceProvider.GREENHOUSE, externalId: 'beampup', name: 'Beam' },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'beamup', name: 'Beam' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'pairwiseviadelart', name: 'Pairwise' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'tenableinc', name: 'Tenable' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'exadelinc', name: 'Exadel' },
