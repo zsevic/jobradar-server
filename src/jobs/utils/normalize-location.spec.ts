@@ -226,6 +226,76 @@ describe('extractLocationFacets', () => {
     );
   });
 
+  it('maps Berlin, DE and Stuttgart, DE to Germany (ISO), not Delaware', () => {
+    const berlin = extractLocationFacets('Berlin, DE');
+    expect(berlin.countries).toContain('germany');
+    expect(berlin.countries).not.toContain('united states');
+    expect(berlin.tokens).not.toContain('delaware');
+
+    const stuttgart = extractLocationFacets('Stuttgart, DE');
+    expect(stuttgart.countries).toContain('germany');
+    expect(stuttgart.countries).not.toContain('united states');
+    expect(stuttgart.tokens).not.toContain('delaware');
+  });
+
+  it('still maps Wilmington, DE to United States (Delaware)', () => {
+    const facets = extractLocationFacets('Wilmington, DE');
+    expect(facets.countries).toContain('united states');
+    expect(facets.tokens).toContain('delaware');
+  });
+
+  it('maps Amsterdam, NL to Netherlands (ISO), not Newfoundland (Canada)', () => {
+    const facets = extractLocationFacets('Amsterdam, NL');
+    expect(facets.countries).toContain('netherlands');
+    expect(facets.countries).not.toContain('canada');
+    expect(facets.tokens).not.toContain('newfoundland and labrador');
+  });
+
+  it('maps plain Newfoundland postal NL to Canada when no Dutch city hint', () => {
+    const facets = extractLocationFacets("St. John's, NL");
+    expect(facets.countries).toContain('canada');
+    expect(facets.countries).not.toContain('netherlands');
+  });
+
+  it('maps Düsseldorf, DE to Germany only', () => {
+    const facets = extractLocationFacets('Düsseldorf, DE');
+    expect(facets.countries).toContain('germany');
+    expect(facets.countries).not.toContain('united states');
+  });
+
+  it('maps Atlanta, Georgia to United States only (US state, not country Georgia)', () => {
+    const facets = extractLocationFacets('Atlanta, Georgia');
+    expect(facets.countries).toEqual(['united states']);
+    expect(facets.countries).not.toContain('georgia');
+  });
+
+  it('maps Ljubljana, Montpellier, Netanya, Gurgaon, and Oxford city hints to countries', () => {
+    expect(extractLocationFacets('Ljubljana').countries).toContain('slovenia');
+    expect(extractLocationFacets('Montpellier').countries).toContain('france');
+    expect(extractLocationFacets('Netanya').countries).toContain('israel');
+    expect(extractLocationFacets('Gurgaon').countries).toContain('india');
+    expect(extractLocationFacets('Oxford').countries).toContain('united kingdom');
+  });
+
+  it('maps Geneva to Switzerland and splits Montreal & Toronto for Canada', () => {
+    expect(extractLocationFacets('Geneva').countries).toContain('switzerland');
+    const both = extractLocationFacets('Montreal & Toronto');
+    expect(both.countries).toContain('canada');
+    expect(both.tokens).toEqual(expect.arrayContaining(['montreal', 'toronto', 'canada']));
+  });
+
+  it('maps Raleigh and Herndon to united states and parses United States & Canada (Remote)', () => {
+    expect(extractLocationFacets('Raleigh').countries).toContain('united states');
+    expect(extractLocationFacets('Herndon').countries).toContain('united states');
+    const na = extractLocationFacets('United States & Canada (Remote)');
+    expect(na.countries).toEqual(
+      expect.arrayContaining(['united states', 'canada']),
+    );
+    expect(extractLocationFacets('Canada & United States (Remote)').countries).toEqual(
+      expect.arrayContaining(['united states', 'canada']),
+    );
+  });
+
   it('maps us east coast to east coast region', () => {
     const facets = extractLocationFacets('US East Coast');
 

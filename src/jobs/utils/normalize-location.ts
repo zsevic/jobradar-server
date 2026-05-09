@@ -435,6 +435,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   bloomington: 'united states',
   zurich: 'switzerland',
   zürich: 'switzerland',
+  geneva: 'switzerland',
+  genève: 'switzerland',
   frankfurt: 'germany',
   dortmund: 'germany',
   duisburg: 'germany',
@@ -514,10 +516,12 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'cape canaveral': 'united states',
   arlington: 'united states',
   chantilly: 'united states',
+  herndon: 'united states',
   'annapolis junction': 'united states',
   lehi: 'united states',
   vilnius: 'lithuania',
   kaunas: 'lithuania',
+  ljubljana: 'slovenia',
   marseille: 'france',
   nantes: 'france',
   nancy: 'france',
@@ -525,6 +529,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   lyon: 'france',
   nice: 'france',
   metz: 'france',
+  montpellier: 'france',
   strasbourg: 'france',
   orléans: 'france',
   orleans: 'france',
@@ -560,6 +565,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   'tamil nadu': 'india',
   clark: 'philippines',
   gurugram: 'india',
+  gurgaon: 'india',
   pune: 'india',
   shenzhen: 'china',
   hangzhou: 'china',
@@ -676,6 +682,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   walnut: 'united states',
   'glen cove': 'united states',
   reading: 'united kingdom',
+  oxford: 'united kingdom',
   oxfordshire: 'united kingdom',
   wallingford: 'united kingdom',
   longbridge: 'united kingdom',
@@ -684,6 +691,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   philadelphia: 'united states',
   'salt lake city': 'united states',
   charlotte: 'united states',
+  raleigh: 'united states',
   orlando: 'united states',
   oxnard: 'united states',
   plano: 'united states',
@@ -716,6 +724,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   /** Airport / job-board shorthand. */
   tlv: 'israel',
   'ramat gan': 'israel',
+  netanya: 'israel',
   abuja: 'nigeria',
   abidjan: COTE_DIVOIRE,
   dakar: 'senegal',
@@ -1162,6 +1171,9 @@ function normalizeKnownLocationPhrases(raw: string): string {
       /\bgreater\s+toronto\s+area(?:\s*[-–—]\s*remote)?\b/gi,
       'Toronto, Canada',
     )
+    /** Common Canadian metro pair — split so city hints resolve (avoid naive `&` split; breaks `Bosnia & Herzegovina`). */
+    .replace(/\bmontreal\s*&\s*toronto\b/gi, 'Montreal | Toronto')
+    .replace(/\btoronto\s*&\s*montreal\b/gi, 'Toronto | Montreal')
     /** Hangzhou spelling variants (ATS / romanization noise). */
     .replace(/\bhang\s+zhou\b/gi, 'Hangzhou')
     .replace(/\bhangzhou\b/gi, 'Hangzhou')
@@ -1450,6 +1462,15 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\busa\s*&\s*canada\b/gi, 'United States, Canada')
     .replace(/\bcanada\s*&\s*us\b/gi, 'Canada, United States')
     .replace(/\bus\s*&\s*canada\b/gi, 'United States, Canada')
+    /** Full names + optional `(Remote)` — pipe-split so both countries resolve (see tests). */
+    .replace(
+      /\bunited\s+states\s*&\s*canada(?:\s*\(\s*remote\s*\))?/gi,
+      'United States | Canada',
+    )
+    .replace(
+      /\bcanada\s*&\s*united\s+states(?:\s*\(\s*remote\s*\))?/gi,
+      'Canada | United States',
+    )
     .replace(
       /\bunited\s+states\s*&\s*emea\b/gi,
       'United States, EMEA',
@@ -1590,13 +1611,19 @@ function splitLocation(raw: string): string[] {
   return segments;
 }
 
-/** True when this comma segment resolves to `united states` (explicit name or alias like `usa`). */
-function mapsToUnitedStates(trimmedBit: string): boolean {
-  const fk =
+/** Same facet key resolution as {@link extractLocationFacets} inner loop (metro → postal → province → raw). */
+function facetKeyFromSegmentToken(trimmedBit: string): string {
+  return (
     US_METRO_ABBREV_TO_TOKEN[trimmedBit] ??
     US_STATE_POSTAL_TO_TOKEN[trimmedBit] ??
     CANADA_PROVINCE_POSTAL_TO_TOKEN[trimmedBit] ??
-    trimmedBit;
+    trimmedBit
+  );
+}
+
+/** True when this comma segment resolves to `united states` (explicit name or alias like `usa`). */
+function mapsToUnitedStates(trimmedBit: string): boolean {
+  const fk = facetKeyFromSegmentToken(trimmedBit);
   if (fk === 'united states') {
     return true;
   }
@@ -1637,6 +1664,23 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
 
     const hasUnitedStatesSibling = trimmedBits.some(mapsToUnitedStates);
 
+    const hasUnitedStatesCityHintSibling = trimmedBits.some((b) => {
+      const fk = facetKeyFromSegmentToken(b);
+      return CITY_COUNTRY_HINTS[fk] === 'united states';
+    });
+
+    /** `DE` doubles as US Delaware and ISO Germany; prefer Germany when a German city hint is in the same segment. */
+    const impliesGermanyFromCityHint = trimmedBits.some((b) => {
+      const fk = facetKeyFromSegmentToken(b);
+      return CITY_COUNTRY_HINTS[fk] === 'germany';
+    });
+
+    /** `NL` doubles as Canada Newfoundland & Labrador and ISO Netherlands; prefer NL when a Dutch city hint is present. */
+    const impliesNetherlandsFromCityHint = trimmedBits.some((b) => {
+      const fk = facetKeyFromSegmentToken(b);
+      return CITY_COUNTRY_HINTS[fk] === 'netherlands';
+    });
+
     for (const bit of bitsSource) {
       const trimmedBit = stripLeadingInSegment(
         bit.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim(),
@@ -1644,16 +1688,25 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       if (!trimmedBit) {
         continue;
       }
-      const fromUsStatePostal = Object.prototype.hasOwnProperty.call(
+      let fromUsStatePostal = Object.prototype.hasOwnProperty.call(
         US_STATE_POSTAL_TO_TOKEN,
         trimmedBit,
       );
 
-      const facetKey =
-        US_METRO_ABBREV_TO_TOKEN[trimmedBit] ??
-        US_STATE_POSTAL_TO_TOKEN[trimmedBit] ??
-        CANADA_PROVINCE_POSTAL_TO_TOKEN[trimmedBit] ??
-        trimmedBit;
+      let fromCanadaProvincePostal = Object.prototype.hasOwnProperty.call(
+        CANADA_PROVINCE_POSTAL_TO_TOKEN,
+        trimmedBit,
+      );
+
+      let facetKey = facetKeyFromSegmentToken(trimmedBit);
+      if (trimmedBit === 'de' && impliesGermanyFromCityHint) {
+        fromUsStatePostal = false;
+        facetKey = 'germany';
+      }
+      if (trimmedBit === 'nl' && impliesNetherlandsFromCityHint) {
+        fromCanadaProvincePostal = false;
+        facetKey = 'netherlands';
+      }
       const mappedCountry = COUNTRY_ALIASES[facetKey] ?? facetKey;
       const mappedRegion = REGION_ALIASES[facetKey];
       // Keep canonical country tokens (e.g. "czech republic" -> "czechia").
@@ -1663,11 +1716,11 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
         tokens.add(KNOWN_COUNTRIES.has(mappedCountry) ? mappedCountry : facetKey);
       }
 
-      /** `Georgia` is both US state and country; explicit `United States` / `USA` in the same segment picks the state. */
+      /** `Georgia` is US state and country; US city hint or explicit US in segment picks the state. */
       const georgiaAsUsState =
         facetKey === 'georgia' &&
         US_STATE_NAME_SET.has('georgia') &&
-        hasUnitedStatesSibling;
+        (hasUnitedStatesSibling || hasUnitedStatesCityHintSibling);
 
       if (
         US_STATE_NAME_SET.has(facetKey) &&
@@ -1676,7 +1729,10 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
         countries.add('united states');
         tokens.add('united states');
       }
-      if (CANADA_PROVINCE_NAME_SET.has(facetKey)) {
+      if (
+        CANADA_PROVINCE_NAME_SET.has(facetKey) &&
+        !(trimmedBit === 'nl' && impliesNetherlandsFromCityHint)
+      ) {
         countries.add('canada');
         tokens.add('canada');
       }
@@ -1687,6 +1743,7 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
 
       if (
         !fromUsStatePostal &&
+        !fromCanadaProvincePostal &&
         KNOWN_COUNTRIES.has(mappedCountry) &&
         !(georgiaAsUsState && mappedCountry === 'georgia')
       ) {
