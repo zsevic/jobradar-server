@@ -520,6 +520,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   texas: 'united states',
   utah: 'united states',
   chicago: 'united states',
+  cincinnati: 'united states',
   illinois: 'united states',
   'san jose': 'united states',
   'palo alto': 'united states',
