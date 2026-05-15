@@ -57,6 +57,11 @@ export class WorkableFetchProcessor extends WorkerHost {
         });
       }
 
+      await this.jobsService.reconcileStaleJobsForSource(
+        source,
+        normalizedJobs,
+      );
+
       source.lastSyncedAt = new Date();
       source.syncStatus = 'success';
       await this.sourceRepository.save(source);

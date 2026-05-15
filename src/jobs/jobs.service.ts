@@ -222,6 +222,36 @@ export class JobsService {
     );
   }
 
+  async reconcileStaleJobsForSource(
+    source: Pick<Source, 'provider' | 'name'>,
+    fetchedJobs: Pick<NormalizedJob, 'externalId'>[],
+  ): Promise<number> {
+    const fetchedExternalIds = [
+      ...new Set(fetchedJobs.map((job) => job.externalId)),
+    ];
+
+    const qb = this.jobsRepository
+      .createQueryBuilder()
+      .delete()
+      .where('provider = :provider', { provider: source.provider })
+      .andWhere('company = :company', { company: source.name });
+
+    if (fetchedExternalIds.length > 0) {
+      qb.andWhere('externalId NOT IN (:...fetchedExternalIds)', {
+        fetchedExternalIds,
+      });
+    }
+
+    const result = await qb.execute();
+    const removed = result.affected ?? 0;
+    if (removed > 0) {
+      this.logger.log(
+        `Removed ${removed} stale jobs for ${source.provider}:${source.name}`,
+      );
+    }
+    return removed;
+  }
+
   private getRoleTitleKeywords(role: string): string[] {
     const keywordMap: Record<string, string[]> = {
       backend: [
