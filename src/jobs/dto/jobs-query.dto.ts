@@ -72,11 +72,31 @@ const noStackRoles = [
   'designer',
 ] as const;
 
+function coerceQueryPrimitive(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+  if (typeof value === 'boolean') {
+    return String(value);
+  }
+  if (typeof value === 'bigint') {
+    return String(value);
+  }
+  return '';
+}
+
 function toStringArray(value: unknown): string[] | undefined {
   if (value === undefined || value === null) {
     return undefined;
   }
-  return Array.isArray(value) ? value.map(String) : [String(value)];
+  const parts = Array.isArray(value)
+    ? value.map(coerceQueryPrimitive)
+    : [coerceQueryPrimitive(value)];
+  const nonEmpty = parts.filter((s) => s.length > 0);
+  return nonEmpty.length > 0 ? nonEmpty : undefined;
 }
 
 export class JobsQueryDto {

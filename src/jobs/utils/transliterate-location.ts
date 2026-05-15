@@ -37,7 +37,7 @@ function cleanTransliterationArtifacts(value: string): string {
     s = s.replace(/([a-zA-Z])'([a-zA-Z])/g, '$1$2');
   } while (s !== prev);
 
-  s = s.replace(/\x00POS(\d+)\x00/g, (_, i: string) => {
+  s = s.replace(/POS(\d+)/g, (_, i: string) => {
     return protectedPossessives[Number(i)] ?? '';
   });
 
