@@ -30,8 +30,12 @@ export class AddNotificationClicks1764009000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_notification_clicks_jobId"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_notification_clicks_userId"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_notification_clicks_jobId"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_notification_clicks_userId"`,
+    );
     await queryRunner.query(`DROP TABLE "notification_clicks"`);
   }
 }

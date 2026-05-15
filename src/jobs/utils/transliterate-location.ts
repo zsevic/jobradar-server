@@ -9,9 +9,12 @@ export function containsNonLatinScript(value: string): boolean {
 
 /** Title-case word boundaries (commas, spaces, dashes) without lowercasing existing capitals. */
 function titleCase(value: string): string {
-  return value.replace(/(^|[\s,\-/&])([a-z])/g, (_m, sep: string, ch: string) => {
-    return sep + ch.toUpperCase();
-  });
+  return value.replace(
+    /(^|[\s,\-/&])([a-z])/g,
+    (_m, sep: string, ch: string) => {
+      return sep + ch.toUpperCase();
+    },
+  );
 }
 
 /**

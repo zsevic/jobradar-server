@@ -24,7 +24,10 @@ function canonicalLocationPart(value: string): string {
 function stripEmptyParentheses(value: string): string {
   let t = value.trim();
   while (/\(\s*\)/.test(t)) {
-    t = t.replace(/\(\s*\)/g, ' ').replace(/\s{2,}/g, ' ').trim();
+    t = t
+      .replace(/\(\s*\)/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   }
   return t;
 }
@@ -106,7 +109,8 @@ export function cleanLocationAfterRemoteDetection(location: string): string {
 
     // Prefer explicit canonical country labels over abbreviations (e.g. UK -> United Kingdom).
     if (
-      canonicalLocationPart(uniqueParts[existingIndex]) !== displayPart.toLowerCase() &&
+      canonicalLocationPart(uniqueParts[existingIndex]) !==
+        displayPart.toLowerCase() &&
       displayPart.toLowerCase() === canonicalKey
     ) {
       uniqueParts[existingIndex] = displayPart;
@@ -173,7 +177,7 @@ export function stripCompanyNameFromLocation(
   let out = loc.replace(re, ' ');
   out = out
     .replace(/\s{2,}/g, ' ')
-    .replace(/^[\s,;/|–\-]+|[\s,;/|–\-]+$/g, '')
+    .replace(/^[\s,;/|–-]+|[\s,;/|–-]+$/g, '')
     .trim();
 
   if (!out) {
@@ -193,14 +197,11 @@ export function resolveNormalizedLocation(
 ): string {
   const trimmed = stripEmptyParentheses(formattedRaw);
   const lower = trimmed.toLowerCase();
-  const forFacets =
-    !trimmed || lower === 'unknown' ? '' : trimmed;
+  const forFacets = !trimmed || lower === 'unknown' ? '' : trimmed;
   const facets = extractLocationFacets(forFacets);
-  const hasGeo =
-    facets.countries.length > 0 || facets.regions.length > 0;
+  const hasGeo = facets.countries.length > 0 || facets.regions.length > 0;
 
-  const sourceForClean =
-    !trimmed || lower === 'unknown' ? 'Unknown' : trimmed;
+  const sourceForClean = !trimmed || lower === 'unknown' ? 'Unknown' : trimmed;
 
   if (hasGeo) {
     return cleanLocationAfterRemoteDetection(sourceForClean);

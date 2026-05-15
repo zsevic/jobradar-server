@@ -181,10 +181,7 @@ export class WorkableAdapter implements JobProviderAdapter {
       return ['junior'];
     }
 
-    if (
-      value.includes('associate') ||
-      hasMidSignal
-    ) {
+    if (value.includes('associate') || hasMidSignal) {
       return ['mid'];
     }
 

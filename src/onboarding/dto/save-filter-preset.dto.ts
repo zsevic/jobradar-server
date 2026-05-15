@@ -45,23 +45,30 @@ const stackOptions = [
   'flutter',
   'dart',
 ] as const;
-const seniorityOptions = ['intern', 'junior', 'mid', 'senior', 'staff'] as const;
+const seniorityOptions = [
+  'intern',
+  'junior',
+  'mid',
+  'senior',
+  'staff',
+] as const;
 export class SaveFilterPresetDto {
   @IsIn(roles)
   role!: (typeof roles)[number];
 
-  @ValidateIf((o: SaveFilterPresetDto) =>
-    ![
-      'devops',
-      'qa',
-      'management',
-      'ai',
-      'data',
-      'solutions',
-      'recruiter',
-      'security',
-      'designer',
-    ].includes(o.role),
+  @ValidateIf(
+    (o: SaveFilterPresetDto) =>
+      ![
+        'devops',
+        'qa',
+        'management',
+        'ai',
+        'data',
+        'solutions',
+        'recruiter',
+        'security',
+        'designer',
+      ].includes(o.role),
   )
   @IsArray()
   @ArrayMinSize(1)

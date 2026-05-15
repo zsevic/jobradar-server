@@ -222,7 +222,11 @@ describe('extractLocationFacets', () => {
 
     expect(facets.countries).toContain('united states');
     expect(facets.tokens).toEqual(
-      expect.arrayContaining(['washington', 'district of columbia', 'united states']),
+      expect.arrayContaining([
+        'washington',
+        'district of columbia',
+        'united states',
+      ]),
     );
   });
 
@@ -274,26 +278,34 @@ describe('extractLocationFacets', () => {
     expect(extractLocationFacets('Montpellier').countries).toContain('france');
     expect(extractLocationFacets('Netanya').countries).toContain('israel');
     expect(extractLocationFacets('Gurgaon').countries).toContain('india');
-    expect(extractLocationFacets('Oxford').countries).toContain('united kingdom');
+    expect(extractLocationFacets('Oxford').countries).toContain(
+      'united kingdom',
+    );
   });
 
   it('maps Geneva to Switzerland and splits Montreal & Toronto for Canada', () => {
     expect(extractLocationFacets('Geneva').countries).toContain('switzerland');
     const both = extractLocationFacets('Montreal & Toronto');
     expect(both.countries).toContain('canada');
-    expect(both.tokens).toEqual(expect.arrayContaining(['montreal', 'toronto', 'canada']));
+    expect(both.tokens).toEqual(
+      expect.arrayContaining(['montreal', 'toronto', 'canada']),
+    );
   });
 
   it('maps Raleigh and Herndon to united states and parses United States & Canada (Remote)', () => {
-    expect(extractLocationFacets('Raleigh').countries).toContain('united states');
-    expect(extractLocationFacets('Herndon').countries).toContain('united states');
+    expect(extractLocationFacets('Raleigh').countries).toContain(
+      'united states',
+    );
+    expect(extractLocationFacets('Herndon').countries).toContain(
+      'united states',
+    );
     const na = extractLocationFacets('United States & Canada (Remote)');
     expect(na.countries).toEqual(
       expect.arrayContaining(['united states', 'canada']),
     );
-    expect(extractLocationFacets('Canada & United States (Remote)').countries).toEqual(
-      expect.arrayContaining(['united states', 'canada']),
-    );
+    expect(
+      extractLocationFacets('Canada & United States (Remote)').countries,
+    ).toEqual(expect.arrayContaining(['united states', 'canada']));
   });
 
   it('adds countries for US state phrases, multi-city postal, India suffix, ISO UK/CH, NL/DK cities', () => {
@@ -305,14 +317,22 @@ describe('extractLocationFacets', () => {
     );
     expect(multi.countries).toContain('united states');
 
-    expect(extractLocationFacets('Bentonville').countries).toContain('united states');
+    expect(extractLocationFacets('Bentonville').countries).toContain(
+      'united states',
+    );
 
-    expect(extractLocationFacets('Cincinnati').countries).toContain('united states');
+    expect(extractLocationFacets('Cincinnati').countries).toContain(
+      'united states',
+    );
 
     expect(extractLocationFacets('Mumbai India').countries).toContain('india');
-    expect(extractLocationFacets('Rotterdam').countries).toContain('netherlands');
+    expect(extractLocationFacets('Rotterdam').countries).toContain(
+      'netherlands',
+    );
     expect(extractLocationFacets('Haarlem').countries).toContain('netherlands');
-    expect(extractLocationFacets('The Randstad').countries).toContain('netherlands');
+    expect(extractLocationFacets('The Randstad').countries).toContain(
+      'netherlands',
+    );
 
     expect(extractLocationFacets('Hillerød').countries).toContain('denmark');
     expect(extractLocationFacets('Greve').countries).toContain('denmark');
@@ -653,9 +673,7 @@ describe('extractLocationFacets', () => {
     const facets = extractLocationFacets('Norway | Nordics | EMEA');
 
     expect(facets.countries).toEqual(['norway']);
-    expect(facets.regions).toEqual(
-      expect.arrayContaining(['nordics', 'emea']),
-    );
+    expect(facets.regions).toEqual(expect.arrayContaining(['nordics', 'emea']));
     expect(facets.countries).not.toContain('nordics');
   });
 
@@ -739,9 +757,9 @@ describe('canonicalizeCountryHint', () => {
 
 describe('splitAndCanonicalizeCountryHints', () => {
   it('splits and canonicalizes mixed delimiter hints', () => {
-    expect(splitAndCanonicalizeCountryHints(['US | EU', 'U.S.A, Canada'])).toEqual(
-      ['united states', 'european union', 'united states', 'canada'],
-    );
+    expect(
+      splitAndCanonicalizeCountryHints(['US | EU', 'U.S.A, Canada']),
+    ).toEqual(['united states', 'european union', 'united states', 'canada']);
   });
 });
 

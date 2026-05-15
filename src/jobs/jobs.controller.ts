@@ -48,7 +48,12 @@ export class JobsController {
     const safePage = Number.isFinite(parsedPage)
       ? Math.max(Math.floor(parsedPage), 1)
       : 1;
-    return this.jobsService.getLatestJobsForUser(userId, safeLimit, safePage, query);
+    return this.jobsService.getLatestJobsForUser(
+      userId,
+      safeLimit,
+      safePage,
+      query,
+    );
   }
 
   @Post('poll/ashby')

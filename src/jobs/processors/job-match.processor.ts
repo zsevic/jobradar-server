@@ -126,8 +126,7 @@ export class JobMatchProcessor extends WorkerHost {
     if (
       preset.seniority &&
       job.seniorities.some(
-        (s) =>
-          s.toLowerCase().trim() === preset.seniority.toLowerCase().trim(),
+        (s) => s.toLowerCase().trim() === preset.seniority.toLowerCase().trim(),
       )
     ) {
       score += 20;

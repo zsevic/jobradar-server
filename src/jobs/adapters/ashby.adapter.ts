@@ -95,8 +95,7 @@ export class AshbyAdapter implements JobProviderAdapter {
           remoteIndicatedByProvider,
         });
         const isRemote =
-          remoteIndicatedByProvider ||
-          geoRaw.toLowerCase().includes('remote');
+          remoteIndicatedByProvider || geoRaw.toLowerCase().includes('remote');
         const rawTitle = (job.title as string).trim();
         const title = stripLocationFromTitle(rawTitle, location);
         const role = classifyRoleWithDescriptionFallback(
@@ -116,8 +115,7 @@ export class AshbyAdapter implements JobProviderAdapter {
           locationCountryHints: countryHints,
           remoteIndicatedByProvider,
           isRemote,
-          postedAt:
-            resolveValidDate(job.publishedAt) ?? new Date(),
+          postedAt: resolveValidDate(job.publishedAt) ?? new Date(),
           url,
           role: role === 'other' ? null : role,
           stack: extractStackFromJobText(title, job.descriptionPlain, role),

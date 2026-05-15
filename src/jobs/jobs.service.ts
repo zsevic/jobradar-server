@@ -184,7 +184,11 @@ export class JobsService {
     if (source.provider === SourceProvider.ASHBY) {
       await this.ashbyFetchQueue.add('fetch-source', payload, queueOptions);
     } else if (source.provider === SourceProvider.GREENHOUSE) {
-      await this.greenhouseFetchQueue.add('fetch-source', payload, queueOptions);
+      await this.greenhouseFetchQueue.add(
+        'fetch-source',
+        payload,
+        queueOptions,
+      );
     } else {
       await this.workableFetchQueue.add('fetch-source', payload, queueOptions);
     }
@@ -254,13 +258,7 @@ export class JobsService {
 
   private getRoleTitleKeywords(role: string): string[] {
     const keywordMap: Record<string, string[]> = {
-      backend: [
-        'backend',
-        'back-end',
-        'api',
-        'server',
-        'server-side',
-      ],
+      backend: ['backend', 'back-end', 'api', 'server', 'server-side'],
       frontend: ['frontend', 'front-end', 'react', 'angular', 'vue', 'next.js'],
       fullstack: ['fullstack', 'full-stack'],
       mobile: ['mobile', 'android', 'ios', 'react native', 'swift', 'kotlin'],
@@ -649,10 +647,9 @@ export class JobsService {
     const jobQuery = this.jobsRepository
       .createQueryBuilder('job')
       .where('job.role IS NOT NULL')
-      .andWhere("length(trim(job.role)) > 0");
+      .andWhere('length(trim(job.role)) > 0');
 
-    const countryLike =
-      countryName !== null ? `%${countryName}%` : null;
+    const countryLike = countryName !== null ? `%${countryName}%` : null;
 
     if (countryName && countryLike) {
       jobQuery.andWhere(
@@ -661,12 +658,9 @@ export class JobsService {
             country: countryName,
           })
             .orWhere('job.isRemote = TRUE')
-            .orWhere(
-              'LOWER(COALESCE(job.locationRaw, \'\')) LIKE :countryLike',
-              {
-                countryLike,
-              },
-            )
+            .orWhere("LOWER(COALESCE(job.locationRaw, '')) LIKE :countryLike", {
+              countryLike,
+            })
             .orWhere('LOWER(job.location) LIKE :countryLike', {
               countryLike,
             });

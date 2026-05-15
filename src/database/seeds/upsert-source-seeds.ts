@@ -5,7 +5,9 @@ import { sourceSeeds } from './source-seeds.data';
 /**
  * Idempotent upsert of all catalog sources. Caller must provide an initialized DataSource.
  */
-export async function upsertSourceSeeds(dataSource: DataSource): Promise<number> {
+export async function upsertSourceSeeds(
+  dataSource: DataSource,
+): Promise<number> {
   const sourceRepository = dataSource.getRepository(Source);
 
   for (const source of sourceSeeds) {

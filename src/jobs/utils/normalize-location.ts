@@ -325,7 +325,9 @@ const US_STATE_POSTAL_TO_TOKEN: Record<string, string> = {
 };
 
 /** US state / DC full tokens (values of {@link US_STATE_POSTAL_TO_TOKEN}) → imply `united states` when not a country name. */
-const US_STATE_NAME_SET = new Set<string>(Object.values(US_STATE_POSTAL_TO_TOKEN));
+const US_STATE_NAME_SET = new Set<string>(
+  Object.values(US_STATE_POSTAL_TO_TOKEN),
+);
 
 /**
  * Canadian province/territory postal abbreviations (lowercase) → region token.
@@ -851,13 +853,17 @@ const SORTED_GEO_SUFFIXES = buildSortedGeoSuffixCandidates();
 function collapseEmployerNoiseSpaces(s: string): string {
   return s
     .replace(/\s{2,}/g, ' ')
-    .replace(/^[\s,;/|–\-]+/g, '')
+    .replace(/^[\s,;/|–-]+/g, '')
     .trim();
 }
 
 function geoHintWordsInSegment(s: string): boolean {
   const lower = s.toLowerCase();
-  if (/\b(united states|united kingdom|south korea|north macedonia|new zealand|hong kong)\b/.test(lower)) {
+  if (
+    /\b(united states|united kingdom|south korea|north macedonia|new zealand|hong kong)\b/.test(
+      lower,
+    )
+  ) {
     return true;
   }
   for (const w of lower.split(/\s+/).filter(Boolean)) {
@@ -870,7 +876,7 @@ function geoHintWordsInSegment(s: string): boolean {
     if (REGION_ALIASES[w]) {
       return true;
     }
-    const mapped = COUNTRY_ALIASES[w as keyof typeof COUNTRY_ALIASES];
+    const mapped = COUNTRY_ALIASES[w];
     if (mapped && KNOWN_COUNTRIES.has(mapped)) {
       return true;
     }
@@ -942,7 +948,7 @@ function isOnlyGeoChain(pk: string): boolean {
     if (CITY_COUNTRY_HINTS[seg]) {
       continue;
     }
-    const mapped = COUNTRY_ALIASES[seg as keyof typeof COUNTRY_ALIASES];
+    const mapped = COUNTRY_ALIASES[seg];
     if (mapped && KNOWN_COUNTRIES.has(mapped)) {
       continue;
     }
@@ -970,8 +976,7 @@ function isLikelyEmployerPrefix(prefix: string): boolean {
   if (pkWithoutConnectors && geoHintWordsInSegment(pkWithoutConnectors)) {
     return false;
   }
-  const shortCountry =
-    COUNTRY_ALIASES[pk as keyof typeof COUNTRY_ALIASES];
+  const shortCountry = COUNTRY_ALIASES[pk];
   if (shortCountry && KNOWN_COUNTRIES.has(shortCountry)) {
     return false;
   }
@@ -1053,14 +1058,12 @@ function applyHyphenEmployerBrandSplit(t: string): string {
   const bothSidesGeoLike = leftGeoLike && rightGeo;
   const leftKey = left.toLowerCase().replace(/\s+/g, ' ').trim();
   const leftMapped =
-    (COUNTRY_ALIASES[leftKey as keyof typeof COUNTRY_ALIASES] as
-      | string
-      | undefined) ?? leftKey;
+    (COUNTRY_ALIASES[leftKey] as string | undefined) ?? leftKey;
   const leftIsGeoAnchor =
     !!REGION_ALIASES[leftKey] ||
     KNOWN_COUNTRIES.has(leftKey) ||
     KNOWN_COUNTRIES.has(leftMapped) ||
-    !!COUNTRY_ALIASES[leftKey as keyof typeof COUNTRY_ALIASES] ||
+    !!COUNTRY_ALIASES[leftKey] ||
     !!CITY_COUNTRY_HINTS[leftKey];
   if (leftCorp || rightGeo) {
     // Preserve multi-location or geo-rich chains like
@@ -1130,34 +1133,36 @@ function stripEmployerBrandFromLocation(raw: string): string {
 }
 
 function normalizeToken(value: string): string {
-  return value
-    .normalize('NFC')
-    .toLowerCase()
-    .replace(/^\*?\s*hq\b\s*(?:[\-–—:,]+\s*)?/g, '')
-    .replace(/\banywhere\s+in\b/g, '')
-    .replace(/\bhq\b/g, '')
-    .replace(/\b(headquarters|head\s+office)\b/g, '')
-    .replace(/^\s*labs\s*$/gi, '')
-    .replace(/\s+labs\s*$/gi, '')
-    .replace(/\bin\s*[- ]?\s*office\b/g, '')
-    .replace(/\boffice\b/g, '')
-    .replace(/\b(hybrid|onsite)\b/g, '')
-    .replace(/\bm\s*,\s*w\s*,\s*f\b/gi, '')
-    .replace(/\bm\s+w\s+f\b/gi, '')
-    .replace(/\bremote\b\s*[-,:]?\s*/g, '')
-    .replace(/\banywhere\b\s*[-,:]?\s*/g, '')
-    /** ATS boilerplate e.g. `Canada: Select locations`, `US: Select locations`. */
-    .replace(/:\s*select\s+locations\b/gi, '')
-    /** Same pattern with “All locations” (e.g. `US: All locations`). */
-    .replace(/:\s*all\s+locations\b/gi, '')
-    .replace(/[.;]/g, ' ')
-    .replace(/\bselect\s+locations\b/gi, '')
-    .replace(/\ball\s+locations\b/gi, '')
-    .replace(/\bany\s+location\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .replace(/^[\s\-–—]+|[\s\-–—]+$/g, '')
-    .replace(/\s+\bin\s*$/g, '')
-    .trim();
+  return (
+    value
+      .normalize('NFC')
+      .toLowerCase()
+      .replace(/^\*?\s*hq\b\s*(?:[-–—:,]+\s*)?/g, '')
+      .replace(/\banywhere\s+in\b/g, '')
+      .replace(/\bhq\b/g, '')
+      .replace(/\b(headquarters|head\s+office)\b/g, '')
+      .replace(/^\s*labs\s*$/gi, '')
+      .replace(/\s+labs\s*$/gi, '')
+      .replace(/\bin\s*[- ]?\s*office\b/g, '')
+      .replace(/\boffice\b/g, '')
+      .replace(/\b(hybrid|onsite)\b/g, '')
+      .replace(/\bm\s*,\s*w\s*,\s*f\b/gi, '')
+      .replace(/\bm\s+w\s+f\b/gi, '')
+      .replace(/\bremote\b\s*[-,:]?\s*/g, '')
+      .replace(/\banywhere\b\s*[-,:]?\s*/g, '')
+      /** ATS boilerplate e.g. `Canada: Select locations`, `US: Select locations`. */
+      .replace(/:\s*select\s+locations\b/gi, '')
+      /** Same pattern with “All locations” (e.g. `US: All locations`). */
+      .replace(/:\s*all\s+locations\b/gi, '')
+      .replace(/[.;]/g, ' ')
+      .replace(/\bselect\s+locations\b/gi, '')
+      .replace(/\ball\s+locations\b/gi, '')
+      .replace(/\bany\s+location\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .replace(/^[\s-–—]+|[\s-–—]+$/g, '')
+      .replace(/\s+\bin\s*$/g, '')
+      .trim()
+  );
 }
 
 /** Strips a leading "in " from a segment (e.g. "in France" → france). */
@@ -1232,10 +1237,7 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bglobal\s+remote\b/gi, 'Worldwide')
     .replace(/\bindia[-–—]bangalore\b/gi, 'Bangalore, India')
     .replace(/\bindia\s+bangalore\b/gi, 'Bangalore, India')
-    .replace(
-      /\bquébec\s+city\s*,\s*québec\b/gi,
-      'Quebec City, QC, Canada',
-    )
+    .replace(/\bquébec\s+city\s*,\s*québec\b/gi, 'Quebec City, QC, Canada')
     .replace(/\bquebec\s+city\s*,\s*quebec\b/gi, 'Quebec City, QC, Canada')
     .replace(/^\s*all locations\s*$/gi, '')
     .replace(/^\s*no location\s*$/gi, '')
@@ -1295,11 +1297,17 @@ function normalizeKnownLocationPhrases(raw: string): string {
       'Springfield, IL; Plano, TX',
     )
     .replace(/\bremote-central\s+america\b/gi, 'Latin America')
-    .replace(/\bremote\/hybrid\s*\(\s*socal\s*\)/gi, 'California, United States')
+    .replace(
+      /\bremote\/hybrid\s*\(\s*socal\s*\)/gi,
+      'California, United States',
+    )
     .replace(/\bremote\s*:\s*boston\s+area\b/gi, 'Boston, MA')
     .replace(/\bremote\s*:\s*northeast\s+us\b/gi, 'East Coast, United States')
     .replace(/\breston\/dulles\s+virginia\b/gi, 'Reston, VA')
-    .replace(/\bsf\s+bay\s+area\s*\/\s*remote\b/gi, 'San Francisco Bay Area, California')
+    .replace(
+      /\bsf\s+bay\s+area\s*\/\s*remote\b/gi,
+      'San Francisco Bay Area, California',
+    )
     .replace(
       /\bsf\s+bay\s+area\s+or\s+nyc\s+preferred\s*,\s*or\s+remote\b/gi,
       'San Francisco, CA; New York, NY',
@@ -1426,7 +1434,10 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\bremote\s*-\s*ok\b/gi, 'Oklahoma, United States')
     .replace(/\bremote\s+anywhere\s+in\s+the\s+world\b/gi, 'Worldwide')
     .replace(/\bremote\s*-\s*anywhere\b/gi, 'Worldwide')
-    .replace(/\bremote\s*:\s*west\s+coast\s+us\b/gi, 'West Coast, United States')
+    .replace(
+      /\bremote\s*:\s*west\s+coast\s+us\b/gi,
+      'West Coast, United States',
+    )
     .replace(/\busa\s*[-–—]\s*remote\b/gi, 'United States')
     /** GCC / US shorthand. */
     .replace(/\buae\s+abu\s+dhabi\b/gi, 'Abu Dhabi, United Arab Emirates')
@@ -1451,7 +1462,10 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/\blouisville\s+ky\b/gi, 'Louisville, KY')
     .replace(/\blehi\s+ut\b/gi, 'Lehi, UT')
     /** UK postcode line → city + country. */
-    .replace(/\blongbridge\s*,\s*b\d{1,2}\s*\d[a-z]{2}\b/gi, 'Longbridge, United Kingdom')
+    .replace(
+      /\blongbridge\s*,\s*b\d{1,2}\s*\d[a-z]{2}\b/gi,
+      'Longbridge, United Kingdom',
+    )
     /** Multi-site “ST-City” corporate templates (split on `. ST-`). */
     .replace(/\bNY-New\s+York\b/gi, 'New York, NY')
     .replace(/\bSF-San\s+Francisco\b/gi, 'San Francisco, CA')
@@ -1481,136 +1495,146 @@ function normalizeKnownLocationPhrases(raw: string): string {
     .replace(/^\s*fully\s+remote\s*$/gi, 'Worldwide')
     /** SpaceX-style multi-site listing — approximate US-wide for geography facets. */
     .replace(/\bflexible\s*-\s*any\s+site\b/gi, 'United States');
-  return stripEmployerBrandFromLocation(preStripped)
-    /** Cape Town / Durban datacenter site codes — not US District of Columbia. */
-    .replace(/\bcape\s+town\s+dc\d*\b/gi, 'Cape Town')
-    .replace(/\bdurban\s+dc\d*\b/gi, 'Durban')
-    .replace(/\bjohannesburg\s+dc\d*\b/gi, 'Johannesburg')
-    .replace(/\bfort\s+worth\s+tx\b/gi, 'Fort Worth, TX')
-    .replace(/\bfrankfurt\s+am\s+main\b/gi, 'Frankfurt')
-    .replace(/\bft\.?\s*meade\b/gi, 'Fort Meade, MD')
-    .replace(/\bcentral\s*\/\s*western\s+us\b/gi, 'United States')
-    .replace(/\bcentral\s+us\b/gi, 'Central US, United States')
-    /** OR omitted from postal map (English “or”); spell out Oregon for facets. */
-    .replace(/\bhillsboro\s*,\s*or\b/gi, 'Hillsboro, Oregon')
-    .replace(/\bhillsboro\s+or\b/gi, 'Hillsboro, Oregon')
-    .replace(/\bhanover\s*,\s*md\b/gi, 'Hanover, MD')
-    .replace(/\bhanover\s+md\b/gi, 'Hanover, MD')
-    .replace(/\bchantilly\s+va\b/gi, 'Chantilly, VA')
-    .replace(/\bconcord\s+ca\b/gi, 'Concord, CA')
-    .replace(/\bdetroit\s+mi\b/gi, 'Detroit, MI')
-    .replace(/\bclark\s+phl\b/gi, 'Clark, Philippines')
-    .replace(/\bcanada\s*&\s*usa\b/gi, 'Canada, United States')
-    .replace(/\busa\s*&\s*canada\b/gi, 'United States, Canada')
-    .replace(/\bcanada\s*&\s*us\b/gi, 'Canada, United States')
-    .replace(/\bus\s*&\s*canada\b/gi, 'United States, Canada')
-    /** Full names + optional `(Remote)` — pipe-split so both countries resolve (see tests). */
-    .replace(
-      /\bunited\s+states\s*&\s*canada(?:\s*\(\s*remote\s*\))?/gi,
-      'United States | Canada',
-    )
-    .replace(
-      /\bcanada\s*&\s*united\s+states(?:\s*\(\s*remote\s*\))?/gi,
-      'Canada | United States',
-    )
-    .replace(
-      /\bunited\s+states\s*&\s*emea\b/gi,
-      'United States, EMEA',
-    )
-    .replace(/\bemea\s*&\s*united\s+states\b/gi, 'EMEA, United States')
-    .replace(/\bbelgium\s*[-–—]\s*brussels?\s+office\b/gi, 'Brussels, Belgium')
-    .replace(/\bcdmx\d+\b/gi, 'Mexico City, Mexico')
-    .replace(/,\s*([a-z]{2})\s+united\s+states\b/gi, ', $1, United States')
-    .replace(
-      /\bdistributed\s*\(\s*([^)]+)\s*\)/gi,
-      (_m, inner: string) => inner.trim(),
-    )
-    .replace(/\bphillipines\b/gi, 'Philippines')
-    .replace(/\bae\s*[-–—]\s*dubai\b/gi, 'Dubai')
-    .replace(/\bca\s*[-–—]\s*toronto\b/gi, 'Toronto, Canada')
-    .replace(/\bil\s*[-–—]\s*tel\s+aviv\b/gi, 'Tel Aviv, Israel')
-    .replace(/\bsg\s*[-–—]\s*singapore\b/gi, 'Singapore')
-    .replace(/\bhk\s*[-–—]\s*hong\s+kong(?:\s+SAR)?\b/gi, 'Hong Kong')
-    .replace(/\bhong\s+kong\s+SAR\b/gi, 'Hong Kong')
-    .replace(/\bvietnam2\b/gi, 'Vietnam')
-    .replace(/\buk\s*[-–—]\s*london\b/gi, 'London, United Kingdom')
-    .replace(/\bus\s*[-–—]\s*san\s+francisco\b/gi, 'San Francisco, California')
-    .replace(/\bus\s*[-–—]\s*san\s+jose\b/gi, 'San Jose, California')
-    .replace(/\bindia\s*[-–—]\s*pune\b/gi, 'Pune, India')
-    .replace(/\blimassol\s+cyprus\b/gi, 'Limassol, Cyprus')
-    .replace(/\btechnological\s+pole\s+almada\b/gi, 'Lisbon, Portugal')
-    .replace(/\bsan\s+francisco\s+bay\s+area\b/gi, 'Bay Area')
-    .replace(/\bcongo\s*,?\s*brazzaville\b/gi, 'Congo - Brazzaville')
-    .replace(/\bnew\s+york\s+city\s+area\b/gi, 'New York')
-    .replace(/\bpittsburgh\s+area\b/gi, 'Pittsburgh')
-    .replace(/\bmiami\s+area\b/gi, 'Miami')
-    .replace(/\bamsterdam\s+l\s+remote\b/gi, 'Amsterdam')
-    .replace(/\bnew\s+york\s+city\b/gi, 'New York')
-    .replace(/\bseattle\s+metro\b/gi, 'Seattle')
-    .replace(/,\s*ca\s+united\s+states\b/gi, ', CA, United States')
-    .replace(/\bhq\s*:\s*/gi, '')
-    .replace(/\bremote\s+u\.s\.?\b/gi, 'United States')
-    .replace(/\bremote\s*,\s*usa\b/gi, 'United States')
-    .replace(/\bnew\s+york\s+city\s+office\b/gi, 'New York')
-    .replace(/\busa\s+-\s*remote\b/gi, 'United States')
-    .replace(/\bunited\s+states\s*[-–—]\s*remote\b/gi, 'United States')
-    .replace(/\bindia\s*[-–—]\s*bangalore\b/gi, 'Bangalore, India')
-    .replace(/\bindia\s*[-–—]\s*remote\b/gi, 'India')
-    .replace(/\btoronto\s*[-–—]\s*remote\b/gi, 'Toronto, Canada')
-    .replace(/\bau\s*[-–—]\s*melbourne\b/gi, 'Melbourne, Australia')
-    .replace(/\bengland\s*[-–—]\s*london\b/gi, 'London, United Kingdom')
-    .replace(/\bremote\s*\(\s*world\s*\)/gi, 'Worldwide')
-    .replace(/\bremote\s+international\b/gi, 'Worldwide')
-    .replace(/\bremote\s*[-–—]\s*international\b/gi, 'Worldwide')
-    .replace(/\bremote\s+hq\b/gi, 'Remote')
-    .replace(/\ball\s+offices\b/gi, '')
-    .replace(/\s*\(\s*hq\s*\)/gi, '')
-    .replace(/\bnyc\s*\([^)]*\)\s*hybrid\b/gi, 'New York')
-    .replace(/\bnew\s+york\s+office\s*\([^)]*\)/gi, 'New York')
-    .replace(
-      /\bsan\s+francisco\s*\(\s*on-?site\s*\)/gi,
-      'San Francisco, California',
-    )
-    .replace(/\bremote\s+-\s*us\s*&?\s*canada\b/gi, 'United States, Canada')
-    .replace(/\bunited\s+states\s*\(\s*remote\s*\)/gi, 'United States')
-    .replace(/\bcanada\s*\(\s*hybrid\s*\)\b/gi, 'Canada')
-    .replace(/\bremote\s*\(\s*canada\s*\)/gi, 'Canada')
-    .replace(/^\s*\(\s*can\s*\)\s*$/gi, 'Canada')
-    .replace(/^\s*united\s*$/gi, 'United States')
-    .replace(/\bchina\s*[-–—]\s*shanghai\b/gi, 'Shanghai, China')
-    .replace(/\bindia\s*[-–—]\s*karnataka\b/gi, 'Karnataka, India')
-    .replace(/\s*[-–—]\s*fully\s+remote\b/gi, '')
-    .replace(/\bremote\s+in\s+the\s+(usa|us)\b/gi, 'United States')
-    .replace(/\bus\s*[-–—]\s*distributed\b/gi, 'United States')
-    .replace(/\bus\s*[-–—]\s*illinois\b/gi, 'Illinois, United States')
-    .replace(/\bus\s*[-–—]\s*based\b/gi, 'United States')
-    .replace(/\bus\s+full[-\s]?time\b/gi, 'United States')
-    .replace(/\bindia\s+team\b/gi, 'India')
-    .replace(/\bwashington\s+d\.c\.?\b/gi, 'Washington, DC')
-    .replace(/\bwashington\s+dc\b/gi, 'Washington, DC')
-    .replace(/\breading\s*\(\s*london\s*\)/gi, 'Reading, United Kingdom')
-    .replace(/\b([a-z0-9]+)\s*\(\s*can\s*\)/gi, '$1, Canada')
-    .replace(/\bnorthlake\s+il\b/gi, 'Northlake, IL')
-    .replace(/\bwalnut\s+ca\b/gi, 'Walnut, CA')
-    .replace(/\bsan\s+antonio\s+tx\b/gi, 'San Antonio, TX')
-    .replace(/\bwallingford\s*,\s*oxfordshire\b/gi, 'Wallingford, United Kingdom')
-    .replace(/\bsan\s+francisco-hq\b/gi, 'San Francisco')
-    .replace(/\bpalo\s+alto\s+office\b/gi, 'Palo Alto')
-    .replace(/\bnew\s+york-office\s*\([^)]*\)/gi, 'New York')
-    /** Foster City + ATS hybrid / schedule noise (specific before generic `[^,|]*`). */
-    .replace(
-      /\bfoster\s+city\s*,\s*ca\s*\(\s*hybrid\s*\)\s*in[- ]office\s*m\s*,\s*w\s*,\s*f\b/gi,
-      'Foster City, CA',
-    )
-    .replace(/\bfoster\s+city\s*,\s*ca\s*\([^)]*\)[^,|]*/gi, 'Foster City, CA')
-    /** Omaha campus-style suffix (Nebraska). */
-    .replace(/\bomaha\s+riverfront\b/gi, 'Omaha, NE')
-    .replace(/\bmoonachie\s+nj\b/gi, 'Moonachie, NJ')
-    /** PA office + legal boilerplate. */
-    .replace(
-      /\bwest\s+chester\s*,\s*pa\b\s+and\s+unanticipated\s+worksites/gi,
-      'West Chester, PA',
-    );
+  return (
+    stripEmployerBrandFromLocation(preStripped)
+      /** Cape Town / Durban datacenter site codes — not US District of Columbia. */
+      .replace(/\bcape\s+town\s+dc\d*\b/gi, 'Cape Town')
+      .replace(/\bdurban\s+dc\d*\b/gi, 'Durban')
+      .replace(/\bjohannesburg\s+dc\d*\b/gi, 'Johannesburg')
+      .replace(/\bfort\s+worth\s+tx\b/gi, 'Fort Worth, TX')
+      .replace(/\bfrankfurt\s+am\s+main\b/gi, 'Frankfurt')
+      .replace(/\bft\.?\s*meade\b/gi, 'Fort Meade, MD')
+      .replace(/\bcentral\s*\/\s*western\s+us\b/gi, 'United States')
+      .replace(/\bcentral\s+us\b/gi, 'Central US, United States')
+      /** OR omitted from postal map (English “or”); spell out Oregon for facets. */
+      .replace(/\bhillsboro\s*,\s*or\b/gi, 'Hillsboro, Oregon')
+      .replace(/\bhillsboro\s+or\b/gi, 'Hillsboro, Oregon')
+      .replace(/\bhanover\s*,\s*md\b/gi, 'Hanover, MD')
+      .replace(/\bhanover\s+md\b/gi, 'Hanover, MD')
+      .replace(/\bchantilly\s+va\b/gi, 'Chantilly, VA')
+      .replace(/\bconcord\s+ca\b/gi, 'Concord, CA')
+      .replace(/\bdetroit\s+mi\b/gi, 'Detroit, MI')
+      .replace(/\bclark\s+phl\b/gi, 'Clark, Philippines')
+      .replace(/\bcanada\s*&\s*usa\b/gi, 'Canada, United States')
+      .replace(/\busa\s*&\s*canada\b/gi, 'United States, Canada')
+      .replace(/\bcanada\s*&\s*us\b/gi, 'Canada, United States')
+      .replace(/\bus\s*&\s*canada\b/gi, 'United States, Canada')
+      /** Full names + optional `(Remote)` — pipe-split so both countries resolve (see tests). */
+      .replace(
+        /\bunited\s+states\s*&\s*canada(?:\s*\(\s*remote\s*\))?/gi,
+        'United States | Canada',
+      )
+      .replace(
+        /\bcanada\s*&\s*united\s+states(?:\s*\(\s*remote\s*\))?/gi,
+        'Canada | United States',
+      )
+      .replace(/\bunited\s+states\s*&\s*emea\b/gi, 'United States, EMEA')
+      .replace(/\bemea\s*&\s*united\s+states\b/gi, 'EMEA, United States')
+      .replace(
+        /\bbelgium\s*[-–—]\s*brussels?\s+office\b/gi,
+        'Brussels, Belgium',
+      )
+      .replace(/\bcdmx\d+\b/gi, 'Mexico City, Mexico')
+      .replace(/,\s*([a-z]{2})\s+united\s+states\b/gi, ', $1, United States')
+      .replace(/\bdistributed\s*\(\s*([^)]+)\s*\)/gi, (_m, inner: string) =>
+        inner.trim(),
+      )
+      .replace(/\bphillipines\b/gi, 'Philippines')
+      .replace(/\bae\s*[-–—]\s*dubai\b/gi, 'Dubai')
+      .replace(/\bca\s*[-–—]\s*toronto\b/gi, 'Toronto, Canada')
+      .replace(/\bil\s*[-–—]\s*tel\s+aviv\b/gi, 'Tel Aviv, Israel')
+      .replace(/\bsg\s*[-–—]\s*singapore\b/gi, 'Singapore')
+      .replace(/\bhk\s*[-–—]\s*hong\s+kong(?:\s+SAR)?\b/gi, 'Hong Kong')
+      .replace(/\bhong\s+kong\s+SAR\b/gi, 'Hong Kong')
+      .replace(/\bvietnam2\b/gi, 'Vietnam')
+      .replace(/\buk\s*[-–—]\s*london\b/gi, 'London, United Kingdom')
+      .replace(
+        /\bus\s*[-–—]\s*san\s+francisco\b/gi,
+        'San Francisco, California',
+      )
+      .replace(/\bus\s*[-–—]\s*san\s+jose\b/gi, 'San Jose, California')
+      .replace(/\bindia\s*[-–—]\s*pune\b/gi, 'Pune, India')
+      .replace(/\blimassol\s+cyprus\b/gi, 'Limassol, Cyprus')
+      .replace(/\btechnological\s+pole\s+almada\b/gi, 'Lisbon, Portugal')
+      .replace(/\bsan\s+francisco\s+bay\s+area\b/gi, 'Bay Area')
+      .replace(/\bcongo\s*,?\s*brazzaville\b/gi, 'Congo - Brazzaville')
+      .replace(/\bnew\s+york\s+city\s+area\b/gi, 'New York')
+      .replace(/\bpittsburgh\s+area\b/gi, 'Pittsburgh')
+      .replace(/\bmiami\s+area\b/gi, 'Miami')
+      .replace(/\bamsterdam\s+l\s+remote\b/gi, 'Amsterdam')
+      .replace(/\bnew\s+york\s+city\b/gi, 'New York')
+      .replace(/\bseattle\s+metro\b/gi, 'Seattle')
+      .replace(/,\s*ca\s+united\s+states\b/gi, ', CA, United States')
+      .replace(/\bhq\s*:\s*/gi, '')
+      .replace(/\bremote\s+u\.s\.?\b/gi, 'United States')
+      .replace(/\bremote\s*,\s*usa\b/gi, 'United States')
+      .replace(/\bnew\s+york\s+city\s+office\b/gi, 'New York')
+      .replace(/\busa\s+-\s*remote\b/gi, 'United States')
+      .replace(/\bunited\s+states\s*[-–—]\s*remote\b/gi, 'United States')
+      .replace(/\bindia\s*[-–—]\s*bangalore\b/gi, 'Bangalore, India')
+      .replace(/\bindia\s*[-–—]\s*remote\b/gi, 'India')
+      .replace(/\btoronto\s*[-–—]\s*remote\b/gi, 'Toronto, Canada')
+      .replace(/\bau\s*[-–—]\s*melbourne\b/gi, 'Melbourne, Australia')
+      .replace(/\bengland\s*[-–—]\s*london\b/gi, 'London, United Kingdom')
+      .replace(/\bremote\s*\(\s*world\s*\)/gi, 'Worldwide')
+      .replace(/\bremote\s+international\b/gi, 'Worldwide')
+      .replace(/\bremote\s*[-–—]\s*international\b/gi, 'Worldwide')
+      .replace(/\bremote\s+hq\b/gi, 'Remote')
+      .replace(/\ball\s+offices\b/gi, '')
+      .replace(/\s*\(\s*hq\s*\)/gi, '')
+      .replace(/\bnyc\s*\([^)]*\)\s*hybrid\b/gi, 'New York')
+      .replace(/\bnew\s+york\s+office\s*\([^)]*\)/gi, 'New York')
+      .replace(
+        /\bsan\s+francisco\s*\(\s*on-?site\s*\)/gi,
+        'San Francisco, California',
+      )
+      .replace(/\bremote\s+-\s*us\s*&?\s*canada\b/gi, 'United States, Canada')
+      .replace(/\bunited\s+states\s*\(\s*remote\s*\)/gi, 'United States')
+      .replace(/\bcanada\s*\(\s*hybrid\s*\)\b/gi, 'Canada')
+      .replace(/\bremote\s*\(\s*canada\s*\)/gi, 'Canada')
+      .replace(/^\s*\(\s*can\s*\)\s*$/gi, 'Canada')
+      .replace(/^\s*united\s*$/gi, 'United States')
+      .replace(/\bchina\s*[-–—]\s*shanghai\b/gi, 'Shanghai, China')
+      .replace(/\bindia\s*[-–—]\s*karnataka\b/gi, 'Karnataka, India')
+      .replace(/\s*[-–—]\s*fully\s+remote\b/gi, '')
+      .replace(/\bremote\s+in\s+the\s+(usa|us)\b/gi, 'United States')
+      .replace(/\bus\s*[-–—]\s*distributed\b/gi, 'United States')
+      .replace(/\bus\s*[-–—]\s*illinois\b/gi, 'Illinois, United States')
+      .replace(/\bus\s*[-–—]\s*based\b/gi, 'United States')
+      .replace(/\bus\s+full[-\s]?time\b/gi, 'United States')
+      .replace(/\bindia\s+team\b/gi, 'India')
+      .replace(/\bwashington\s+d\.c\.?\b/gi, 'Washington, DC')
+      .replace(/\bwashington\s+dc\b/gi, 'Washington, DC')
+      .replace(/\breading\s*\(\s*london\s*\)/gi, 'Reading, United Kingdom')
+      .replace(/\b([a-z0-9]+)\s*\(\s*can\s*\)/gi, '$1, Canada')
+      .replace(/\bnorthlake\s+il\b/gi, 'Northlake, IL')
+      .replace(/\bwalnut\s+ca\b/gi, 'Walnut, CA')
+      .replace(/\bsan\s+antonio\s+tx\b/gi, 'San Antonio, TX')
+      .replace(
+        /\bwallingford\s*,\s*oxfordshire\b/gi,
+        'Wallingford, United Kingdom',
+      )
+      .replace(/\bsan\s+francisco-hq\b/gi, 'San Francisco')
+      .replace(/\bpalo\s+alto\s+office\b/gi, 'Palo Alto')
+      .replace(/\bnew\s+york-office\s*\([^)]*\)/gi, 'New York')
+      /** Foster City + ATS hybrid / schedule noise (specific before generic `[^,|]*`). */
+      .replace(
+        /\bfoster\s+city\s*,\s*ca\s*\(\s*hybrid\s*\)\s*in[- ]office\s*m\s*,\s*w\s*,\s*f\b/gi,
+        'Foster City, CA',
+      )
+      .replace(
+        /\bfoster\s+city\s*,\s*ca\s*\([^)]*\)[^,|]*/gi,
+        'Foster City, CA',
+      )
+      /** Omaha campus-style suffix (Nebraska). */
+      .replace(/\bomaha\s+riverfront\b/gi, 'Omaha, NE')
+      .replace(/\bmoonachie\s+nj\b/gi, 'Moonachie, NJ')
+      /** PA office + legal boilerplate. */
+      .replace(
+        /\bwest\s+chester\s*,\s*pa\b\s+and\s+unanticipated\s+worksites/gi,
+        'West Chester, PA',
+      )
+  );
 }
 
 /** Split on ; | /, spaced hyphens, and " or " so alternatives become separate segments. */
@@ -1670,10 +1694,7 @@ function mapsToUnitedStates(trimmedBit: string): boolean {
     return true;
   }
   const alias =
-    (COUNTRY_ALIASES[trimmedBit as keyof typeof COUNTRY_ALIASES] as
-      | string
-      | undefined) ??
-    (COUNTRY_ALIASES[fk as keyof typeof COUNTRY_ALIASES] as string | undefined);
+    (COUNTRY_ALIASES[trimmedBit] as string | undefined) ?? COUNTRY_ALIASES[fk];
   return alias === 'united states';
 }
 
@@ -1790,9 +1811,7 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
         : expandCommaSegmentToFacetTokens(normalizedPart);
     const trimmedBits = bitsSource
       .map((bit) =>
-        stripLeadingInSegment(
-          bit.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim(),
-        ),
+        stripLeadingInSegment(bit.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim()),
       )
       .filter((b): b is string => b.length > 0);
 
@@ -1847,7 +1866,9 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       if (mappedRegion) {
         tokens.add(mappedRegion);
       } else {
-        tokens.add(KNOWN_COUNTRIES.has(mappedCountry) ? mappedCountry : facetKey);
+        tokens.add(
+          KNOWN_COUNTRIES.has(mappedCountry) ? mappedCountry : facetKey,
+        );
       }
 
       /** `Georgia` is US state and country; US city hint or explicit US in segment picks the state. */
@@ -1957,7 +1978,10 @@ function buildTitleCountryPhraseEntries(): ReadonlyArray<{
 
 const TITLE_COUNTRY_PHRASE_ENTRIES = buildTitleCountryPhraseEntries();
 
-function phraseMatchesAsCountryMention(haystack: string, phrase: string): boolean {
+function phraseMatchesAsCountryMention(
+  haystack: string,
+  phrase: string,
+): boolean {
   const esc = escapeRegExp(phrase);
   const re = new RegExp(
     `(^|[^\\p{L}\\p{M}\\p{N}])${esc}([^\\p{L}\\p{M}\\p{N}]|$)`,

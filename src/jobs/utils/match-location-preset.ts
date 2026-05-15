@@ -1,5 +1,8 @@
 import { Job } from '../../database/entities/job.entity';
-import { formatRawLocation, stripCompanyNameFromLocation } from './clean-location';
+import {
+  formatRawLocation,
+  stripCompanyNameFromLocation,
+} from './clean-location';
 import {
   extractCountryMentionsFromText,
   extractLocationFacets,
@@ -22,7 +25,10 @@ export function normalizeCountryToken(value: string): string {
   return normalized;
 }
 
-function matchesSelectedCountries(job: Job, selectedCountries: string[]): boolean {
+function matchesSelectedCountries(
+  job: Job,
+  selectedCountries: string[],
+): boolean {
   if (selectedCountries.length === 0) {
     return false;
   }
@@ -79,7 +85,10 @@ function matchesSelectedCountries(job: Job, selectedCountries: string[]): boolea
  *   otherwise every `isRemote` listing worldwide would appear when users also tick Remote
  *   alongside countries.
  */
-export function matchesJobLocationPreset(job: Job, selectedLocations: string[]): boolean {
+export function matchesJobLocationPreset(
+  job: Job,
+  selectedLocations: string[],
+): boolean {
   const normalizedLocations = selectedLocations
     .map((value) => normalizeCountryToken(value))
     .filter((value) => value.length > 0);

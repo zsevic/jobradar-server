@@ -117,9 +117,7 @@ function isNonGeographicGreenhouseLocation(name: string): boolean {
     return false;
   }
   const segments = n
-    .split(
-      /\s*;\s*|\s*\|\s*|\s*\/\s*|\s+-\s+|\s+or\s+|\s+and\s+/i,
-    )
+    .split(/\s*;\s*|\s*\|\s*|\s*\/\s*|\s+-\s+|\s+or\s+|\s+and\s+/i)
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
   if (segments.length === 0) {

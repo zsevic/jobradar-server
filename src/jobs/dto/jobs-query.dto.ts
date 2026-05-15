@@ -52,7 +52,13 @@ const stackOptions = [
   'dart',
 ] as const;
 
-const seniorityOptions = ['intern', 'junior', 'mid', 'senior', 'staff'] as const;
+const seniorityOptions = [
+  'intern',
+  'junior',
+  'mid',
+  'senior',
+  'staff',
+] as const;
 
 const noStackRoles = [
   'devops',
@@ -89,12 +95,13 @@ export class JobsQueryDto {
 
   /** When set, all filter fields below are validated and used as feed overrides. */
   @IsOptional()
-  @IsIn(roles as unknown as string[])
+  @IsIn(roles)
   role?: (typeof roles)[number];
 
   @ValidateIf(
     (o: JobsQueryDto) =>
-      !!o.role && !noStackRoles.includes(o.role as (typeof noStackRoles)[number]),
+      !!o.role &&
+      !noStackRoles.includes(o.role as (typeof noStackRoles)[number]),
   )
   @IsArray()
   @ArrayMinSize(1)
@@ -104,7 +111,7 @@ export class JobsQueryDto {
 
   /** Single seniority filter (user selects one level). */
   @ValidateIf((o: JobsQueryDto) => !!o.role)
-  @IsIn(seniorityOptions as unknown as string[])
+  @IsIn(seniorityOptions)
   seniority?: (typeof seniorityOptions)[number];
 
   @ValidateIf((o: JobsQueryDto) => !!o.role)

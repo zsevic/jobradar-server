@@ -326,7 +326,10 @@ function mentionsAiOrMlIcRole(normalized: string): boolean {
   if (/\bai\s*&\s*ml\s+engineer\b/i.test(normalized)) {
     return true;
   }
-  if (/\bai\s*\/\s*ml\s+engineer\b/i.test(normalized) || /\bai\/ml\s+engineer\b/i.test(normalized)) {
+  if (
+    /\bai\s*\/\s*ml\s+engineer\b/i.test(normalized) ||
+    /\bai\/ml\s+engineer\b/i.test(normalized)
+  ) {
     return true;
   }
   if (/\bai\s+agents?\b/i.test(normalized)) {
@@ -394,7 +397,9 @@ function mentionsPythonExpertStyleRole(normalized: string): boolean {
   }
   const withinTitle = '[^\\n]{0,160}?';
   return (
-    new RegExp(`\\bexpert\\b${withinTitle}\\bpython\\b`, 'i').test(normalized) ||
+    new RegExp(`\\bexpert\\b${withinTitle}\\bpython\\b`, 'i').test(
+      normalized,
+    ) ||
     new RegExp(`\\bpython\\b${withinTitle}\\bexpert\\b`, 'i').test(normalized)
   );
 }

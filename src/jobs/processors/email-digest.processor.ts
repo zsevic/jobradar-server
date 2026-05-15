@@ -3,7 +3,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Job as BullJob } from 'bullmq';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import { GumroadService } from '../../auth/gumroad.service';
@@ -37,8 +36,9 @@ export class EmailDigestProcessor extends WorkerHost {
     super();
   }
 
-  async process(_job: BullJob): Promise<void> {
-    const maxJobs = this.configService.get<number>('EMAIL_DIGEST_MAX_JOBS') ?? 25;
+  async process(): Promise<void> {
+    const maxJobs =
+      this.configService.get<number>('EMAIL_DIGEST_MAX_JOBS') ?? 25;
 
     const distinctUsers = await this.pendingRepository
       .createQueryBuilder('p')
@@ -51,7 +51,10 @@ export class EmailDigestProcessor extends WorkerHost {
     }
   }
 
-  private async processUserDigest(userId: string, maxJobs: number): Promise<void> {
+  private async processUserDigest(
+    userId: string,
+    maxJobs: number,
+  ): Promise<void> {
     const user = await this.userRepository.findOneBy({ id: userId });
     if (!user) {
       this.logger.warn(`Digest skip: user not found userId=${userId}`);
@@ -162,7 +165,9 @@ export class EmailDigestProcessor extends WorkerHost {
           .orIgnore()
           .execute();
       }
-      await queryRunner.manager.delete(PendingMatchEmail, { id: In(pendingIds) });
+      await queryRunner.manager.delete(PendingMatchEmail, {
+        id: In(pendingIds),
+      });
       if (advanceLastDigestSentAt) {
         await queryRunner.manager.update(
           User,
@@ -202,7 +207,8 @@ export class EmailDigestProcessor extends WorkerHost {
     targetUrl: string,
   ): Promise<string> {
     const base =
-      this.configService.get<string>('BACKEND_ORIGIN') ?? 'http://localhost:3000';
+      this.configService.get<string>('BACKEND_ORIGIN') ??
+      'http://localhost:3000';
     const token = await this.jwtService.signAsync(
       {
         sub: userId,

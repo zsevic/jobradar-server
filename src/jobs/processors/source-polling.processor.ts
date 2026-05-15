@@ -1,6 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import { Job as BullJob } from 'bullmq';
 import { SOURCE_POLLING_QUEUE } from '../jobs.constants';
 import { JobsService } from '../jobs.service';
 
@@ -13,7 +12,7 @@ export class SourcePollingProcessor extends WorkerHost {
     super();
   }
 
-  async process(_job: BullJob): Promise<void> {
+  async process(): Promise<void> {
     await this.jobsService.enqueueAshbySources();
     await this.jobsService.enqueueGreenhouseSources();
     await this.jobsService.enqueueWorkableSources();

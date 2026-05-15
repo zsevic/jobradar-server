@@ -44,9 +44,7 @@ function expandInclusive(levels: ExtractedSeniority[]): ExtractedSeniority[] {
  * band) > staff (incl. leadership keywords) > L-levels > Roman / Arabic level
  * suffix lists > senior keyword > mid keyword.
  */
-export function extractSeniorityFromTitle(
-  title: string,
-): ExtractedSeniority[] {
+export function extractSeniorityFromTitle(title: string): ExtractedSeniority[] {
   const normalized = title
     .toLowerCase()
     .replace(/[.,/()_-]+/g, ' ')

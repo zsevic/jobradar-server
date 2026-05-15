@@ -30,7 +30,9 @@ async function runDatabaseBootstrap(): Promise<void> {
         : 'Database migrations are up to date',
     );
   } else {
-    bootstrapLogger.log('SKIP_DB_MIGRATIONS=true — skipping database migrations on boot');
+    bootstrapLogger.log(
+      'SKIP_DB_MIGRATIONS=true — skipping database migrations on boot',
+    );
   }
 
   if (!skipSeed) {

@@ -127,10 +127,7 @@ export class GumroadService {
       return { ok: false, reason: 'refunded' };
     }
     const purchaseEmail = (response.purchase.email ?? '').trim().toLowerCase();
-    if (
-      purchaseEmail &&
-      purchaseEmail !== user.email.trim().toLowerCase()
-    ) {
+    if (purchaseEmail && purchaseEmail !== user.email.trim().toLowerCase()) {
       return { ok: false, reason: 'email_mismatch' };
     }
     return { ok: true };
