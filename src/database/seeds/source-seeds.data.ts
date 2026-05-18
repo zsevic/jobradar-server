@@ -475,7 +475,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   },
   {
     provider: SourceProvider.ASHBY,
-    externalId: 'ouro-careers-page',
+    externalId: 'ouro careers page',
     name: 'Ouro',
   },
   {
@@ -3227,7 +3227,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'sola', name: 'Sola' },
   {
     provider: SourceProvider.ASHBY,
-    externalId: 'Superhuman%20Platform%20Inc',
+    externalId: 'Superhuman Platform Inc',
     name: 'Superhuman Platform Inc',
   },
   {
