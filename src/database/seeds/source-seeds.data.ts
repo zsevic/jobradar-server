@@ -320,7 +320,11 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'owner', name: 'Owner' },
   { provider: SourceProvider.ASHBY, externalId: 'cleric', name: 'Cleric' },
   { provider: SourceProvider.ASHBY, externalId: 'dust', name: 'Dust' },
-  { provider: SourceProvider.ASHBY, externalId: 'dualentry', name: 'DualEntry' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'dualentry',
+    name: 'DualEntry',
+  },
   {
     provider: SourceProvider.ASHBY,
     externalId: 'sfcompute',
