@@ -220,7 +220,6 @@ export const sourceSeeds: SourceSeedItem[] = [
     name: 'TensorWave',
   },
   { provider: SourceProvider.ASHBY, externalId: 'ekho', name: 'Ekho' },
-  { provider: SourceProvider.ASHBY, externalId: 'flankai', name: 'Flank AI' },
   { provider: SourceProvider.ASHBY, externalId: 'partiful', name: 'Partiful' },
   {
     provider: SourceProvider.ASHBY,
@@ -321,6 +320,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'owner', name: 'Owner' },
   { provider: SourceProvider.ASHBY, externalId: 'cleric', name: 'Cleric' },
   { provider: SourceProvider.ASHBY, externalId: 'dust', name: 'Dust' },
+  { provider: SourceProvider.ASHBY, externalId: 'dualentry', name: 'DualEntry' },
   {
     provider: SourceProvider.ASHBY,
     externalId: 'sfcompute',
@@ -576,7 +576,6 @@ export const sourceSeeds: SourceSeedItem[] = [
   },
   { provider: SourceProvider.ASHBY, externalId: 'betterup', name: 'BetterUp' },
   { provider: SourceProvider.ASHBY, externalId: 'laurel', name: 'Laurel' },
-  { provider: SourceProvider.ASHBY, externalId: 'lime', name: 'Lime' },
   {
     provider: SourceProvider.ASHBY,
     externalId: 'meridianlink',
@@ -818,11 +817,6 @@ export const sourceSeeds: SourceSeedItem[] = [
   },
   {
     provider: SourceProvider.GREENHOUSE,
-    externalId: 'paradigminccareersopenpositions',
-    name: 'Paradigm',
-  },
-  {
-    provider: SourceProvider.GREENHOUSE,
     externalId: 'processstreet',
     name: 'Process Street',
   },
@@ -835,7 +829,6 @@ export const sourceSeeds: SourceSeedItem[] = [
   },
   { provider: SourceProvider.GREENHOUSE, externalId: 'vast', name: 'Vast' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'xai', name: 'xAI' },
-  { provider: SourceProvider.GREENHOUSE, externalId: 'tangoio', name: 'Tango' },
   {
     provider: SourceProvider.GREENHOUSE,
     externalId: 'superbet',
@@ -2831,11 +2824,6 @@ export const sourceSeeds: SourceSeedItem[] = [
   },
   {
     provider: SourceProvider.GREENHOUSE,
-    externalId: 'apertumonline',
-    name: 'Apertum Online',
-  },
-  {
-    provider: SourceProvider.GREENHOUSE,
     externalId: 'joyousteam',
     name: 'Joyous',
   },
@@ -2853,7 +2841,6 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'constellationspace',
     name: 'Constellation Space',
   },
-  { provider: SourceProvider.ASHBY, externalId: 'elastic-co', name: 'Elastic' },
   {
     provider: SourceProvider.ASHBY,
     externalId: 'honeybook',
@@ -2864,7 +2851,6 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'mistral', name: 'Mistral' },
   { provider: SourceProvider.ASHBY, externalId: 'mutiny', name: 'Mutiny' },
   { provider: SourceProvider.ASHBY, externalId: 'nuon', name: 'Nuon' },
-  { provider: SourceProvider.ASHBY, externalId: 'nutanix', name: 'Nutanix' },
   { provider: SourceProvider.ASHBY, externalId: 'polymath', name: 'Polymath' },
   { provider: SourceProvider.ASHBY, externalId: 'share', name: 'Share' },
   { provider: SourceProvider.ASHBY, externalId: 'sifflet', name: 'Sifflet' },
@@ -3053,11 +3039,6 @@ export const sourceSeeds: SourceSeedItem[] = [
     provider: SourceProvider.ASHBY,
     externalId: 'lightspark',
     name: 'Lightspark',
-  },
-  {
-    provider: SourceProvider.ASHBY,
-    externalId: 'lindushealth',
-    name: 'Lindus Health',
   },
   { provider: SourceProvider.ASHBY, externalId: 'liveflow', name: 'LiveFlow' },
   {
@@ -3250,11 +3231,6 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'foursquare',
     name: 'Foursquare',
   },
-  {
-    provider: SourceProvider.ASHBY,
-    externalId: 'meadowmemorials',
-    name: 'Meadow Memorials',
-  },
   { provider: SourceProvider.ASHBY, externalId: 'qdrant.tech', name: 'Qdrant' },
   { provider: SourceProvider.ASHBY, externalId: 'spoton', name: 'SpotOn' },
   { provider: SourceProvider.ASHBY, externalId: 'wrapbook', name: 'Wrapbook' },
@@ -3343,11 +3319,6 @@ export const sourceSeeds: SourceSeedItem[] = [
     provider: SourceProvider.GREENHOUSE,
     externalId: 'systemstechnologyresearch',
     name: 'System Technology Research',
-  },
-  {
-    provider: SourceProvider.GREENHOUSE,
-    externalId: 'adventisementstrikeltd',
-    name: 'Advertisement Strike',
   },
   { provider: SourceProvider.GREENHOUSE, externalId: 'akuity', name: 'Akuity' },
   {
