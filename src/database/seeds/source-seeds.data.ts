@@ -1198,11 +1198,6 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'servant',
     name: 'Servant',
   },
-  {
-    provider: SourceProvider.WORKABLE,
-    externalId: 'kupa-global',
-    name: 'Kupa Global',
-  },
   { provider: SourceProvider.WORKABLE, externalId: 'maxana', name: 'Maxana' },
   {
     provider: SourceProvider.WORKABLE,
