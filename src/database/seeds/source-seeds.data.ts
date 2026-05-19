@@ -2883,6 +2883,11 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'atob', name: 'AtoB' },
   {
     provider: SourceProvider.ASHBY,
+    externalId: 'atomic-invest',
+    name: 'Atomic Invest',
+  },
+  {
+    provider: SourceProvider.ASHBY,
     externalId: 'august-health',
     name: 'August Health',
   },
