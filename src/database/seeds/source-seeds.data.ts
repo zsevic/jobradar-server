@@ -3620,6 +3620,7 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'seatgeek',
     name: 'SeatGeek',
   },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'dbeaver', name: 'DBeaver' },
   {
     provider: SourceProvider.GREENHOUSE,
     externalId: 'datadog',
