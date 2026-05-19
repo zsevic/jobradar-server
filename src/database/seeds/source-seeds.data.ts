@@ -3177,6 +3177,7 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'thirstysprout',
     name: 'Thirsty Sprout',
   },
+  { provider: SourceProvider.ASHBY, externalId: 'tldr.tech', name: 'TLDR' },
   { provider: SourceProvider.ASHBY, externalId: 'tonal', name: 'Tonal' },
   {
     provider: SourceProvider.ASHBY,
