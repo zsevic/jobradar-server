@@ -2847,7 +2847,6 @@ export const sourceSeeds: SourceSeedItem[] = [
   },
   { provider: SourceProvider.ASHBY, externalId: 'litmus', name: 'Litmus' },
   { provider: SourceProvider.ASHBY, externalId: 'maven', name: 'Maven' },
-  { provider: SourceProvider.ASHBY, externalId: 'mistral', name: 'Mistral' },
   { provider: SourceProvider.ASHBY, externalId: 'mutiny', name: 'Mutiny' },
   { provider: SourceProvider.ASHBY, externalId: 'nuon', name: 'Nuon' },
   { provider: SourceProvider.ASHBY, externalId: 'polymath', name: 'Polymath' },
@@ -3620,7 +3619,11 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'seatgeek',
     name: 'SeatGeek',
   },
-  { provider: SourceProvider.GREENHOUSE, externalId: 'dbeaver', name: 'DBeaver' },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'dbeaver',
+    name: 'DBeaver',
+  },
   {
     provider: SourceProvider.GREENHOUSE,
     externalId: 'datadog',
