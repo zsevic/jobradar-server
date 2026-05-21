@@ -3175,6 +3175,11 @@ export const sourceSeeds: SourceSeedItem[] = [
   { provider: SourceProvider.ASHBY, externalId: 'tenex', name: 'Tenex' },
   {
     provider: SourceProvider.ASHBY,
+    externalId: 'telepatia',
+    name: 'Telepatia',
+  },
+  {
+    provider: SourceProvider.ASHBY,
     externalId: 'thatgamecompany',
     name: 'That Game Company',
   },
@@ -4011,6 +4016,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   },
   { provider: SourceProvider.WORKABLE, externalId: 'seenio', name: 'Seenio' },
   { provider: SourceProvider.WORKABLE, externalId: 'm-files', name: 'M-Files' },
+  { provider: SourceProvider.WORKABLE, externalId: 'modash', name: 'Modash' },
   {
     provider: SourceProvider.WORKABLE,
     externalId: 'resethealth',
