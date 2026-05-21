@@ -4,8 +4,10 @@ import {
   stripCompanyNameFromLocation,
 } from './clean-location';
 import {
+  extractCountriesFromGeoScopedRemoteText,
   extractCountryMentionsFromText,
   extractLocationFacets,
+  textImpliesGeoScopedRemote,
 } from './normalize-location';
 
 /** Preset token for remote-friendly roles (aligned with frontend `REMOTE_LOCATION`). */
@@ -14,6 +16,24 @@ export const REMOTE_LOCATION = 'remote';
 /** Preset token for location-agnostic remote only (aligned with frontend `FULLY_REMOTE_LOCATION`). */
 export const FULLY_REMOTE_LOCATION = 'fully-remote';
 
+function jobImpliesGeoScopedRemote(job: Job): boolean {
+  if (job.locationCountries.length > 0 || job.locationRegions.length > 0) {
+    return true;
+  }
+  if (textImpliesGeoScopedRemote(job.title)) {
+    return true;
+  }
+  const raw = job.locationRaw ?? job.location;
+  if (textImpliesGeoScopedRemote(raw)) {
+    return true;
+  }
+  const titleCountries = [
+    ...extractCountryMentionsFromText(job.title),
+    ...extractCountriesFromGeoScopedRemoteText(job.title),
+  ];
+  return titleCountries.length > 0;
+}
+
 export function isFullyRemoteJob(job: Job): boolean {
   if (!job.isRemote) {
     return false;
@@ -21,7 +41,7 @@ export function isFullyRemoteJob(job: Job): boolean {
   if (job.location.trim().toLowerCase() !== 'remote') {
     return false;
   }
-  if (job.locationCountries.length > 0 || job.locationRegions.length > 0) {
+  if (jobImpliesGeoScopedRemote(job)) {
     return false;
   }
   const raw = (job.locationRaw ?? job.location).toLowerCase();

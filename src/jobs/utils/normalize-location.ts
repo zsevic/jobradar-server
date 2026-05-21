@@ -1927,6 +1927,66 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
   };
 }
 
+/** `{geo} remote` / `remote - {geo}` in titles or location text (e.g. `US Remote`). */
+const GEO_SCOPED_REMOTE_PREFIX_RE =
+  /\b(us|usa|u\.s\.a?\.?|uk|u\.k\.|eu|ca|canada|india|germany|france|australia|poland|ireland|netherlands|spain|italy|mexico|brazil|japan|singapore)\s+remote\b/gi;
+
+const GEO_SCOPED_REMOTE_SUFFIX_RE =
+  /\bremote\s*(?:[-–—:,/]\s*|\s+)(us|usa|u\.s\.a?\.?|uk|u\.k\.|eu|ca|canada|india|germany|france|australia|poland|ireland|netherlands|spain|italy|mexico|brazil|japan|singapore)(?:\b|$)/gi;
+
+const GEO_SCOPED_REMOTE_REGION_PREFIX_RE =
+  /\b(emea|apac|latam|mena|noram|nordics|dach|iberia)\s+remote\b/gi;
+
+const GEO_SCOPED_REMOTE_REGION_SUFFIX_RE =
+  /\bremote\s*(?:[-–—:,/]\s*|\s+)(emea|apac|latam|mena|noram|nordics|dach|iberia)(?:\b|$)/gi;
+
+function countryFromGeoScopedRemoteToken(token: string): string | null {
+  const cleaned = token.toLowerCase().replace(/\./g, '').trim();
+  if (!cleaned) {
+    return null;
+  }
+  const hint = canonicalizeCountryHint(cleaned);
+  return KNOWN_COUNTRIES.has(hint) ? hint : null;
+}
+
+/**
+ * Parses country tokens glued to “remote” in titles (e.g. `US Remote` → united states).
+ * Safer than allowing bare `us` in generic title country extraction.
+ */
+export function extractCountriesFromGeoScopedRemoteText(text: string): string[] {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return [];
+  }
+  const found = new Set<string>();
+  for (const re of [GEO_SCOPED_REMOTE_PREFIX_RE, GEO_SCOPED_REMOTE_SUFFIX_RE]) {
+    re.lastIndex = 0;
+    let match = re.exec(trimmed);
+    while (match) {
+      const country = countryFromGeoScopedRemoteToken(match[1] ?? '');
+      if (country) {
+        found.add(country);
+      }
+      match = re.exec(trimmed);
+    }
+  }
+  return Array.from(found);
+}
+
+export function textImpliesGeoScopedRemote(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return false;
+  }
+  if (extractCountriesFromGeoScopedRemoteText(trimmed).length > 0) {
+    return true;
+  }
+  return (
+    GEO_SCOPED_REMOTE_REGION_PREFIX_RE.test(trimmed) ||
+    GEO_SCOPED_REMOTE_REGION_SUFFIX_RE.test(trimmed)
+  );
+}
+
 /**
  * Short country/region codes allowed in job titles (excludes e.g. `us` / `in` to avoid
  * English-word false positives like “tell us” / “checking in”).

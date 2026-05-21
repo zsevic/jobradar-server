@@ -61,6 +61,28 @@ describe('isFullyRemoteJob', () => {
       ),
     ).toBe(false);
   });
+
+  it('returns false when title has geo-scoped remote like US Remote', () => {
+    expect(
+      isFullyRemoteJob(
+        makeJob({
+          title:
+            'Senior Full Stack Engineer – EHR Integrations - US Remote',
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it('returns false when locationCountries were set from geo-scoped title', () => {
+    expect(
+      isFullyRemoteJob(
+        makeJob({
+          title: 'Engineer - US Remote',
+          locationCountries: ['united states'],
+        }),
+      ),
+    ).toBe(false);
+  });
 });
 
 describe('matchesJobLocationPreset', () => {

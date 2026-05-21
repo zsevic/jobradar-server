@@ -13,6 +13,7 @@ import {
   stripCompanyNameFromLocation,
 } from '../utils/clean-location';
 import {
+  extractCountriesFromGeoScopedRemoteText,
   extractCountryMentionsFromText,
   extractLocationFacets,
   isCanonicalRegionToken,
@@ -143,11 +144,17 @@ export class JobProcessProcessor extends WorkerHost {
     }
 
     if (locationFacets.countries.length === 0) {
-      const countriesFromTitle = extractCountryMentionsFromText(input.title);
+      const countriesFromTitle = [
+        ...extractCountryMentionsFromText(input.title),
+        ...extractCountriesFromGeoScopedRemoteText(input.title),
+      ];
       if (countriesFromTitle.length > 0) {
-        locationFacets.countries = countriesFromTitle;
+        locationFacets.countries = Array.from(new Set(countriesFromTitle));
         locationFacets.tokens = Array.from(
-          new Set<string>([...locationFacets.tokens, ...countriesFromTitle]),
+          new Set<string>([
+            ...locationFacets.tokens,
+            ...locationFacets.countries,
+          ]),
         );
       }
     }
