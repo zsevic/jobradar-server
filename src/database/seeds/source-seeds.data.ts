@@ -3913,6 +3913,7 @@ export const sourceSeeds: SourceSeedItem[] = [
     name: 'CoolGames',
   },
   { provider: SourceProvider.WORKABLE, externalId: 'servme-1', name: 'ServMe' },
+  { provider: SourceProvider.WORKABLE, externalId: 'sperasoft', name: 'Sperasoft' },
   {
     provider: SourceProvider.WORKABLE,
     externalId: 'globaldevgroup',
