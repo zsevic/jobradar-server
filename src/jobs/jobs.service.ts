@@ -19,6 +19,10 @@ import {
   matchesJobLocationPreset,
   normalizeCountryToken,
 } from './utils/match-location-preset';
+import {
+  roleTitleKeywordNeedsWordBoundary,
+  roleTitleKeywordRegexPattern,
+} from './utils/match-role-title-keyword';
 import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
 
 @Injectable()
@@ -537,12 +541,22 @@ export class JobsService {
                 legacyQb.andWhere(
                   new Brackets((keywordQb) => {
                     for (const [index, keyword] of roleKeywords.entries()) {
-                      keywordQb.orWhere(
-                        `LOWER(job.title) LIKE :roleKeyword${index}`,
-                        {
-                          [`roleKeyword${index}`]: `%${keyword.toLowerCase()}%`,
-                        },
-                      );
+                      if (roleTitleKeywordNeedsWordBoundary(keyword)) {
+                        keywordQb.orWhere(
+                          `LOWER(job.title) ~* :roleKeyword${index}`,
+                          {
+                            [`roleKeyword${index}`]:
+                              roleTitleKeywordRegexPattern(keyword),
+                          },
+                        );
+                      } else {
+                        keywordQb.orWhere(
+                          `LOWER(job.title) LIKE :roleKeyword${index}`,
+                          {
+                            [`roleKeyword${index}`]: `%${keyword.toLowerCase()}%`,
+                          },
+                        );
+                      }
                     }
                   }),
                 );

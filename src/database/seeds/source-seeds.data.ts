@@ -2998,6 +2998,7 @@ export const sourceSeeds: SourceSeedItem[] = [
     name: 'Handshake',
   },
   { provider: SourceProvider.ASHBY, externalId: 'hawk', name: 'Hawk' },
+  { provider: SourceProvider.ASHBY, externalId: 'haast', name: 'Haast' },
   { provider: SourceProvider.ASHBY, externalId: 'hcompany', name: 'H Company' },
   { provider: SourceProvider.ASHBY, externalId: 'heyjobs', name: 'HeyJobs' },
   {
