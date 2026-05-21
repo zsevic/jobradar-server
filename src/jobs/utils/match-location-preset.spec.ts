@@ -50,9 +50,7 @@ describe('isFullyRemoteJob', () => {
 
   it('returns false when locationCountries are set', () => {
     expect(
-      isFullyRemoteJob(
-        makeJob({ locationCountries: ['united states'] }),
-      ),
+      isFullyRemoteJob(makeJob({ locationCountries: ['united states'] })),
     ).toBe(false);
   });
 
@@ -67,9 +65,9 @@ describe('isFullyRemoteJob', () => {
 
 describe('matchesJobLocationPreset', () => {
   it('matches fully-remote-only preset for fully remote jobs', () => {
-    expect(
-      matchesJobLocationPreset(makeJob(), [FULLY_REMOTE_LOCATION]),
-    ).toBe(true);
+    expect(matchesJobLocationPreset(makeJob(), [FULLY_REMOTE_LOCATION])).toBe(
+      true,
+    );
   });
 
   it('does not match fully-remote-only for broad remote with geo', () => {
