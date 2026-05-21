@@ -11,6 +11,26 @@ import {
 /** Preset token for remote-friendly roles (aligned with frontend `REMOTE_LOCATION`). */
 export const REMOTE_LOCATION = 'remote';
 
+/** Preset token for location-agnostic remote only (aligned with frontend `FULLY_REMOTE_LOCATION`). */
+export const FULLY_REMOTE_LOCATION = 'fully-remote';
+
+export function isFullyRemoteJob(job: Job): boolean {
+  if (!job.isRemote) {
+    return false;
+  }
+  if (job.location.trim().toLowerCase() !== 'remote') {
+    return false;
+  }
+  if (job.locationCountries.length > 0 || job.locationRegions.length > 0) {
+    return false;
+  }
+  const raw = (job.locationRaw ?? job.location).toLowerCase();
+  if (/\bhybrid\b/.test(raw)) {
+    return false;
+  }
+  return true;
+}
+
 export function normalizeCountryToken(value: string): string {
   const normalized = value.trim().toLowerCase();
   if (normalized === 'us' || normalized === 'usa') {
@@ -77,13 +97,12 @@ function matchesSelectedCountries(
 /**
  * Location matching rules:
  *
- * - **Remote only** (preset is just `remote`): any job with `isRemote` matches.
- * - **One or more countries**: job must match a selected country via parsed facets,
- *   stored location columns, location text, or (if both are empty) country mentions in the
- *   job title. Being
- *   remote is **not** enough by itself,
- *   otherwise every `isRemote` listing worldwide would appear when users also tick Remote
- *   alongside countries.
+ * - **Remote only** (`remote`): any job with `isRemote` matches.
+ * - **Fully remote only** (`fully-remote`): {@link isFullyRemoteJob} (no geo/hybrid).
+ * - **Countries**: country match via facets / stored columns / title.
+ * - **Countries + fully-remote**: country match OR fully remote job.
+ * - **Countries + remote**: country match only (broad remote does not add worldwide listings).
+ * - **remote + fully-remote** (no countries): broad `isRemote`.
  */
 export function matchesJobLocationPreset(
   job: Job,
@@ -97,17 +116,30 @@ export function matchesJobLocationPreset(
   }
 
   const wantsRemote = normalizedLocations.includes(REMOTE_LOCATION);
+  const wantsFullyRemote = normalizedLocations.includes(FULLY_REMOTE_LOCATION);
   const selectedCountries = normalizedLocations.filter(
-    (value) => value !== REMOTE_LOCATION,
+    (value) => value !== REMOTE_LOCATION && value !== FULLY_REMOTE_LOCATION,
   );
 
-  if (wantsRemote && selectedCountries.length === 0) {
+  if (selectedCountries.length > 0) {
+    const countryMatch = matchesSelectedCountries(job, selectedCountries);
+    if (wantsFullyRemote) {
+      return countryMatch || isFullyRemoteJob(job);
+    }
+    return countryMatch;
+  }
+
+  if (wantsRemote && wantsFullyRemote) {
     return job.isRemote;
   }
 
-  if (selectedCountries.length > 0) {
-    return matchesSelectedCountries(job, selectedCountries);
+  if (wantsFullyRemote) {
+    return isFullyRemoteJob(job);
   }
 
-  return wantsRemote && job.isRemote;
+  if (wantsRemote) {
+    return job.isRemote;
+  }
+
+  return false;
 }
