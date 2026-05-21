@@ -1953,7 +1953,9 @@ function countryFromGeoScopedRemoteToken(token: string): string | null {
  * Parses country tokens glued to “remote” in titles (e.g. `US Remote` → united states).
  * Safer than allowing bare `us` in generic title country extraction.
  */
-export function extractCountriesFromGeoScopedRemoteText(text: string): string[] {
+export function extractCountriesFromGeoScopedRemoteText(
+  text: string,
+): string[] {
   const trimmed = text.trim();
   if (!trimmed) {
     return [];

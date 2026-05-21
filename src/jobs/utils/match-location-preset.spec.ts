@@ -66,8 +66,7 @@ describe('isFullyRemoteJob', () => {
     expect(
       isFullyRemoteJob(
         makeJob({
-          title:
-            'Senior Full Stack Engineer – EHR Integrations - US Remote',
+          title: 'Senior Full Stack Engineer – EHR Integrations - US Remote',
         }),
       ),
     ).toBe(false);
