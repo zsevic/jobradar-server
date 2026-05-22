@@ -58,6 +58,14 @@ function resolveValidDate(value?: string | Date | null): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+/** Public Workable jobs use `state` for region (e.g. "Bogota"), not listing status. */
+function isWorkableJobPublished(job: WorkableJob): boolean {
+  if (job.published_on?.trim()) {
+    return true;
+  }
+  return !job.state || job.state === 'published';
+}
+
 @Injectable()
 export class WorkableAdapter implements JobProviderAdapter {
   private readonly logger = new Logger(WorkableAdapter.name);
@@ -86,8 +94,7 @@ export class WorkableAdapter implements JobProviderAdapter {
     return jobs
       .filter((job) => {
         const hasBasics = !!job.title && !!(job.url || job.shortlink);
-        const isPublished = !job.state || job.state === 'published';
-        return hasBasics && isPublished;
+        return hasBasics && isWorkableJobPublished(job);
       })
       .map((job) => {
         const rawLocation = formatRawLocation(this.resolveLocation(job));
