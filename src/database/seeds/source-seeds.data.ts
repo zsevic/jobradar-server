@@ -4021,6 +4021,7 @@ export const sourceSeeds: SourceSeedItem[] = [
   },
   { provider: SourceProvider.WORKABLE, externalId: 'seenio', name: 'Seenio' },
   { provider: SourceProvider.WORKABLE, externalId: 'm-files', name: 'M-Files' },
+  { provider: SourceProvider.WORKABLE, externalId: 'minka-1', name: 'Minka' },
   { provider: SourceProvider.WORKABLE, externalId: 'modash', name: 'Modash' },
   {
     provider: SourceProvider.WORKABLE,
