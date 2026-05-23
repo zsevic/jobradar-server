@@ -2118,7 +2118,9 @@ export function extractCountryMentionsFromText(text: string): string[] {
   return Array.from(found);
 }
 
-const ISO3166_ALPHA2_DISPLAY = new Intl.DisplayNames(['en'], { type: 'region' });
+const ISO3166_ALPHA2_DISPLAY = new Intl.DisplayNames(['en'], {
+  type: 'region',
+});
 
 /**
  * Resolve ISO 3166-1 alpha-2 codes (e.g. Lever `country: "ES"`) to {@link KNOWN_COUNTRIES} tokens.
