@@ -1861,6 +1861,11 @@ export const sourceSeeds = [
   { provider: SourceProvider.GREENHOUSE, externalId: 'figma', name: 'Figma' },
   {
     provider: SourceProvider.GREENHOUSE,
+    externalId: 'fingerprint',
+    name: 'Fingerprint',
+  },
+  {
+    provider: SourceProvider.GREENHOUSE,
     externalId: 'next-internal',
     name: 'Next',
   },
