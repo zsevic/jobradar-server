@@ -16,8 +16,7 @@ import {
   extractCountriesFromGeoScopedRemoteText,
   extractCountryMentionsFromText,
   extractLocationFacets,
-  isCanonicalRegionToken,
-  splitAndCanonicalizeCountryHints,
+  mergeLocationFacetsWithCountryHints,
 } from '../utils/normalize-location';
 import { transliterateLocationDisplay } from '../utils/transliterate-location';
 import { JobsService } from '../jobs.service';
@@ -36,22 +35,6 @@ interface PersistJobPayload {
 export class JobProcessProcessor extends WorkerHost {
   private readonly TWO_DAYS_IN_MS = 48 * 60 * 60 * 1000;
   private readonly logger = new Logger(JobProcessProcessor.name);
-  private readonly REGION_HINTS = new Set<string>([
-    'apac',
-    'emea',
-    'latam',
-    'mena',
-    'americas',
-    'north america',
-    'south america',
-    'asia',
-    'europe',
-    'european union',
-    'eu',
-    'east coast',
-    'west coast',
-  ]);
-
   constructor(
     @InjectRepository(Job)
     private readonly jobRepository: Repository<Job>,
@@ -117,30 +100,13 @@ export class JobProcessProcessor extends WorkerHost {
       .map((country) => country.trim().toLowerCase())
       .filter((country) => country.length > 0);
     if (hintedCountries.length > 0) {
-      const regionHints = hintedCountries.filter((hint) =>
-        this.REGION_HINTS.has(hint),
+      const merged = mergeLocationFacetsWithCountryHints(
+        locationFacets,
+        hintedCountries,
       );
-      const countryHints = splitAndCanonicalizeCountryHints(
-        hintedCountries.filter((hint) => !this.REGION_HINTS.has(hint)),
-      ).filter((hint) => !isCanonicalRegionToken(hint));
-
-      const mergedCountries = new Set<string>([
-        ...locationFacets.countries,
-        ...countryHints,
-      ]);
-      const mergedRegions = new Set<string>([
-        ...locationFacets.regions,
-        ...regionHints,
-      ]);
-      locationFacets.countries = Array.from(mergedCountries);
-      locationFacets.regions = Array.from(mergedRegions);
-      locationFacets.tokens = Array.from(
-        new Set<string>([
-          ...locationFacets.tokens,
-          ...locationFacets.countries,
-          ...locationFacets.regions,
-        ]),
-      );
+      locationFacets.countries = merged.countries;
+      locationFacets.regions = merged.regions;
+      locationFacets.tokens = merged.tokens;
     }
 
     if (locationFacets.countries.length === 0) {

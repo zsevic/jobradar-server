@@ -790,13 +790,20 @@ describe('canonicalizeCountryHint', () => {
     expect(canonicalizeCountryHint("People's Republic of China")).toBe('china');
     expect(canonicalizeCountryHint('People’s Republic of China')).toBe('china');
   });
+
+  it('canonicalizes ISO 3166-1 alpha-2 Lever country hints', () => {
+    expect(canonicalizeCountryHint('ES')).toBe('spain');
+    expect(canonicalizeCountryHint('CO')).toBe('colombia');
+    expect(canonicalizeCountryHint('AE')).toBe('united arab emirates');
+    expect(canonicalizeCountryHint('RS')).toBe('serbia');
+  });
 });
 
 describe('splitAndCanonicalizeCountryHints', () => {
   it('splits and canonicalizes mixed delimiter hints', () => {
     expect(
       splitAndCanonicalizeCountryHints(['US | EU', 'U.S.A, Canada']),
-    ).toEqual(['united states', 'european union', 'united states', 'canada']);
+    ).toEqual(['united states', 'european union', 'canada']);
   });
 });
 

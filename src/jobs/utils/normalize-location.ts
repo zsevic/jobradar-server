@@ -2118,6 +2118,45 @@ export function extractCountryMentionsFromText(text: string): string[] {
   return Array.from(found);
 }
 
+const ISO3166_ALPHA2_DISPLAY = new Intl.DisplayNames(['en'], { type: 'region' });
+
+/**
+ * Resolve ISO 3166-1 alpha-2 codes (e.g. Lever `country: "ES"`) to {@link KNOWN_COUNTRIES} tokens.
+ * Skips US/CA province postals that share two-letter codes.
+ */
+function countryFromIso3166Alpha2(code: string): string | null {
+  if (!/^[a-z]{2}$/.test(code)) {
+    return null;
+  }
+  try {
+    const display = ISO3166_ALPHA2_DISPLAY.of(code.toUpperCase());
+    if (!display) {
+      return null;
+    }
+    const lower = display.normalize('NFC').toLowerCase();
+    if (KNOWN_COUNTRIES.has(lower)) {
+      return lower;
+    }
+    const aliased = COUNTRY_ALIASES[lower];
+    if (aliased && KNOWN_COUNTRIES.has(aliased)) {
+      return aliased;
+    }
+    if (code === 'ci') {
+      return COTE_DIVOIRE;
+    }
+  } catch {
+    return null;
+  }
+  // US/CA province postals share ISO alpha-2 codes; only treat as subnational when not a country.
+  if (
+    Object.prototype.hasOwnProperty.call(US_STATE_POSTAL_TO_TOKEN, code) ||
+    Object.prototype.hasOwnProperty.call(CANADA_PROVINCE_POSTAL_TO_TOKEN, code)
+  ) {
+    return null;
+  }
+  return null;
+}
+
 /**
  * Canonicalize provider-supplied country hints (e.g. `USA` -> `united states`)
  * to match stored facet country vocabulary.
@@ -2130,6 +2169,10 @@ export function canonicalizeCountryHint(countryHint: string): string {
   const mappedCountry = COUNTRY_ALIASES[normalized];
   if (mappedCountry) {
     return mappedCountry;
+  }
+  const fromIso2 = countryFromIso3166Alpha2(normalized);
+  if (fromIso2) {
+    return fromIso2;
   }
   const mappedRegion = REGION_ALIASES[normalized];
   if (mappedRegion) {
@@ -2152,7 +2195,93 @@ export function splitAndCanonicalizeCountryHints(
       .filter((part) => part.length > 0);
     expanded.push(...parts);
   }
-  return expanded;
+  return Array.from(new Set(expanded));
+}
+
+/** Region hint tokens merged from provider country hints (mirrors job-process.processor). */
+export const PROVIDER_REGION_COUNTRY_HINTS = new Set<string>([
+  'apac',
+  'emea',
+  'latam',
+  'mena',
+  'americas',
+  'north america',
+  'south america',
+  'asia',
+  'europe',
+  'european union',
+  'eu',
+  'east coast',
+  'west coast',
+]);
+
+/**
+ * Merge parsed location facets with provider country/region hints (e.g. Lever ISO `country`).
+ */
+export function mergeLocationFacetsWithCountryHints(
+  facets: LocationFacets,
+  countryHints: string[],
+): LocationFacets {
+  const hinted = countryHints
+    .map((country) => country.trim().toLowerCase())
+    .filter((country) => country.length > 0);
+  if (hinted.length === 0) {
+    return facets;
+  }
+
+  const regionHints = hinted.filter((hint) =>
+    PROVIDER_REGION_COUNTRY_HINTS.has(hint),
+  );
+  const countryParts = splitAndCanonicalizeCountryHints(
+    hinted.filter((hint) => !PROVIDER_REGION_COUNTRY_HINTS.has(hint)),
+  ).filter(
+    (hint) =>
+      KNOWN_COUNTRIES.has(hint) ||
+      (COUNTRY_ALIASES[hint] && KNOWN_COUNTRIES.has(COUNTRY_ALIASES[hint])),
+  );
+
+  const mergedCountries = new Set<string>([
+    ...facets.countries,
+    ...countryParts,
+  ]);
+  const mergedRegions = new Set<string>([...facets.regions, ...regionHints]);
+  const mergedTokens = new Set<string>([
+    ...facets.tokens,
+    ...mergedCountries,
+    ...mergedRegions,
+  ]);
+
+  return {
+    tokens: Array.from(mergedTokens),
+    countries: Array.from(mergedCountries),
+    regions: Array.from(mergedRegions),
+  };
+}
+
+/** Normalize country facet arrays for comparison (drops unmapped ISO-2 leftovers). */
+export function normalizeCountriesForFacetCompare(
+  countries: string[],
+): string[] {
+  const out = new Set<string>();
+  for (const country of countries) {
+    const canon = canonicalizeCountryHint(country);
+    if (KNOWN_COUNTRIES.has(canon)) {
+      out.add(canon);
+    }
+  }
+  return Array.from(out).sort();
+}
+
+/** Normalize region facet arrays for comparison. */
+export function normalizeRegionsForFacetCompare(regions: string[]): string[] {
+  const out = new Set<string>();
+  for (const region of regions) {
+    const canon = canonicalizeCountryHint(region);
+    if (isCanonicalRegionToken(canon)) {
+      out.add(canon);
+    }
+  }
+  return Array.from(out).sort();
 }
 
 const CANONICAL_REGION_TOKENS = new Set<string>(Object.values(REGION_ALIASES));
