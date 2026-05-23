@@ -51,4 +51,12 @@ describe('classifyRoleFromTitle', () => {
   it('keeps solutions architect under solutions role', () => {
     expect(classifyRoleFromTitle('Solutions Architect')).toBe('solutions');
   });
+
+  it('classifies forward deployed enablement engineer as solutions', () => {
+    expect(
+      classifyRoleFromTitle(
+        'Forward Deployed Enablement Engineer - Customer Success',
+      ),
+    ).toBe('solutions');
+  });
 });

@@ -9,6 +9,10 @@
 
 import { SourceProvider } from '../src/database/entities/source.entity';
 import { sourceSeeds } from '../src/database/seeds/source-seeds.data';
+import {
+  leverRegionFromApiRegion,
+  resolveLeverPostingsBaseUrl,
+} from '../src/jobs/adapters/lever-api.constants';
 
 const TIMEOUT_MS = 15_000;
 const DELAY_MS_BETWEEN_MS = 200;
@@ -17,9 +21,12 @@ type Row = {
   provider: SourceProvider;
   externalId: string;
   name: string;
+  apiRegion?: 'eu';
 };
 
-function buildUrl(row: Pick<Row, 'provider' | 'externalId'>): string {
+function buildUrl(
+  row: Pick<Row, 'provider' | 'externalId' | 'apiRegion'>,
+): string {
   const id = encodeURIComponent(row.externalId);
   switch (row.provider) {
     case SourceProvider.GREENHOUSE:
@@ -28,6 +35,12 @@ function buildUrl(row: Pick<Row, 'provider' | 'externalId'>): string {
       return `https://api.ashbyhq.com/posting-api/job-board/${id}`;
     case SourceProvider.WORKABLE:
       return `https://www.workable.com/api/accounts/${id}?details=true`;
+    case SourceProvider.LEVER: {
+      const base = resolveLeverPostingsBaseUrl(
+        leverRegionFromApiRegion(row.apiRegion),
+      );
+      return `${base}/${id}?mode=json&limit=1`;
+    }
     default:
       throw new Error(`Unknown provider: ${String((row as Row).provider)}`);
   }
@@ -55,6 +68,7 @@ async function main(): Promise<void> {
     provider: s.provider,
     externalId: s.externalId,
     name: s.name,
+    apiRegion: s.apiRegion,
   }));
 
   console.log(

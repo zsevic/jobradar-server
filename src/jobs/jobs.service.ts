@@ -11,6 +11,7 @@ import {
   GREENHOUSE_FETCH_QUEUE,
   JOB_MATCH_QUEUE,
   JOB_PROCESS_QUEUE,
+  LEVER_FETCH_QUEUE,
   WORKABLE_FETCH_QUEUE,
 } from './jobs.constants';
 import { JobsQueryDto } from './dto/jobs-query.dto';
@@ -43,6 +44,8 @@ export class JobsService {
     private readonly greenhouseFetchQueue: Queue,
     @InjectQueue(WORKABLE_FETCH_QUEUE)
     private readonly workableFetchQueue: Queue,
+    @InjectQueue(LEVER_FETCH_QUEUE)
+    private readonly leverFetchQueue: Queue,
     @InjectQueue(JOB_PROCESS_QUEUE)
     private readonly jobProcessQueue: Queue,
     @InjectQueue(JOB_MATCH_QUEUE)
@@ -146,6 +149,38 @@ export class JobsService {
     this.logger.log(`Enqueued ${workableSources.length} workable sources`);
   }
 
+  async enqueueLeverSources(): Promise<void> {
+    if (this.providerCircuitBreaker.isOpen(SourceProvider.LEVER)) {
+      this.logger.warn('Skip lever polling: circuit open');
+      return;
+    }
+    const leverSources = await this.sourceRepository.find({
+      where: {
+        provider: SourceProvider.LEVER,
+        isActive: true,
+      },
+      order: {
+        name: 'ASC',
+      },
+    });
+
+    for (const [index, source] of leverSources.entries()) {
+      await this.leverFetchQueue.add(
+        'fetch-source',
+        {
+          sourceId: source.id,
+        },
+        {
+          delay: index * 400,
+          removeOnComplete: true,
+          removeOnFail: 200,
+        },
+      );
+    }
+
+    this.logger.log(`Enqueued ${leverSources.length} lever sources`);
+  }
+
   async enqueueSourceByCompany(company: string): Promise<{
     sourceId: string;
     provider: SourceProvider;
@@ -193,8 +228,10 @@ export class JobsService {
         payload,
         queueOptions,
       );
-    } else {
+    } else if (source.provider === SourceProvider.WORKABLE) {
       await this.workableFetchQueue.add('fetch-source', payload, queueOptions);
+    } else {
+      await this.leverFetchQueue.add('fetch-source', payload, queueOptions);
     }
 
     this.logger.log(
@@ -334,6 +371,7 @@ export class JobsService {
         'gtm engineer',
         'go-to-market engineer',
         'forward deployed engineer',
+        'forward deployed enablement engineer',
       ],
       recruiter: [
         'recruiter',

@@ -74,6 +74,12 @@ export class JobsController {
     return { status: 'queued' };
   }
 
+  @Post('poll/lever')
+  async pollLever() {
+    await this.jobsService.enqueueLeverSources();
+    return { status: 'queued' };
+  }
+
   @Post('poll/company')
   async pollSpecificCompany(@Query('company') company?: string) {
     const value = company?.trim();

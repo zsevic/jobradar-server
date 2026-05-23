@@ -33,6 +33,8 @@ describe('JobsService.reconcileStaleJobsForSource', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
+      {},
     );
   });
 

@@ -646,6 +646,43 @@ describe('extractLocationFacets', () => {
     expect(facets.tokens).toContain('tanzania');
   });
 
+  it('maps dar es salaam to tanzania', () => {
+    const facets = extractLocationFacets('Dar es Salaam');
+
+    expect(facets.countries).toContain('tanzania');
+    expect(facets.tokens).toContain('dar es salaam');
+    expect(facets.tokens).toContain('tanzania');
+  });
+
+  it('maps baku to azerbaijan', () => {
+    const facets = extractLocationFacets('Baku');
+
+    expect(facets.countries).toContain('azerbaijan');
+    expect(facets.tokens).toContain('baku');
+    expect(facets.tokens).toContain('azerbaijan');
+  });
+
+  it('maps paphos to cyprus', () => {
+    const facets = extractLocationFacets('Paphos');
+
+    expect(facets.countries).toContain('cyprus');
+    expect(facets.tokens).toContain('paphos');
+    expect(facets.tokens).toContain('cyprus');
+  });
+
+  it('maps anywhere in europe and south america to both regions', () => {
+    const facets = extractLocationFacets(
+      'Anywhere in Europe and South America',
+    );
+
+    expect(facets.regions).toEqual(
+      expect.arrayContaining(['europe', 'south america']),
+    );
+    expect(facets.tokens).toEqual(
+      expect.arrayContaining(['europe', 'south america']),
+    );
+  });
+
   it('maps johannesburg to south africa', () => {
     const facets = extractLocationFacets('Johannesburg');
 

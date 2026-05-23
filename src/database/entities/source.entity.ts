@@ -11,6 +11,7 @@ export enum SourceProvider {
   ASHBY = 'ashby',
   GREENHOUSE = 'greenhouse',
   WORKABLE = 'workable',
+  LEVER = 'lever',
 }
 
 @Entity('sources')
@@ -39,6 +40,10 @@ export class Source {
 
   @Column({ type: 'varchar', default: 'idle' })
   syncStatus!: string;
+
+  /** Optional ATS API region (e.g. Lever EU host when `eu`). Null = provider default. */
+  @Column({ type: 'varchar', nullable: true, name: 'api_region' })
+  apiRegion!: 'eu' | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;

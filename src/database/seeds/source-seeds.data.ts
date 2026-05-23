@@ -4,6 +4,8 @@ export interface SourceSeedItem {
   provider: SourceProvider;
   externalId: string;
   name: string;
+  /** Optional ATS API region (e.g. Lever EU when `'eu'`). */
+  apiRegion?: 'eu';
 }
 
 export const sourceSeeds: SourceSeedItem[] = [
@@ -4090,5 +4092,42 @@ export const sourceSeeds: SourceSeedItem[] = [
     provider: SourceProvider.WORKABLE,
     externalId: 'tickpick',
     name: 'TickPick',
+  },
+  { provider: SourceProvider.LEVER, externalId: 'unlimit', name: 'Unlimit' },
+  { provider: SourceProvider.LEVER, externalId: 'spotify', name: 'Spotify' },
+  {
+    provider: SourceProvider.LEVER,
+    externalId: 'palantir',
+    name: 'Palantir',
+  },
+  { provider: SourceProvider.LEVER, externalId: 'xsolla', name: 'Xsolla' },
+  {
+    provider: SourceProvider.LEVER,
+    externalId: 'people-ai',
+    name: 'Backstory',
+  },
+  {
+    provider: SourceProvider.LEVER,
+    externalId: 'provectus',
+    name: 'Provectus',
+  },
+  { provider: SourceProvider.LEVER, externalId: 'toptal', name: 'Toptal' },
+  { provider: SourceProvider.LEVER, externalId: 'qonto', name: 'Qonto' },
+  {
+    provider: SourceProvider.LEVER,
+    externalId: 'anybotics',
+    name: 'ANYbotics',
+  },
+  {
+    provider: SourceProvider.LEVER,
+    externalId: 'pnlfin',
+    name: 'Finom',
+    apiRegion: 'eu',
+  },
+  {
+    provider: SourceProvider.LEVER,
+    externalId: 'symphony',
+    name: 'Symphony',
+    apiRegion: 'eu',
   },
 ];

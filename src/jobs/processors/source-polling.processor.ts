@@ -16,5 +16,6 @@ export class SourcePollingProcessor extends WorkerHost {
     await this.jobsService.enqueueAshbySources();
     await this.jobsService.enqueueGreenhouseSources();
     await this.jobsService.enqueueWorkableSources();
+    await this.jobsService.enqueueLeverSources();
   }
 }

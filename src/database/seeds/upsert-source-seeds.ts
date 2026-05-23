@@ -16,6 +16,7 @@ export async function upsertSourceSeeds(
         name: source.name,
         provider: source.provider,
         externalId: source.externalId,
+        apiRegion: source.apiRegion ?? null,
         isActive: true,
         syncStatus: 'idle',
       },

@@ -613,6 +613,8 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   yerevan: 'armenia',
   limassol: 'cyprus',
   nicosia: 'cyprus',
+  paphos: 'cyprus',
+  baku: 'azerbaijan',
   birkirkara: 'malta',
   london: 'united kingdom',
   belfast: 'united kingdom',
@@ -778,6 +780,7 @@ const CITY_COUNTRY_HINTS: Record<string, string> = {
   algiers: 'algeria',
   constantine: 'algeria',
   'dar es salam': 'tanzania',
+  'dar es salaam': 'tanzania',
   split: 'croatia',
   almaty: 'kazakhstan',
   cebu: 'philippines',
@@ -1257,6 +1260,11 @@ function normalizeKnownLocationPhrases(raw: string): string {
     /** Greenhouse / ATS sandbox rows — not a place. */
     .replace(/\bz-test\s*&\s*templates\s*only\b/gi, '')
     .replace(/\blatin\s+america\s*[-–—]\s*remote\b/gi, 'Latin America')
+    .replace(
+      /\banywhere\s+in\s+europe\s+and\s+south\s+america\b/gi,
+      'Europe | South America',
+    )
+    .replace(/\beurope\s+and\s+south\s+america\b/gi, 'Europe | South America')
     /** Spanish “remote”. */
     .replace(/\bremoto\b/gi, 'Remote')
     .replace(/\brepublic\s+of\s+ireland\s*\(\s*remote\s*\)/gi, 'Ireland')
@@ -1637,6 +1645,42 @@ function normalizeKnownLocationPhrases(raw: string): string {
   );
 }
 
+/** Split `Europe and South America` when every ` and `-joined part is a known region/country/city. */
+function splitGeoAndConjunction(segment: string): string[] {
+  const t = segment.trim();
+  if (!/\s+and\s+/i.test(t)) {
+    return [segment];
+  }
+  const parts = t
+    .split(/\s+and\s+/i)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+  if (parts.length < 2) {
+    return [segment];
+  }
+  const isGeoPart = (part: string): boolean => {
+    const key = normalizeToken(part);
+    if (!key) {
+      return false;
+    }
+    if (REGION_ALIASES[key]) {
+      return true;
+    }
+    const country = COUNTRY_ALIASES[key] ?? key;
+    if (KNOWN_COUNTRIES.has(country)) {
+      return true;
+    }
+    if (CITY_COUNTRY_HINTS[key]) {
+      return true;
+    }
+    return false;
+  };
+  if (parts.every(isGeoPart)) {
+    return parts;
+  }
+  return [segment];
+}
+
 /** Split on ; | /, spaced hyphens, and " or " so alternatives become separate segments. */
 function splitLocation(raw: string): string[] {
   const segments: string[] = [];
@@ -1668,7 +1712,9 @@ function splitLocation(raw: string): string[] {
             .split(/\s+or\s+/i)
             .map((part) => part.trim())
             .filter((part) => part.length > 0);
-          segments.push(...orParts);
+          for (const orPart of orParts) {
+            segments.push(...splitGeoAndConjunction(orPart));
+          }
         }
       }
     }

@@ -13,6 +13,7 @@ import { User } from '../database/entities/user.entity';
 import { MailModule } from '../mail/mail.module';
 import { AshbyAdapter } from './adapters/ashby.adapter';
 import { GreenhouseAdapter } from './adapters/greenhouse.adapter';
+import { LeverAdapter } from './adapters/lever.adapter';
 import { WorkableAdapter } from './adapters/workable.adapter';
 import { EmailDigestBootstrap } from './email-digest.bootstrap';
 import { SourcePollingBootstrap } from './source-polling.bootstrap';
@@ -22,6 +23,7 @@ import {
   GREENHOUSE_FETCH_QUEUE,
   JOB_MATCH_QUEUE,
   JOB_PROCESS_QUEUE,
+  LEVER_FETCH_QUEUE,
   SOURCE_POLLING_QUEUE,
   WORKABLE_FETCH_QUEUE,
 } from './jobs.constants';
@@ -34,6 +36,7 @@ import { GreenhouseFetchProcessor } from './processors/greenhouse-fetch.processo
 import { JobMatchProcessor } from './processors/job-match.processor';
 import { JobProcessProcessor } from './processors/job-process.processor';
 import { SourcePollingProcessor } from './processors/source-polling.processor';
+import { LeverFetchProcessor } from './processors/lever-fetch.processor';
 import { WorkableFetchProcessor } from './processors/workable-fetch.processor';
 import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
 
@@ -55,6 +58,7 @@ import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
       { name: ASHBY_FETCH_QUEUE },
       { name: GREENHOUSE_FETCH_QUEUE },
       { name: WORKABLE_FETCH_QUEUE },
+      { name: LEVER_FETCH_QUEUE },
       { name: JOB_PROCESS_QUEUE },
       { name: JOB_MATCH_QUEUE },
       { name: EMAIL_DIGEST_QUEUE },
@@ -68,9 +72,11 @@ import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
     AshbyAdapter,
     GreenhouseAdapter,
     WorkableAdapter,
+    LeverAdapter,
     AshbyFetchProcessor,
     GreenhouseFetchProcessor,
     WorkableFetchProcessor,
+    LeverFetchProcessor,
     JobProcessProcessor,
     JobMatchProcessor,
     EmailDigestProcessor,
