@@ -2307,6 +2307,7 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'whitetech',
     name: 'WhiteTech',
   },
+  { provider: SourceProvider.GREENHOUSE, externalId: 'parloa', name: 'Parloa' },
   { provider: SourceProvider.GREENHOUSE, externalId: 'polyai', name: 'PolyAI' },
   {
     provider: SourceProvider.GREENHOUSE,
@@ -2458,6 +2459,11 @@ export const sourceSeeds: SourceSeedItem[] = [
     name: 'Intercom',
   },
   { provider: SourceProvider.GREENHOUSE, externalId: 'branch', name: 'Branch' },
+  {
+    provider: SourceProvider.GREENHOUSE,
+    externalId: 'serhant',
+    name: 'Serhant',
+  },
   { provider: SourceProvider.GREENHOUSE, externalId: 'sezzle', name: 'Sezzle' },
   {
     provider: SourceProvider.GREENHOUSE,
@@ -3183,6 +3189,25 @@ export const sourceSeeds: SourceSeedItem[] = [
     externalId: 'telepatia',
     name: 'Telepatia',
   },
+  { provider: SourceProvider.ASHBY, externalId: 'away', name: 'Away' },
+  { provider: SourceProvider.ASHBY, externalId: 'bureau', name: 'Bureau' },
+  { provider: SourceProvider.ASHBY, externalId: 'fonoa', name: 'Fonoa' },
+  { provider: SourceProvider.ASHBY, externalId: 'gamma', name: 'Gamma' },
+  { provider: SourceProvider.ASHBY, externalId: 'playson', name: 'Playson' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'triggerdev',
+    name: 'Trigger.dev',
+  },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'trm-labs',
+    name: 'TRM Labs',
+  },
+  { provider: SourceProvider.ASHBY, externalId: 'urun', name: 'Urun' },
+  { provider: SourceProvider.ASHBY, externalId: 'vizzia', name: 'Vizzia' },
+  { provider: SourceProvider.ASHBY, externalId: 'welltech', name: 'Welltech' },
+  { provider: SourceProvider.ASHBY, externalId: 'ziina', name: 'Ziina' },
   {
     provider: SourceProvider.ASHBY,
     externalId: 'thatgamecompany',
@@ -4054,5 +4079,16 @@ export const sourceSeeds: SourceSeedItem[] = [
     provider: SourceProvider.WORKABLE,
     externalId: 'fastbreak-ai',
     name: 'Fastbreak AI',
+  },
+  { provider: SourceProvider.WORKABLE, externalId: 'alumil', name: 'Alumil' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'nelson-education',
+    name: 'Nelson Education',
+  },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'tickpick',
+    name: 'TickPick',
   },
 ];
