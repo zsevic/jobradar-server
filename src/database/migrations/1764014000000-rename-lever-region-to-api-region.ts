@@ -28,9 +28,20 @@ export class RenameLeverRegionToApiRegion1764014000000 implements MigrationInter
       END $$;
     `);
     await queryRunner.query(`
-      ALTER TABLE "sources"
-      ADD CONSTRAINT "CHK_sources_api_region"
-      CHECK ("api_region" IS NULL OR "api_region" = 'eu')
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_constraint c
+          JOIN pg_class t ON c.conrelid = t.oid
+          WHERE t.relname = 'sources'
+            AND c.conname = 'CHK_sources_api_region'
+        ) THEN
+          ALTER TABLE "sources"
+          ADD CONSTRAINT "CHK_sources_api_region"
+          CHECK ("api_region" IS NULL OR "api_region" = 'eu');
+        END IF;
+      END $$;
     `);
   }
 
@@ -52,9 +63,20 @@ export class RenameLeverRegionToApiRegion1764014000000 implements MigrationInter
       END $$;
     `);
     await queryRunner.query(`
-      ALTER TABLE "sources"
-      ADD CONSTRAINT "CHK_sources_lever_region"
-      CHECK ("lever_region" IS NULL OR "lever_region" = 'eu')
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_constraint c
+          JOIN pg_class t ON c.conrelid = t.oid
+          WHERE t.relname = 'sources'
+            AND c.conname = 'CHK_sources_lever_region'
+        ) THEN
+          ALTER TABLE "sources"
+          ADD CONSTRAINT "CHK_sources_lever_region"
+          CHECK ("lever_region" IS NULL OR "lever_region" = 'eu');
+        END IF;
+      END $$;
     `);
   }
 }
