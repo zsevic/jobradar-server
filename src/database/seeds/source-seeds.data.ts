@@ -98,6 +98,7 @@ export const sourceSeeds = [
   },
   { provider: SourceProvider.ASHBY, externalId: 'junior', name: 'Junior' },
   { provider: SourceProvider.ASHBY, externalId: 'echomark', name: 'Echomark' },
+  { provider: SourceProvider.ASHBY, externalId: 'echotwin', name: 'EchoTwin' },
   { provider: SourceProvider.ASHBY, externalId: 'grepr', name: 'Grepr' },
   { provider: SourceProvider.ASHBY, externalId: 'bevel', name: 'Bevel' },
   { provider: SourceProvider.ASHBY, externalId: 'sentient', name: 'Sentient' },
