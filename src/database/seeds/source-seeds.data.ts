@@ -3205,6 +3205,11 @@ export const sourceSeeds = [
   { provider: SourceProvider.ASHBY, externalId: 'away', name: 'Away' },
   { provider: SourceProvider.ASHBY, externalId: 'bureau', name: 'Bureau' },
   { provider: SourceProvider.ASHBY, externalId: 'fonoa', name: 'Fonoa' },
+  {
+    provider: SourceProvider.ASHBY,
+    externalId: 'foxelligroup',
+    name: 'Foxelli Group',
+  },
   { provider: SourceProvider.ASHBY, externalId: 'gamma', name: 'Gamma' },
   { provider: SourceProvider.ASHBY, externalId: 'playson', name: 'Playson' },
   {
