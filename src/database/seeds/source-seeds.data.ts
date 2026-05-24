@@ -243,6 +243,11 @@ export const sourceSeeds = [
   { provider: SourceProvider.ASHBY, externalId: 'scrunch', name: 'Scrunch' },
   {
     provider: SourceProvider.ASHBY,
+    externalId: 'searchapi',
+    name: 'SearchAPI',
+  },
+  {
+    provider: SourceProvider.ASHBY,
     externalId: 'relevanceai',
     name: 'Relevance AI',
   },
