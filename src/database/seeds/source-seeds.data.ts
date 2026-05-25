@@ -338,6 +338,7 @@ export const sourceSeeds = [
     externalId: 'dualentry',
     name: 'DualEntry',
   },
+  { provider: SourceProvider.ASHBY, externalId: 'duvo', name: 'Duvo' },
   {
     provider: SourceProvider.ASHBY,
     externalId: 'sfcompute',
