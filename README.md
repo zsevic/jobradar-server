@@ -1,198 +1,73 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# JobRadar Server
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS backend for [JobRadar](https://jobradar.tech): job ingestion, filtering, auth (Gumroad licenses), and email notifications.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-JobRadar backend API and workers.
-
-## AWS deployment
-
-**All AWS-related work is on the `aws` branch** — CDK stacks, Lambda/API Gateway, RDS, DynamoDB, SES, and the GitHub Actions production deploy workflow.
+AWS-related work lives on the **[`aws` branch](https://github.com/zsevic/jobradar-server/tree/aws)** — CDK stacks, Lambda/API Gateway, RDS, DynamoDB, SES, and the GitHub Actions deploy workflow.
 
 ```bash
+git fetch origin aws
 git checkout aws
 ```
 
-On that branch, see:
+## Local development
 
-- [docs/GITHUB_ACTIONS.md](docs/GITHUB_ACTIONS.md) — OIDC role, secrets, CI deploy
-- [docs/RDS.md](docs/RDS.md) — PostgreSQL (RDS)
-- [docs/SERVERLESS_CUTOVER.md](docs/SERVERLESS_CUTOVER.md) — cutover and smoke tests
-- [docs/CDK-IAM.md](docs/CDK-IAM.md) — IAM recovery for stuck CloudFormation stacks
-
-Pushes to `aws` run `.github/workflows/aws-deploy.yml` (lint, test, CDK deploy, migrations, health check).
-
-## Project setup
+### Setup
 
 ```bash
-$ npm install
+npm install
+cp .env.example .env
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Local infrastructure (PostgreSQL + Redis)
-
-Start infra:
+### Infrastructure
 
 ```bash
 docker compose up -d
+docker compose down      # stop
+docker compose down -v   # stop and wipe data
 ```
 
-Stop infra:
+Defaults from `.env.example`:
 
-```bash
-docker compose down
-```
-
-Reset infra data:
-
-```bash
-docker compose down -v
-```
-
-Service connection defaults are already included in `.env.example`:
-
-- `DATABASE_URL=postgresql://jobradar:jobradar@localhost:5432/jobradar`
+- `DATABASE_URL=postgres://jobradar:jobradar@localhost:5433/jobradar`
 - `REDIS_URL=redis://localhost:6379`
 
-Nest now boots with:
+### Run
 
-- TypeORM PostgreSQL connection from `DATABASE_URL`
-- BullMQ Redis connection from `REDIS_URL`
-- startup env validation via Joi schema
+```bash
+npm run start:dev
+```
 
-Run DB migrations:
+Migrations run on boot unless `SKIP_DB_MIGRATIONS=true`. Source catalog is upserted on boot unless `SKIP_SOURCE_SEED=true`.
+
+### Database
 
 ```bash
 npm run migration:run
-```
-
-Revert last migration:
-
-```bash
 npm run migration:revert
-```
-
-Generate migration from entity changes:
-
-```bash
 npm run migration:generate
-```
-
-Seed initial sources:
-
-```bash
 npm run seed:sources
 ```
 
-Run a manual Greenhouse poll cycle (queues fetch + persistence jobs):
+### Auth
 
-```bash
-POST /api/jobs/poll/greenhouse
-```
+Set `GUMROAD_PRODUCT_ID` and `JWT_SECRET` in `.env`, then:
 
-Run a manual Ashby poll cycle (queues fetch + persistence jobs):
+```http
+POST /api/auth/login
+Content-Type: application/json
 
-```bash
-POST /api/jobs/poll/ashby
-```
-
-Run a manual Workable poll cycle (queues fetch + persistence jobs):
-
-```bash
-POST /api/jobs/poll/workable
-```
-
-## Auth setup (Gumroad license verification)
-
-1. Copy `.env.example` to `.env`.
-2. Set:
-   - `GUMROAD_PRODUCT_ID`
-   - `JWT_SECRET`
-3. Call `POST /api/auth/login` with:
-
-```json
 {
   "email": "user@example.com",
   "licenseKey": "xxxx-xxxx-xxxx"
 }
 ```
 
-License keys are validated against Gumroad on every login and are **not** stored in the database.
+License keys are validated against Gumroad on every login and stored on the user record for re-verification before digest emails.
 
-If Gumroad validation passes, API returns an `accessToken` JWT and user email.
-
-## Run tests
+### Tests
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm test
+npm run test:e2e
+npm run test:cov
 ```
-
-## Deployment
-
-Production on AWS is deployed from the **`aws`** branch only (not from `main`). See [AWS deployment](#aws-deployment) above.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
