@@ -2896,6 +2896,7 @@ export const sourceSeeds = [
   { provider: SourceProvider.ASHBY, externalId: 'almedia', name: 'Almedia' },
   { provider: SourceProvider.ASHBY, externalId: 'altimate', name: 'Altimate' },
   { provider: SourceProvider.ASHBY, externalId: 'anon', name: 'Anon' },
+  { provider: SourceProvider.ASHBY, externalId: 'abusix', name: 'Abusix' },
   { provider: SourceProvider.ASHBY, externalId: 'apify', name: 'Apify' },
   { provider: SourceProvider.ASHBY, externalId: 'articul8', name: 'Articul8' },
   { provider: SourceProvider.ASHBY, externalId: 'ashby', name: 'Ashby' },
@@ -3037,6 +3038,7 @@ export const sourceSeeds = [
     name: 'Horizon3 AI',
   },
   { provider: SourceProvider.ASHBY, externalId: 'hotplate', name: 'Hotplate' },
+  { provider: SourceProvider.ASHBY, externalId: 'hubstaff', name: 'Hubstaff' },
   { provider: SourceProvider.ASHBY, externalId: 'humaans', name: 'Humaans' },
   { provider: SourceProvider.ASHBY, externalId: 'ideogram', name: 'Ideogram' },
   {
@@ -4067,6 +4069,11 @@ export const sourceSeeds = [
   { provider: SourceProvider.WORKABLE, externalId: 'm-files', name: 'M-Files' },
   { provider: SourceProvider.WORKABLE, externalId: 'minka-1', name: 'Minka' },
   { provider: SourceProvider.WORKABLE, externalId: 'modash', name: 'Modash' },
+  {
+    provider: SourceProvider.WORKABLE,
+    externalId: 'mmdsmart-ltd',
+    name: 'MMDSmart Ltd',
+  },
   {
     provider: SourceProvider.WORKABLE,
     externalId: 'resethealth',
