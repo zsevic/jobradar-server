@@ -13,6 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { SponsorGuard } from '../auth/guards/sponsor.guard';
 import { FilterPreset } from '../database/entities/filter-preset.entity';
 import { NotificationClick } from '../database/entities/notification-click.entity';
 
@@ -104,7 +105,7 @@ export class NotificationsController {
    * Debug endpoint for recent notification click stats of the current user.
    */
   @Get('click-stats')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SponsorGuard)
   async clickStats(
     @Req()
     request: Request & {

@@ -5,7 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
-import { GumroadService } from '../../auth/gumroad.service';
+import { GitHubService } from '../../auth/github.service';
 import { FilterPreset } from '../../database/entities/filter-preset.entity';
 import { NotificationSent } from '../../database/entities/notification-sent.entity';
 import { PendingMatchEmail } from '../../database/entities/pending-match-email.entity';
@@ -27,7 +27,7 @@ export class EmailDigestProcessor extends WorkerHost {
     private readonly userRepository: Repository<User>,
     @InjectRepository(FilterPreset)
     private readonly filterPresetRepository: Repository<FilterPreset>,
-    private readonly gumroadService: GumroadService,
+    private readonly githubService: GitHubService,
     private readonly mailService: MailService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -74,10 +74,10 @@ export class EmailDigestProcessor extends WorkerHost {
       return;
     }
 
-    const gumroad = await this.gumroadService.verifyLicenseForUser(user);
-    if (!gumroad.ok) {
+    const sponsorship = await this.githubService.verifySponsorshipForUser(user);
+    if (!sponsorship.ok) {
       this.logger.log(
-        `Digest skip: Gumroad verify failed userId=${userId} reason=${gumroad.reason ?? 'unknown'}`,
+        `Digest skip: sponsor verify failed userId=${userId} reason=${sponsorship.reason ?? 'unknown'}`,
       );
       return;
     }

@@ -7,8 +7,9 @@ import { SignOptions } from 'jsonwebtoken';
 import { User } from '../database/entities/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { GitHubService } from './github.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { GumroadService } from './gumroad.service';
+import { SponsorGuard } from './guards/sponsor.guard';
 
 @Module({
   imports: [
@@ -28,13 +29,14 @@ import { GumroadService } from './gumroad.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GumroadService, JwtAuthGuard],
+  providers: [AuthService, GitHubService, JwtAuthGuard, SponsorGuard],
   exports: [
     AuthService,
+    GitHubService,
     JwtAuthGuard,
+    SponsorGuard,
     JwtModule,
     TypeOrmModule,
-    GumroadService,
   ],
 })
 export class AuthModule {}

@@ -13,9 +13,11 @@ export class User {
   @Column({ type: 'varchar', unique: true })
   email!: string;
 
-  /** Gumroad license key (for re-verification before sending digest emails). */
-  @Column({ type: 'varchar', nullable: true })
-  licenseKey!: string | null;
+  @Column({ type: 'varchar', unique: true, nullable: true })
+  githubId!: string | null;
+
+  @Column({ type: 'varchar', unique: true, nullable: true })
+  githubLogin!: string | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;

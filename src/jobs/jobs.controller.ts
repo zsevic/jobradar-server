@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { SponsorGuard } from '../auth/guards/sponsor.guard';
 import { JobsQueryDto } from './dto/jobs-query.dto';
 import { JobsService } from './jobs.service';
 
@@ -30,7 +31,7 @@ export class JobsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SponsorGuard)
   async getJobs(
     @Req() request: AuthenticatedRequest,
     @Query() query: JobsQueryDto,

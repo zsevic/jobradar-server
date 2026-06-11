@@ -1,6 +1,6 @@
 # JobRadar Server
 
-NestJS backend for [JobRadar](https://jobradar.tech): job ingestion, filtering, auth (Gumroad licenses), and email notifications.
+NestJS backend for [JobRadar](https://jobradar.tech): job ingestion, filtering, auth (GitHub Sponsors), and email notifications.
 
 AWS-related work lives on the **[`aws` branch](https://github.com/zsevic/jobradar-server/tree/aws)** — CDK stacks, Lambda/API Gateway, RDS, DynamoDB, SES, and the GitHub Actions deploy workflow.
 
@@ -50,19 +50,13 @@ npm run seed:sources
 
 ### Auth
 
-Set `GUMROAD_PRODUCT_ID` and `JWT_SECRET` in `.env`, then:
+Set GitHub OAuth and Sponsors env vars in `.env` (see `.env.example`), then open:
 
 ```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "licenseKey": "xxxx-xxxx-xxxx"
-}
+GET /api/auth/github
 ```
 
-License keys are validated against Gumroad on every login and stored on the user record for re-verification before digest emails.
+Users sign in with GitHub; access requires an **active** sponsorship of `@zsevic`. Sponsorship is re-checked on protected API routes and before digest emails.
 
 ### Tests
 

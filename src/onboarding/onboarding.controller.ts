@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { SponsorGuard } from '../auth/guards/sponsor.guard';
 import { SaveFilterPresetDto } from './dto/save-filter-preset.dto';
 import { UpdateAlertsDto } from './dto/update-alerts.dto';
 import { OnboardingService } from './onboarding.service';
@@ -21,7 +22,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 @Controller('onboarding')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SponsorGuard)
 export class OnboardingController {
   constructor(private readonly onboardingService: OnboardingService) {}
 

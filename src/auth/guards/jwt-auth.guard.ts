@@ -7,10 +7,11 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
-interface JwtPayload {
+export interface JwtPayload {
   sub: string;
   email: string;
   userId: string;
+  githubLogin?: string;
 }
 
 @Injectable()
