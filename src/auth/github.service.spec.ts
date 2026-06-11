@@ -52,6 +52,70 @@ describe('GitHubService', () => {
     expect(httpService.post).not.toHaveBeenCalled();
   });
 
+  it('returns true when user is in sponsors list for required tier', async () => {
+    configService.get.mockImplementation((key: string) => {
+      const values: Record<string, string> = {
+        GITHUB_CLIENT_ID: 'client-id',
+        GITHUB_CLIENT_SECRET: 'client-secret',
+        GITHUB_SPONSOR_LOGIN: 'zsevic',
+        GITHUB_SPONSOR_CHECK_TOKEN: 'pat-token',
+        GITHUB_SPONSOR_REQUIRED_TIER_ID: 'ST_tier_123',
+        BACKEND_ORIGIN: 'http://localhost:3000',
+        REDIS_URL: '',
+        SPONSOR_CHECK_CACHE_TTL_SECONDS: '300',
+      };
+      return values[key];
+    });
+    httpService.post.mockReturnValue(
+      of({
+        data: {
+          data: {
+            user: {
+              sponsors: {
+                pageInfo: { hasNextPage: false },
+                nodes: [{ login: 'sponsor-user' }],
+              },
+            },
+          },
+        },
+      }),
+    );
+
+    await expect(service.isActiveSponsor('sponsor-user')).resolves.toBe(true);
+  });
+
+  it('returns false when user is not in sponsors list for required tier', async () => {
+    configService.get.mockImplementation((key: string) => {
+      const values: Record<string, string> = {
+        GITHUB_CLIENT_ID: 'client-id',
+        GITHUB_CLIENT_SECRET: 'client-secret',
+        GITHUB_SPONSOR_LOGIN: 'zsevic',
+        GITHUB_SPONSOR_CHECK_TOKEN: 'pat-token',
+        GITHUB_SPONSOR_REQUIRED_TIER_ID: 'ST_tier_123',
+        BACKEND_ORIGIN: 'http://localhost:3000',
+        REDIS_URL: '',
+        SPONSOR_CHECK_CACHE_TTL_SECONDS: '300',
+      };
+      return values[key];
+    });
+    httpService.post.mockReturnValue(
+      of({
+        data: {
+          data: {
+            user: {
+              sponsors: {
+                pageInfo: { hasNextPage: false },
+                nodes: [{ login: 'other-user' }],
+              },
+            },
+          },
+        },
+      }),
+    );
+
+    await expect(service.isActiveSponsor('sponsor-user')).resolves.toBe(false);
+  });
+
   it('returns true when GraphQL reports active sponsorship', async () => {
     httpService.post.mockReturnValue(
       of({

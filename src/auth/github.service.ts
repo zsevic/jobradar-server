@@ -211,13 +211,13 @@ export class GitHubService implements OnModuleDestroy {
       return true;
     }
 
-    const cacheKey = accountLogin.toLowerCase();
+    const cacheKey = this.getSponsorCacheKey(accountLogin);
     const cached = await this.getCachedSponsorStatus(cacheKey);
     if (cached !== null) {
       return cached;
     }
 
-    const isSponsor = await this.queryIsSponsoredBy(accountLogin);
+    const isSponsor = await this.querySponsorship(accountLogin);
     await this.setCachedSponsorStatus(cacheKey, isSponsor);
     return isSponsor;
   }
@@ -238,15 +238,43 @@ export class GitHubService implements OnModuleDestroy {
     }
   }
 
-  private async queryIsSponsoredBy(accountLogin: string): Promise<boolean> {
-    const sponsorLogin =
-      this.configService.get<string>('GITHUB_SPONSOR_LOGIN') ?? 'zsevic';
+  private getRequiredTierId(): string | null {
+    const tierId = this.configService
+      .get<string>('GITHUB_SPONSOR_REQUIRED_TIER_ID')
+      ?.trim();
+    return tierId || null;
+  }
+
+  private getSponsorCacheKey(login: string): string {
+    const tierId = this.getRequiredTierId();
+    const normalizedLogin = login.toLowerCase();
+    if (tierId) {
+      return `sponsor:active:${tierId}:${normalizedLogin}`;
+    }
+    return `sponsor:active:${normalizedLogin}`;
+  }
+
+  private getSponsorCheckToken(): string {
     const token = this.configService.get<string>('GITHUB_SPONSOR_CHECK_TOKEN');
     if (!token) {
       throw new ServiceUnavailableException(
         'Server not configured: missing GITHUB_SPONSOR_CHECK_TOKEN',
       );
     }
+    return token;
+  }
+
+  private async querySponsorship(accountLogin: string): Promise<boolean> {
+    const tierId = this.getRequiredTierId();
+    if (tierId) {
+      return this.queryIsSponsoredAtTier(accountLogin, tierId);
+    }
+    return this.queryIsSponsoredBy(accountLogin);
+  }
+
+  private async queryIsSponsoredBy(accountLogin: string): Promise<boolean> {
+    const sponsorLogin =
+      this.configService.get<string>('GITHUB_SPONSOR_LOGIN') ?? 'zsevic';
 
     const query = `
       query($sponsorLogin: String!, $accountLogin: String!) {
@@ -256,21 +284,86 @@ export class GitHubService implements OnModuleDestroy {
       }
     `;
 
-    let data: {
-      data?: { user?: { isSponsoredBy?: boolean } | null };
+    const data = await this.runGraphqlQuery<{
+      user?: { isSponsoredBy?: boolean } | null;
+    }>(query, { sponsorLogin, accountLogin });
+
+    return data.user?.isSponsoredBy === true;
+  }
+
+  private async queryIsSponsoredAtTier(
+    accountLogin: string,
+    tierId: string,
+  ): Promise<boolean> {
+    const sponsorLogin =
+      this.configService.get<string>('GITHUB_SPONSOR_LOGIN') ?? 'zsevic';
+    const targetLogin = accountLogin.toLowerCase();
+
+    const query = `
+      query($sponsorLogin: String!, $tierId: ID!, $after: String) {
+        user(login: $sponsorLogin) {
+          sponsors(first: 100, tierId: $tierId, after: $after) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            nodes {
+              ... on User {
+                login
+              }
+              ... on Organization {
+                login
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    let after: string | null = null;
+    for (;;) {
+      const data = await this.runGraphqlQuery<{
+        user?: {
+          sponsors?: {
+            pageInfo?: { hasNextPage?: boolean; endCursor?: string | null };
+            nodes?: Array<{ login?: string | null } | null>;
+          } | null;
+        } | null;
+      }>(query, { sponsorLogin, tierId, after });
+
+      const sponsors = data.user?.sponsors;
+      for (const node of sponsors?.nodes ?? []) {
+        const login = node?.login?.trim().toLowerCase();
+        if (login && login === targetLogin) {
+          return true;
+        }
+      }
+
+      if (!sponsors?.pageInfo?.hasNextPage) {
+        return false;
+      }
+      after = sponsors.pageInfo.endCursor ?? null;
+      if (!after) {
+        return false;
+      }
+    }
+  }
+
+  private async runGraphqlQuery<TData>(
+    query: string,
+    variables: Record<string, unknown>,
+  ): Promise<TData> {
+    const token = this.getSponsorCheckToken();
+
+    let payload: {
+      data?: TData;
       errors?: Array<{ message: string }>;
     };
     try {
       const response = await firstValueFrom(
-        this.httpService.post<typeof data>(
+        this.httpService.post<typeof payload>(
           GITHUB_GRAPHQL_URL,
-          {
-            query,
-            variables: {
-              sponsorLogin,
-              accountLogin,
-            },
-          },
+          { query, variables },
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -280,16 +373,20 @@ export class GitHubService implements OnModuleDestroy {
           },
         ),
       );
-      data = response.data;
+      payload = response.data;
     } catch {
       throw new ServiceUnavailableException('Failed to verify GitHub sponsorship');
     }
 
-    if (data.errors?.length) {
+    if (payload.errors?.length) {
       throw new ServiceUnavailableException('GitHub sponsorship query failed');
     }
 
-    return data.data?.user?.isSponsoredBy === true;
+    if (!payload.data) {
+      throw new ServiceUnavailableException('GitHub sponsorship query failed');
+    }
+
+    return payload.data;
   }
 
   private getCacheTtlSeconds(): number {

@@ -10,6 +10,7 @@ export const envValidationSchema = Joi.object({
   GITHUB_CLIENT_SECRET: Joi.string().required(),
   GITHUB_SPONSOR_LOGIN: Joi.string().default('zsevic'),
   GITHUB_SPONSOR_CHECK_TOKEN: Joi.string().required(),
+  GITHUB_SPONSOR_REQUIRED_TIER_ID: Joi.string().optional(),
   GITHUB_OAUTH_REDIRECT_URI: Joi.string().uri().optional(),
   SPONSOR_CHECK_CACHE_TTL_SECONDS: Joi.number().integer().min(0).default(300),
   DATABASE_URL: Joi.string().uri().required(),
