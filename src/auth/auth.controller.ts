@@ -23,7 +23,8 @@ export class AuthController {
     @Res() response: Response,
   ): Promise<void> {
     const frontendOrigin = (
-      this.configService.get<string>('FRONTEND_ORIGIN') ?? 'http://localhost:3001'
+      this.configService.get<string>('FRONTEND_ORIGIN') ??
+      'http://localhost:3001'
     ).replace(/\/$/, '');
 
     const result = await this.authService.handleGitHubCallback(code, state);

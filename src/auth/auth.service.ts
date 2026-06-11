@@ -49,8 +49,7 @@ export class AuthService {
       const githubId = String(profile.id);
       const githubLogin = profile.login.trim();
       const email =
-        profile.email ??
-        `${githubId}@users.noreply.github.com`.toLowerCase();
+        profile.email ?? `${githubId}@users.noreply.github.com`.toLowerCase();
 
       const existingByGithub = await this.userRepository.findOneBy({
         githubId,

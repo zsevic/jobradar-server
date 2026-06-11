@@ -1887,15 +1887,10 @@ export function extractLocationFacets(rawLocation: string): LocationFacets {
       if (!trimmedBit) {
         continue;
       }
-      let fromUsStatePostal = Object.prototype.hasOwnProperty.call(
-        US_STATE_POSTAL_TO_TOKEN,
-        trimmedBit,
-      );
+      let fromUsStatePostal = trimmedBit in US_STATE_POSTAL_TO_TOKEN;
 
-      let fromCanadaProvincePostal = Object.prototype.hasOwnProperty.call(
-        CANADA_PROVINCE_POSTAL_TO_TOKEN,
-        trimmedBit,
-      );
+      let fromCanadaProvincePostal =
+        trimmedBit in CANADA_PROVINCE_POSTAL_TO_TOKEN;
 
       let facetKey = facetKeyFromSegmentToken(trimmedBit);
       if (trimmedBit === 'de' && impliesGermanyFromCityHint) {

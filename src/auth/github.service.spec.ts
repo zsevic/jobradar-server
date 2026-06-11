@@ -31,7 +31,9 @@ describe('GitHubService', () => {
     };
     jwtService = {
       signAsync: jest.fn().mockResolvedValue('signed-state'),
-      verifyAsync: jest.fn().mockResolvedValue({ purpose: 'github-oauth-state' }),
+      verifyAsync: jest
+        .fn()
+        .mockResolvedValue({ purpose: 'github-oauth-state' }),
     };
     service = new GitHubService(
       httpService as unknown as HttpService,
@@ -137,7 +139,9 @@ describe('GitHubService', () => {
       }),
     );
 
-    await expect(service.isActiveSponsor('former-sponsor')).resolves.toBe(false);
+    await expect(service.isActiveSponsor('former-sponsor')).resolves.toBe(
+      false,
+    );
   });
 
   it('verifySponsorshipForUser returns not_sponsor when inactive', async () => {

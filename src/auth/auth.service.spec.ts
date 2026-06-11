@@ -26,7 +26,9 @@ describe('AuthService', () => {
   beforeEach(() => {
     githubService = {
       signOAuthState: jest.fn().mockResolvedValue('oauth-state'),
-      buildAuthorizeUrl: jest.fn().mockReturnValue('https://github.com/login/oauth/authorize'),
+      buildAuthorizeUrl: jest
+        .fn()
+        .mockReturnValue('https://github.com/login/oauth/authorize'),
       verifyOAuthState: jest.fn().mockResolvedValue(undefined),
       exchangeCodeForToken: jest.fn().mockResolvedValue('gho_access'),
       fetchGitHubUser: jest.fn().mockResolvedValue(profile),

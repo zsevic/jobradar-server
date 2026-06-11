@@ -150,9 +150,10 @@ describe('LeverAdapter', () => {
 
     expect(httpGet).toHaveBeenCalledWith(
       'https://api.eu.lever.co/v0/postings/symphony',
-      expect.objectContaining({
-        params: expect.objectContaining({ mode: 'json', skip: 0, limit: 100 }),
-      }),
+      {
+        params: { mode: 'json', skip: 0, limit: 100 },
+        timeout: expect.any(Number) as number,
+      },
     );
   });
 

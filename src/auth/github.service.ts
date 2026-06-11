@@ -22,6 +22,80 @@ const GITHUB_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize';
 const GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token';
 const GITHUB_GRAPHQL_URL = 'https://api.github.com/graphql';
 
+type GraphqlResponse<TData> = {
+  data?: TData;
+  errors?: Array<{ message: string }>;
+};
+
+type IsSponsoredByGraphqlData = {
+  user?: { isSponsoredBy?: boolean } | null;
+};
+
+type SponsorTierNode = {
+  login?: string | null;
+};
+
+type SponsorsAtTierGraphqlData = {
+  user?: {
+    sponsors?: {
+      pageInfo?: { hasNextPage?: boolean; endCursor?: string | null };
+      nodes?: Array<SponsorTierNode | null>;
+    } | null;
+  } | null;
+};
+
+function sponsorNodeLoginMatches(
+  node: SponsorTierNode | null | undefined,
+  targetLogin: string,
+): boolean {
+  const rawLogin = node?.login;
+  if (typeof rawLogin !== 'string') {
+    return false;
+  }
+  const normalized = rawLogin.trim().toLowerCase();
+  return normalized.length > 0 && normalized === targetLogin;
+}
+
+async function executeGitHubGraphql<TData>(
+  httpService: HttpService,
+  token: string,
+  query: string,
+  variables: Record<string, unknown>,
+): Promise<TData> {
+  let payload: GraphqlResponse<TData>;
+  try {
+    const response = await firstValueFrom(
+      httpService.post<GraphqlResponse<TData>>(
+        GITHUB_GRAPHQL_URL,
+        { query, variables },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 8000,
+        },
+      ),
+    );
+    payload = response.data;
+  } catch {
+    throw new ServiceUnavailableException(
+      'Failed to verify GitHub sponsorship',
+    );
+  }
+
+  if (payload.errors?.length) {
+    throw new ServiceUnavailableException('GitHub sponsorship query failed');
+  }
+
+  const data = payload.data;
+  if (data === undefined) {
+    throw new ServiceUnavailableException('GitHub sponsorship query failed');
+  }
+
+  return data;
+}
+
 @Injectable()
 export class GitHubService implements OnModuleDestroy {
   private redis: Redis | null = null;
@@ -37,12 +111,15 @@ export class GitHubService implements OnModuleDestroy {
   }
 
   getOAuthRedirectUri(): string {
-    const explicit = this.configService.get<string>('GITHUB_OAUTH_REDIRECT_URI');
+    const explicit = this.configService.get<string>(
+      'GITHUB_OAUTH_REDIRECT_URI',
+    );
     if (explicit?.trim()) {
       return explicit.trim();
     }
     const backendOrigin = (
-      this.configService.get<string>('BACKEND_ORIGIN') ?? 'http://localhost:3000'
+      this.configService.get<string>('BACKEND_ORIGIN') ??
+      'http://localhost:3000'
     ).replace(/\/$/, '');
     return `${backendOrigin}/api/auth/github/callback`;
   }
@@ -123,7 +200,9 @@ export class GitHubService implements OnModuleDestroy {
       );
       data = response.data;
     } catch {
-      throw new ServiceUnavailableException('Failed to exchange GitHub OAuth code');
+      throw new ServiceUnavailableException(
+        'Failed to exchange GitHub OAuth code',
+      );
     }
 
     const accessToken = data.access_token?.trim();
@@ -139,20 +218,23 @@ export class GitHubService implements OnModuleDestroy {
     let profile: { id: number; login: string; email: string | null };
     try {
       const { data } = await firstValueFrom(
-        this.httpService.get<{ id: number; login: string; email: string | null }>(
-          'https://api.github.com/user',
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              Accept: 'application/vnd.github+json',
-            },
-            timeout: 8000,
+        this.httpService.get<{
+          id: number;
+          login: string;
+          email: string | null;
+        }>('https://api.github.com/user', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: 'application/vnd.github+json',
           },
-        ),
+          timeout: 8000,
+        }),
       );
       profile = data;
     } catch {
-      throw new ServiceUnavailableException('Failed to load GitHub user profile');
+      throw new ServiceUnavailableException(
+        'Failed to load GitHub user profile',
+      );
     }
 
     let email = profile.email?.trim().toLowerCase() ?? null;
@@ -284,21 +366,24 @@ export class GitHubService implements OnModuleDestroy {
       }
     `;
 
-    const data = await this.runGraphqlQuery<{
-      user?: { isSponsoredBy?: boolean } | null;
-    }>(query, { sponsorLogin, accountLogin });
+    const data = await executeGitHubGraphql<IsSponsoredByGraphqlData>(
+      this.httpService,
+      this.getSponsorCheckToken(),
+      query,
+      {
+        sponsorLogin,
+        accountLogin,
+      },
+    );
 
     return data.user?.isSponsoredBy === true;
   }
 
-  private async queryIsSponsoredAtTier(
-    accountLogin: string,
+  private async fetchSponsorsAtTierPage(
+    sponsorLogin: string,
     tierId: string,
-  ): Promise<boolean> {
-    const sponsorLogin =
-      this.configService.get<string>('GITHUB_SPONSOR_LOGIN') ?? 'zsevic';
-    const targetLogin = accountLogin.toLowerCase();
-
+    after: string | null,
+  ): Promise<SponsorsAtTierGraphqlData> {
     const query = `
       query($sponsorLogin: String!, $tierId: ID!, $after: String) {
         user(login: $sponsorLogin) {
@@ -320,73 +405,47 @@ export class GitHubService implements OnModuleDestroy {
       }
     `;
 
+    return executeGitHubGraphql<SponsorsAtTierGraphqlData>(
+      this.httpService,
+      this.getSponsorCheckToken(),
+      query,
+      { sponsorLogin, tierId, after },
+    );
+  }
+
+  private async queryIsSponsoredAtTier(
+    accountLogin: string,
+    tierId: string,
+  ): Promise<boolean> {
+    const sponsorLogin =
+      this.configService.get<string>('GITHUB_SPONSOR_LOGIN') ?? 'zsevic';
+    const targetLogin = accountLogin.toLowerCase();
+
     let after: string | null = null;
     for (;;) {
-      const data = await this.runGraphqlQuery<{
-        user?: {
-          sponsors?: {
-            pageInfo?: { hasNextPage?: boolean; endCursor?: string | null };
-            nodes?: Array<{ login?: string | null } | null>;
-          } | null;
-        } | null;
-      }>(query, { sponsorLogin, tierId, after });
+      const data = await this.fetchSponsorsAtTierPage(
+        sponsorLogin,
+        tierId,
+        after,
+      );
 
       const sponsors = data.user?.sponsors;
-      for (const node of sponsors?.nodes ?? []) {
-        const login = node?.login?.trim().toLowerCase();
-        if (login && login === targetLogin) {
+      const nodes = sponsors?.nodes ?? [];
+      for (const node of nodes) {
+        if (sponsorNodeLoginMatches(node, targetLogin)) {
           return true;
         }
       }
 
-      if (!sponsors?.pageInfo?.hasNextPage) {
+      const pageInfo = sponsors?.pageInfo;
+      if (!pageInfo?.hasNextPage) {
         return false;
       }
-      after = sponsors.pageInfo.endCursor ?? null;
+      after = pageInfo.endCursor ?? null;
       if (!after) {
         return false;
       }
     }
-  }
-
-  private async runGraphqlQuery<TData>(
-    query: string,
-    variables: Record<string, unknown>,
-  ): Promise<TData> {
-    const token = this.getSponsorCheckToken();
-
-    let payload: {
-      data?: TData;
-      errors?: Array<{ message: string }>;
-    };
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post<typeof payload>(
-          GITHUB_GRAPHQL_URL,
-          { query, variables },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            timeout: 8000,
-          },
-        ),
-      );
-      payload = response.data;
-    } catch {
-      throw new ServiceUnavailableException('Failed to verify GitHub sponsorship');
-    }
-
-    if (payload.errors?.length) {
-      throw new ServiceUnavailableException('GitHub sponsorship query failed');
-    }
-
-    if (!payload.data) {
-      throw new ServiceUnavailableException('GitHub sponsorship query failed');
-    }
-
-    return payload.data;
   }
 
   private getCacheTtlSeconds(): number {

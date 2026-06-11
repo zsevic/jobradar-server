@@ -157,7 +157,7 @@ export class JobsQueryDto {
     if (value === 'false' || value === '0') {
       return false;
     }
-    return value;
+    return undefined;
   })
   alertsEnabled?: boolean;
 }

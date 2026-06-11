@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 export interface DigestJobLine {
   title: string;
@@ -15,11 +16,11 @@ export interface DigestJobLine {
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  private transporter: Transporter | null = null;
+  private transporter: Transporter<SMTPTransport.SentMessageInfo> | null = null;
 
   constructor(private readonly configService: ConfigService) {}
 
-  private getTransporter(): Transporter {
+  private getTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
     if (this.transporter) {
       return this.transporter;
     }
