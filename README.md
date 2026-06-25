@@ -59,7 +59,14 @@ Over-limit responses return **429** with `Too many requests. Please try again la
 
 Rate limits are Redis-backed (works across multiple instances). Tune via `RATE_LIMIT_PUBLIC_JOBS_*` in `.env` (see `.env.example`).
 
-Internal poll endpoints (`POST /api/jobs/poll/*`) are not rate-limited and are meant for operators/cron, not the public site.
+Scheduled polling runs automatically while the server is up (`SOURCE_POLLING_INTERVAL_MINUTES`, default 30). To trigger fetches manually:
+
+```bash
+npm run poll:sources              # all providers
+npm run poll:company -- stripe    # one company (name or externalId)
+```
+
+Requires Redis and an running server (or workers) to process the queued jobs.
 
 ## Database
 
