@@ -1,12 +1,7 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
-import { FilterPreset } from './entities/filter-preset.entity';
 import { Job } from './entities/job.entity';
-import { NotificationClick } from './entities/notification-click.entity';
-import { NotificationSent } from './entities/notification-sent.entity';
-import { PendingMatchEmail } from './entities/pending-match-email.entity';
 import { Source } from './entities/source.entity';
-import { User } from './entities/user.entity';
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -20,15 +15,7 @@ const migrationExtension = __filename.endsWith('.ts') ? 'ts' : 'js';
 export default new DataSource({
   type: 'postgres',
   url: databaseUrl,
-  entities: [
-    User,
-    Source,
-    Job,
-    FilterPreset,
-    NotificationSent,
-    PendingMatchEmail,
-    NotificationClick,
-  ],
+  entities: [Source, Job],
   migrations: [`${__dirname}/migrations/*.${migrationExtension}`],
   synchronize: false,
 });

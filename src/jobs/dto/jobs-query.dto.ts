@@ -2,7 +2,6 @@ import { Transform, Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
-  IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
@@ -140,24 +139,4 @@ export class JobsQueryDto {
   @IsString({ each: true })
   @Transform(({ value }) => toStringArray(value))
   location?: string[];
-
-  @ValidateIf((o: JobsQueryDto) => !!o.role)
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => {
-    if (value === undefined || value === null) {
-      return undefined;
-    }
-    if (typeof value === 'boolean') {
-      return value;
-    }
-    if (value === 'true' || value === '1') {
-      return true;
-    }
-    if (value === 'false' || value === '0') {
-      return false;
-    }
-    return undefined;
-  })
-  alertsEnabled?: boolean;
 }

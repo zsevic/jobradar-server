@@ -1,6 +1,6 @@
 # JobRadar Server
 
-NestJS backend for [JobRadar](https://jobradar.tech): job ingestion, filtering, auth (GitHub Sponsors), and email notifications.
+NestJS backend for [JobRadar](https://jobradar.tech): job ingestion and public job filtering.
 
 AWS-related work lives on the **[`aws` branch](https://github.com/zsevic/jobradar-server/tree/aws)** — CDK stacks, Lambda/API Gateway, RDS, DynamoDB, SES, and the GitHub Actions deploy workflow.
 
@@ -47,16 +47,6 @@ npm run migration:revert
 npm run migration:generate
 npm run seed:sources
 ```
-
-### Auth
-
-Set GitHub OAuth and Sponsors env vars in `.env` (see `.env.example`), then open:
-
-```http
-GET /api/auth/github
-```
-
-Users sign in with GitHub; access requires an **active** sponsorship of `@zsevic`. Sponsorship is re-checked on protected API routes and before digest emails.
 
 ### Tests
 

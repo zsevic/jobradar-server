@@ -3,13 +3,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import { Brackets, Repository } from 'typeorm';
-import { FilterPreset } from '../database/entities/filter-preset.entity';
 import { Job } from '../database/entities/job.entity';
 import { Source, SourceProvider } from '../database/entities/source.entity';
 import {
   ASHBY_FETCH_QUEUE,
   GREENHOUSE_FETCH_QUEUE,
-  JOB_MATCH_QUEUE,
   JOB_PROCESS_QUEUE,
   LEVER_FETCH_QUEUE,
   WORKABLE_FETCH_QUEUE,
@@ -26,6 +24,13 @@ import {
 } from './utils/match-role-title-keyword';
 import { ProviderCircuitBreaker } from './utils/provider-circuit-breaker';
 
+type JobFilterPreset = {
+  role: string;
+  stack: string[];
+  seniority: string;
+  locations: string[];
+};
+
 @Injectable()
 export class JobsService {
   private readonly logger = new Logger(JobsService.name);
@@ -36,8 +41,6 @@ export class JobsService {
     private readonly sourceRepository: Repository<Source>,
     @InjectRepository(Job)
     private readonly jobsRepository: Repository<Job>,
-    @InjectRepository(FilterPreset)
-    private readonly filterPresetRepository: Repository<FilterPreset>,
     @InjectQueue(ASHBY_FETCH_QUEUE)
     private readonly ashbyFetchQueue: Queue,
     @InjectQueue(GREENHOUSE_FETCH_QUEUE)
@@ -48,8 +51,6 @@ export class JobsService {
     private readonly leverFetchQueue: Queue,
     @InjectQueue(JOB_PROCESS_QUEUE)
     private readonly jobProcessQueue: Queue,
-    @InjectQueue(JOB_MATCH_QUEUE)
-    private readonly jobMatchQueue: Queue,
     private readonly providerCircuitBreaker: ProviderCircuitBreaker,
   ) {}
 
@@ -254,17 +255,6 @@ export class JobsService {
       removeOnComplete: true,
       removeOnFail: 200,
     });
-  }
-
-  async enqueueJobForMatching(jobId: string): Promise<void> {
-    await this.jobMatchQueue.add(
-      'match-job',
-      { jobId },
-      {
-        removeOnComplete: true,
-        removeOnFail: 200,
-      },
-    );
   }
 
   async reconcileStaleJobsForSource(
@@ -473,7 +463,7 @@ export class JobsService {
 
   private matchesPresetMetadata(
     job: Job,
-    preset: Pick<FilterPreset, 'role' | 'stack' | 'seniority'>,
+    preset: Pick<JobFilterPreset, 'role' | 'stack' | 'seniority'>,
   ): boolean {
     const seniorityMatches =
       !preset.seniority ||
@@ -502,8 +492,7 @@ export class JobsService {
     return seniorityMatches && stackMatches;
   }
 
-  async getLatestJobsForUser(
-    userId: string,
+  async getLatestJobs(
     limit = 100,
     page = 1,
     jobsQuery?: JobsQueryDto,
@@ -542,7 +531,7 @@ export class JobsService {
       'designer',
     ] as const;
 
-    const overridePreset =
+    const overridePreset: JobFilterPreset | null =
       jobsQuery?.role !== undefined
         ? {
             role: jobsQuery.role,
@@ -553,13 +542,10 @@ export class JobsService {
               : (jobsQuery.stack ?? []),
             seniority: jobsQuery.seniority!,
             locations: jobsQuery.location!,
-            alertsEnabled: jobsQuery.alertsEnabled ?? true,
           }
         : null;
 
-    const preset =
-      overridePreset ??
-      (await this.filterPresetRepository.findOneBy({ userId }));
+    const preset = overridePreset;
     const roleKeywords = this.getRoleTitleKeywords(preset?.role ?? '');
 
     const jobQuery = this.jobsRepository

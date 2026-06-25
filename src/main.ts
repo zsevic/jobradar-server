@@ -1,5 +1,6 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import dataSource from './database/data-source';
 import { upsertSourceSeeds } from './database/seeds/upsert-source-seeds';
@@ -48,7 +49,8 @@ async function runDatabaseBootstrap(): Promise<void> {
 
 async function bootstrap() {
   await runDatabaseBootstrap();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.set('trust proxy', 1);
   app.enableCors({
     origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:3001',
     credentials: true,

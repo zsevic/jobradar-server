@@ -19,7 +19,6 @@ import {
   mergeLocationFacetsWithCountryHints,
 } from '../utils/normalize-location';
 import { transliterateLocationDisplay } from '../utils/transliterate-location';
-import { JobsService } from '../jobs.service';
 
 interface PersistJobPayload {
   sourceId: string;
@@ -33,12 +32,10 @@ interface PersistJobPayload {
   concurrency: 4,
 })
 export class JobProcessProcessor extends WorkerHost {
-  private readonly TWO_DAYS_IN_MS = 48 * 60 * 60 * 1000;
   private readonly logger = new Logger(JobProcessProcessor.name);
   constructor(
     @InjectRepository(Job)
     private readonly jobRepository: Repository<Job>,
-    private readonly jobsService: JobsService,
   ) {
     super();
   }
@@ -145,14 +142,7 @@ export class JobProcessProcessor extends WorkerHost {
       hash,
     });
 
-    const now = Date.now();
-    if (now - saved.postedAt.getTime() <= this.TWO_DAYS_IN_MS) {
-      await this.jobsService.enqueueJobForMatching(saved.id);
-      this.logger.log(`Saved job ${saved.id} and enqueued for matching`);
-      return;
-    }
-
-    this.logger.log(`Saved job ${saved.id} (older than 48h, skip matching)`);
+    this.logger.log(`Saved job ${saved.id}`);
   }
 
   private buildJobHash(job: NormalizedJob): string {
