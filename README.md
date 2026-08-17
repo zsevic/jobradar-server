@@ -1,14 +1,12 @@
 # JobRadar Server
 
-NestJS backend for [JobRadar](https://jobradar.tech): ingests jobs from Ashby, Greenhouse, Lever, and Workable, stores them in Postgres, and serves a public filtered jobs API.
-
-AWS-related work lives on the **[`aws` branch](https://github.com/zsevic/jobradar-server/tree/aws)** (CDK, Lambda/API Gateway, RDS, DynamoDB, SES, deploy workflow).
+NestJS backend for [JobRadar](github.com/zsevic/jobradar): ingests jobs from Ashby, Greenhouse, Lever, and Workable, stores them in Postgres, and serves a public filtered jobs API.
 
 ## Local development
 
 ### Prerequisites
 
-- Node.js 20+ (CI uses Node 26)
+- Node.js 26+
 - Docker (Postgres + Redis)
 
 ### Setup
@@ -94,4 +92,4 @@ GitHub Actions runs on pushes and PRs to `main` / `master`: `npm ci`, lint, and 
 
 ## Production
 
-Deployed on Railway at `https://jobradar-server-production.up.railway.app`. Set `FRONTEND_ORIGIN` to your frontend URL for CORS. Requires `DATABASE_URL`, `REDIS_URL`, and rate-limit env vars from `.env.example`.
+Set `FRONTEND_ORIGIN` to your frontend URL for CORS. Requires `DATABASE_URL`, `REDIS_URL`, and rate-limit env vars from `.env.example`.
